@@ -11,78 +11,58 @@ export interface QuadPoints {
 }
 
 /**
- * Computes the 3x3 projective transformation matrix (Homography)
- * mapping unit square (0,0),(1,0),(1,1),(0,1) to arbitrary quadrilateral (x0,y0),(x1,y1),(x2,y2),(x3,y3)
+ * Calculates rotation angle, bounding box, dimensions and relative clip polygon from 4 quad points
  */
-export function getPerspectiveTransformMatrix(
-  srcWidth: number,
-  srcHeight: number,
-  quad: QuadPoints,
-  canvasWidth: number,
-  canvasHeight: number
-): number[] {
-  // Convert quad percentage points to canvas pixel coordinates
-  const p0 = { x: (quad.topLeft.x / 100) * canvasWidth, y: (quad.topLeft.y / 100) * canvasHeight };
-  const p1 = { x: (quad.topRight.x / 100) * canvasWidth, y: (quad.topRight.y / 100) * canvasHeight };
-  const p2 = { x: (quad.bottomRight.x / 100) * canvasWidth, y: (quad.bottomRight.y / 100) * canvasHeight };
-  const p3 = { x: (quad.bottomLeft.x / 100) * canvasWidth, y: (quad.bottomLeft.y / 100) * canvasHeight };
+export function getQuadBoundsAndRotation(quad: QuadPoints) {
+  // Angle of the top edge in degrees
+  const dxTop = quad.topRight.x - quad.topLeft.x;
+  const dyTop = quad.topRight.y - quad.topLeft.y;
+  const angle = Math.atan2(dyTop, dxTop) * (180 / Math.PI);
 
-  const dx1 = p1.x - p2.x;
-  const dy1 = p1.y - p2.y;
-  const dx2 = p3.x - p2.x;
-  const dy2 = p3.y - p2.y;
+  // Center
+  const cx = (quad.topLeft.x + quad.topRight.x + quad.bottomRight.x + quad.bottomLeft.x) / 4;
+  const cy = (quad.topLeft.y + quad.topRight.y + quad.bottomRight.y + quad.bottomLeft.y) / 4;
 
-  const sx = p0.x - p1.x + p2.x - p3.x;
-  const sy = p0.y - p1.y + p2.y - p3.y;
+  // Approximate width & height of the quadrilateral
+  const wTop = Math.hypot(quad.topRight.x - quad.topLeft.x, quad.topRight.y - quad.topLeft.y);
+  const wBottom = Math.hypot(quad.bottomRight.x - quad.bottomLeft.x, quad.bottomRight.y - quad.bottomLeft.y);
+  const width = Math.max(1, (wTop + wBottom) / 2);
 
-  let g = 0;
-  let h = 0;
+  const hLeft = Math.hypot(quad.bottomLeft.x - quad.topLeft.x, quad.bottomLeft.y - quad.topLeft.y);
+  const hRight = Math.hypot(quad.bottomRight.x - quad.topRight.x, quad.bottomRight.y - quad.topRight.y);
+  const height = Math.max(1, (hLeft + hRight) / 2);
 
-  if (sx === 0 && sy === 0) {
-    // Affine transform
-    const a = p1.x - p0.x;
-    const b = p3.x - p0.x;
-    const c = p0.x;
-    const d = p1.y - p0.y;
-    const e = p3.y - p0.y;
-    const f = p0.y;
-    return [a / srcWidth, d / srcWidth, 0, 0, b / srcHeight, e / srcHeight, 0, 0, 0, 0, 1, 0, c, f, 0, 1];
-  } else {
-    const det = dx1 * dy2 - dy1 * dx2;
-    g = (sx * dy2 - sy * dx2) / det;
-    h = (dx1 * sy - dy1 * sx) / det;
+  const minX = Math.min(quad.topLeft.x, quad.bottomLeft.x);
+  const minY = Math.min(quad.topLeft.y, quad.topRight.y);
+  const maxX = Math.max(quad.topRight.x, quad.bottomRight.x);
+  const maxY = Math.max(quad.bottomLeft.y, quad.bottomRight.y);
+  const bboxW = Math.max(1, maxX - minX);
+  const bboxH = Math.max(1, maxY - minY);
 
-    const a = p1.x - p0.x + g * p1.x;
-    const b = p3.x - p0.x + h * p3.x;
-    const c = p0.x;
-    const d = p1.y - p0.y + g * p1.y;
-    const e = p3.y - p0.y + h * p3.y;
-    const f = p0.y;
+  // Relative polygon clip path within the bounding box (0-100%)
+  const relTL = { x: ((quad.topLeft.x - minX) / bboxW) * 100, y: ((quad.topLeft.y - minY) / bboxH) * 100 };
+  const relTR = { x: ((quad.topRight.x - minX) / bboxW) * 100, y: ((quad.topRight.y - minY) / bboxH) * 100 };
+  const relBR = { x: ((quad.bottomRight.x - minX) / bboxW) * 100, y: ((quad.bottomRight.y - minY) / bboxH) * 100 };
+  const relBL = { x: ((quad.bottomLeft.x - minX) / bboxW) * 100, y: ((quad.bottomLeft.y - minY) / bboxH) * 100 };
 
-    // Convert to CSS matrix3d representation
-    return [
-      a / srcWidth,
-      d / srcWidth,
-      0,
-      g / srcWidth,
-      b / srcHeight,
-      e / srcHeight,
-      0,
-      h / srcHeight,
-      0,
-      0,
-      1,
-      0,
-      c,
-      f,
-      0,
-      1,
-    ];
-  }
+  const relativeClipPath = `polygon(${relTL.x}% ${relTL.y}%, ${relTR.x}% ${relTR.y}%, ${relBR.x}% ${relBR.y}%, ${relBL.x}% ${relBL.y}%)`;
+
+  return {
+    cx: Math.round(cx * 10) / 10,
+    cy: Math.round(cy * 10) / 10,
+    width: Math.round(width * 10) / 10,
+    height: Math.round(height * 10) / 10,
+    rotation: Math.round(angle * 10) / 10,
+    minX: Math.round(minX * 10) / 10,
+    minY: Math.round(minY * 10) / 10,
+    bboxW: Math.round(bboxW * 10) / 10,
+    bboxH: Math.round(bboxH * 10) / 10,
+    relativeClipPath,
+  };
 }
 
 /**
- * Returns a CSS clip-path polygon from 4 quadrilateral points
+ * Returns a CSS clip-path polygon from 4 quadrilateral points across the full canvas
  */
 export function getPolygonClipPath(quad: QuadPoints): string {
   return `polygon(${quad.topLeft.x}% ${quad.topLeft.y}%, ${quad.topRight.x}% ${quad.topRight.y}%, ${quad.bottomRight.x}% ${quad.bottomRight.y}%, ${quad.bottomLeft.x}% ${quad.bottomLeft.y}%)`;

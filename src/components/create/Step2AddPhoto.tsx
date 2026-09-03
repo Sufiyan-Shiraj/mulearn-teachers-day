@@ -168,15 +168,17 @@ export const Step2AddPhoto: React.FC<Step2AddPhotoProps> = ({
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+          <div className="pt-4 space-y-3">
             {/* Zoom / Scale */}
             <div>
               <div className="flex items-center justify-between text-xs font-bold text-stone-700 mb-1">
                 <span className="flex items-center gap-1">
-                  <ZoomIn className="w-3.5 h-3.5" />
-                  <span>Zoom</span>
+                  <ZoomIn className="w-3.5 h-3.5 text-[#7A1F1F]" />
+                  <span>Zoom Photo</span>
                 </span>
-                <span className="font-mono">{Math.round(photoPosition.scale * 100)}%</span>
+                <span className="font-mono bg-stone-100 px-2 py-0.5 rounded text-xs">
+                  {Math.round(photoPosition.scale * 100)}%
+                </span>
               </div>
               <input
                 type="range"
@@ -185,50 +187,19 @@ export const Step2AddPhoto: React.FC<Step2AddPhotoProps> = ({
                 step="0.05"
                 value={photoPosition.scale}
                 onChange={(e) => updatePos({ scale: parseFloat(e.target.value) })}
-                className="w-full accent-[#7A1F1F]"
+                className="w-full accent-[#7A1F1F] cursor-pointer"
               />
             </div>
 
-            {/* Horizontal Pan */}
-            <div>
-              <div className="flex items-center justify-between text-xs font-bold text-stone-700 mb-1">
-                <span>Pan X</span>
-                <span className="font-mono">{photoPosition.x}px</span>
-              </div>
-              <input
-                type="range"
-                min="-150"
-                max="150"
-                value={photoPosition.x}
-                onChange={(e) => updatePos({ x: parseInt(e.target.value, 10) })}
-                className="w-full accent-[#7A1F1F]"
-              />
+            <div className="flex items-center justify-between text-xs text-stone-500 pt-1">
+              <span>💡 You can drag the photo directly inside the card frame to reposition</span>
+              <button
+                onClick={() => updatePos({ x: 0, y: 0, scale: 1, rotation: 0 })}
+                className="text-xs text-stone-600 hover:text-[#7A1F1F] hover:underline font-semibold cursor-pointer"
+              >
+                Reset Position
+              </button>
             </div>
-
-            {/* Vertical Pan */}
-            <div>
-              <div className="flex items-center justify-between text-xs font-bold text-stone-700 mb-1">
-                <span>Pan Y</span>
-                <span className="font-mono">{photoPosition.y}px</span>
-              </div>
-              <input
-                type="range"
-                min="-150"
-                max="150"
-                value={photoPosition.y}
-                onChange={(e) => updatePos({ y: parseInt(e.target.value, 10) })}
-                className="w-full accent-[#7A1F1F]"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button
-              onClick={() => updatePos({ x: 0, y: 0, scale: 1, rotation: 0 })}
-              className="text-xs text-stone-500 hover:text-stone-800"
-            >
-              Reset Position
-            </button>
           </div>
         </div>
       )}

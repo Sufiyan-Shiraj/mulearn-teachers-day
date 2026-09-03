@@ -3,6 +3,27 @@ import fs from 'fs';
 import path from 'path';
 import { TemplateDefinition } from '@/templates/types';
 
+const registryPath = path.join(process.cwd(), 'src', 'templates', 'registry.ts');
+
+function readCurrentRegistry(): TemplateDefinition[] {
+  if (!fs.existsSync(registryPath)) return [];
+  const content = fs.readFileSync(registryPath, 'utf8');
+  const match = content.match(/TEMPLATE_REGISTRY:\s*TemplateDefinition\[\]\s*=\s*(\[[\s\S]*?\]);\s*export function/);
+  if (match && match[1]) {
+    try {
+      return JSON.parse(match[1]);
+    } catch {
+      // fallback
+    }
+  }
+  return [];
+}
+
+export async function GET() {
+  const current = readCurrentRegistry();
+  return NextResponse.json({ templates: current });
+}
+
 export async function POST(request: Request) {
   try {
     const updatedTemplate: TemplateDefinition = await request.json();
@@ -11,28 +32,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid template definition' }, { status: 400 });
     }
 
-    const registryPath = path.join(process.cwd(), 'src', 'templates', 'registry.ts');
-
-    if (!fs.existsSync(registryPath)) {
-      return NextResponse.json({ error: 'registry.ts not found' }, { status: 404 });
+    let currentRegistry = readCurrentRegistry();
+    if (!currentRegistry.length) {
+      const { TEMPLATE_REGISTRY } = await import('@/templates/registry');
+      currentRegistry = [...TEMPLATE_REGISTRY];
     }
 
-    // Read current registry file
-    const fileContent = fs.readFileSync(registryPath, 'utf8');
-
-    // Dynamically update the specific template definition
-    const { TEMPLATE_REGISTRY } = await import('@/templates/registry');
-    const existingIndex = TEMPLATE_REGISTRY.findIndex((t) => t.id === updatedTemplate.id);
+    const existingIndex = currentRegistry.findIndex((t) => t.id === updatedTemplate.id);
 
     let newRegistry: TemplateDefinition[];
     if (existingIndex >= 0) {
-      newRegistry = [...TEMPLATE_REGISTRY];
+      newRegistry = [...currentRegistry];
       newRegistry[existingIndex] = {
         ...newRegistry[existingIndex],
         ...updatedTemplate,
       };
     } else {
-      newRegistry = [...TEMPLATE_REGISTRY, updatedTemplate];
+      newRegistry = [...currentRegistry, updatedTemplate];
     }
 
     // Write back formatted TypeScript code to registry.ts
@@ -51,6 +67,7 @@ export function getTemplateById(id: string): TemplateDefinition {
       success: true,
       message: `Template "${updatedTemplate.name}" mapping saved permanently!`,
       template: updatedTemplate,
+      templates: newRegistry,
     });
   } catch (error: any) {
     console.error('Error saving template mapping:', error);

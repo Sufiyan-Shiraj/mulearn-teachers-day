@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { CardCustomConfig, FontFamilyChoice } from '@/types';
 import { getTemplateById } from '@/templates/registry';
+import { getQuadBoundsAndRotation } from '@/lib/perspectiveWarp';
 import { WashiTape } from './WashiTape';
 import { StickerRenderer } from './Stickers';
 import { Heart, Sparkles, User, Move } from 'lucide-react';
@@ -149,8 +150,10 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
       }}
     >
       <div
-        onClick={handleFlipToggle}
-        className={`relative ${getAspectClass()} rounded-3xl transition-transform duration-700 ease-out transform-style-3d cursor-pointer scrapbook-card-shadow ${
+        onClick={allowEdit ? undefined : handleFlipToggle}
+        className={`relative ${getAspectClass()} rounded-3xl transition-transform duration-700 ease-out transform-style-3d ${
+          allowEdit ? '' : 'cursor-pointer'
+        } scrapbook-card-shadow ${
           isFlipped ? 'rotate-y-180' : ''
         }`}
       >
@@ -176,29 +179,37 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
           )}
 
           {/* Mapped Photo Window Layer */}
-          <div
-            className="absolute overflow-hidden z-10"
-            style={{
-              left: `${tplDef.photoWindow.left}%`,
-              top: `${tplDef.photoWindow.top}%`,
-              width: `${tplDef.photoWindow.width}%`,
-              height: `${tplDef.photoWindow.height}%`,
-              transform: `rotate(${tplDef.photoWindow.rotation}deg)`,
-              borderRadius: tplDef.photoWindow.borderRadius || '2px',
-              clipPath: tplDef.photoWindow.quadPoints ? `polygon(
-                ${((tplDef.photoWindow.quadPoints.topLeft.x - tplDef.photoWindow.left) / tplDef.photoWindow.width) * 100}% ${((tplDef.photoWindow.quadPoints.topLeft.y - tplDef.photoWindow.top) / tplDef.photoWindow.height) * 100}%,
-                ${((tplDef.photoWindow.quadPoints.topRight.x - tplDef.photoWindow.left) / tplDef.photoWindow.width) * 100}% ${((tplDef.photoWindow.quadPoints.topRight.y - tplDef.photoWindow.top) / tplDef.photoWindow.height) * 100}%,
-                ${((tplDef.photoWindow.quadPoints.bottomRight.x - tplDef.photoWindow.left) / tplDef.photoWindow.width) * 100}% ${((tplDef.photoWindow.quadPoints.bottomRight.y - tplDef.photoWindow.top) / tplDef.photoWindow.height) * 100}%,
-                ${((tplDef.photoWindow.quadPoints.bottomLeft.x - tplDef.photoWindow.left) / tplDef.photoWindow.width) * 100}% ${((tplDef.photoWindow.quadPoints.bottomLeft.y - tplDef.photoWindow.top) / tplDef.photoWindow.height) * 100}%
-              )` : undefined,
-            }}
-            onMouseDown={handlePhotoMouseDown}
-            onMouseMove={handlePhotoMouseMove}
-            onMouseUp={handlePhotoMouseUp}
-            onTouchStart={handlePhotoTouchStart}
-            onTouchMove={handlePhotoTouchMove}
-            onTouchEnd={handlePhotoMouseUp}
-          >
+          {(() => {
+            const quadMetrics = tplDef.photoWindow.quadPoints
+              ? getQuadBoundsAndRotation(tplDef.photoWindow.quadPoints)
+              : null;
+
+            const winLeft = quadMetrics ? quadMetrics.minX : tplDef.photoWindow.left;
+            const winTop = quadMetrics ? quadMetrics.minY : tplDef.photoWindow.top;
+            const winWidth = quadMetrics ? quadMetrics.bboxW : tplDef.photoWindow.width;
+            const winHeight = quadMetrics ? quadMetrics.bboxH : tplDef.photoWindow.height;
+            const winRot = quadMetrics ? quadMetrics.rotation : tplDef.photoWindow.rotation;
+            const winClip = quadMetrics ? quadMetrics.relativeClipPath : undefined;
+
+            return (
+              <div
+                className="absolute overflow-hidden z-10"
+                style={{
+                  left: `${winLeft}%`,
+                  top: `${winTop}%`,
+                  width: `${winWidth}%`,
+                  height: `${winHeight}%`,
+                  transform: `rotate(${winRot}deg)`,
+                  borderRadius: tplDef.photoWindow.borderRadius || '2px',
+                  clipPath: winClip,
+                }}
+                onMouseDown={handlePhotoMouseDown}
+                onMouseMove={handlePhotoMouseMove}
+                onMouseUp={handlePhotoMouseUp}
+                onTouchStart={handlePhotoTouchStart}
+                onTouchMove={handlePhotoTouchMove}
+                onTouchEnd={handlePhotoMouseUp}
+              >
             {photoUrl ? (
               <div
                 className={`relative w-full h-full ${allowPhotoDrag ? 'cursor-grab active:cursor-grabbing' : ''}`}
@@ -230,6 +241,8 @@ export const FlippableCard: React.FC<FlippableCardProps> = ({
               </div>
             )}
           </div>
+        );
+      })()}
 
           {/* FOREGROUND OVERLAY OBJECTS (Rendered on top of photo) */}
           {tplDef.foregroundType === 'template_1_overlay' && (

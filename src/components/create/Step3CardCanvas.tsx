@@ -280,14 +280,16 @@ export const Step3CardCanvas: React.FC<Step3CardCanvasProps> = ({
               <p className="text-xs text-stone-500 font-medium">
                 Adjust zoom and pan so your photo is centered nicely inside the frame:
               </p>
-
+              {/* Scale / Zoom */}
               <div>
                 <div className="flex items-center justify-between text-xs font-bold text-stone-700 mb-1">
                   <span className="flex items-center gap-1">
-                    <ZoomIn className="w-3.5 h-3.5" />
-                    <span>Zoom Scale</span>
+                    <ZoomIn className="w-3.5 h-3.5 text-[#7A1F1F]" />
+                    <span>Zoom Photo</span>
                   </span>
-                  <span className="font-mono">{Math.round(photoPos.scale * 100)}%</span>
+                  <span className="font-mono bg-stone-100 px-2 py-0.5 rounded text-xs">
+                    {Math.round(photoPos.scale * 100)}%
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -296,45 +298,15 @@ export const Step3CardCanvas: React.FC<Step3CardCanvasProps> = ({
                   step="0.05"
                   value={photoPos.scale}
                   onChange={(e) => updatePhotoPos({ scale: parseFloat(e.target.value) })}
-                  className="w-full accent-[#7A1F1F]"
+                  className="w-full accent-[#7A1F1F] cursor-pointer"
                 />
               </div>
 
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-stone-700 mb-1">
-                  <span>Pan Left / Right (X)</span>
-                  <span className="font-mono">{photoPos.x}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="-150"
-                  max="150"
-                  value={photoPos.x}
-                  onChange={(e) => updatePhotoPos({ x: parseInt(e.target.value, 10) })}
-                  className="w-full accent-[#7A1F1F]"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs font-bold text-stone-700 mb-1">
-                  <span>Pan Up / Down (Y)</span>
-                  <span className="font-mono">{photoPos.y}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="-150"
-                  max="150"
-                  value={photoPos.y}
-                  onChange={(e) => updatePhotoPos({ y: parseInt(e.target.value, 10) })}
-                  className="w-full accent-[#7A1F1F]"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-between items-center">
-                <span className="text-[11px] text-stone-500">Tip: You can also drag photo directly on canvas</span>
+              <div className="pt-2 flex justify-between items-center text-xs text-stone-500">
+                <span>💡 Drag photo directly on canvas to reposition</span>
                 <button
                   onClick={() => updatePhotoPos({ x: 0, y: 0, scale: 1, rotation: 0 })}
-                  className="text-xs text-[#7A1F1F] font-semibold hover:underline"
+                  className="text-xs text-[#7A1F1F] font-semibold hover:underline cursor-pointer"
                 >
                   Reset
                 </button>

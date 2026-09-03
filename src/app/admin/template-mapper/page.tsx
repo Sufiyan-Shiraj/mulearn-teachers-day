@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TEMPLATE_REGISTRY } from '@/templates/registry';
 import { TemplateDefinition } from '@/templates/types';
-import { QuadPoints, Point2D, getPolygonClipPath } from '@/lib/perspectiveWarp';
+import { QuadPoints, Point2D, getPolygonClipPath, getQuadBoundsAndRotation } from '@/lib/perspectiveWarp';
 import {
   Move,
   Layers,
@@ -93,12 +93,29 @@ const SMART_PRESETS: SmartItemPreset[] = [
 ];
 
 export default function AdminTemplateMapperPage() {
+  const [templates, setTemplates] = useState<TemplateDefinition[]>(TEMPLATE_REGISTRY);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateDefinition>(TEMPLATE_REGISTRY[0]);
   const [activeTool, setActiveTool] = useState<'quad' | 'mask' | 'wand' | 'text' | 'preview'>('quad');
   const [testPhotoUrl, setTestPhotoUrl] = useState<string>(TEST_PHOTOS[0]);
   const [showNodes, setShowNodes] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  // Fetch freshest templates from API on load
+  useEffect(() => {
+    fetch('/api/admin/save-template-mapping')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.templates && data.templates.length) {
+          setTemplates(data.templates);
+          const current = data.templates.find((t: TemplateDefinition) => t.id === selectedTemplate.id);
+          if (current) {
+            setSelectedTemplate(current);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // 4 Quad Points state (percentage 0-100 relative to template canvas)
   const [quad, setQuad] = useState<QuadPoints>(
@@ -494,14 +511,17 @@ export default function AdminTemplateMapperPage() {
     setIsSaving(true);
     setSaveSuccessMsg(null);
 
+    const quadMetrics = getQuadBoundsAndRotation(quad);
+
     const updatedTemplate: TemplateDefinition = {
       ...selectedTemplate,
       photoWindow: {
         ...selectedTemplate.photoWindow,
-        left: Math.round(minX * 10) / 10,
-        top: Math.round(minY * 10) / 10,
-        width: Math.round(bboxWidth * 10) / 10,
-        height: Math.round(bboxHeight * 10) / 10,
+        left: quadMetrics.minX,
+        top: quadMetrics.minY,
+        width: quadMetrics.bboxW,
+        height: quadMetrics.bboxH,
+        rotation: quadMetrics.rotation,
         quadPoints: quad,
       },
       teacherNamePlacement: textPlacement,
@@ -517,6 +537,9 @@ export default function AdminTemplateMapperPage() {
 
       const data = await res.json();
       if (res.ok) {
+        if (data.templates) {
+          setTemplates(data.templates);
+        }
         setSaveSuccessMsg(`Template "${selectedTemplate.name}" mapping saved permanently!`);
         setTimeout(() => setSaveSuccessMsg(null), 4000);
       } else {
@@ -579,7 +602,7 @@ export default function AdminTemplateMapperPage() {
                 1. Select Template to Map
               </label>
               <div className="grid grid-cols-2 gap-3">
-                {TEMPLATE_REGISTRY.map((tpl) => (
+                {templates.map((tpl) => (
                   <button
                     key={tpl.id}
                     onClick={() => setSelectedTemplate(tpl)}
@@ -996,7 +1019,10 @@ export default function AdminTemplateMapperPage() {
               ref={containerRef}
               onMouseMove={handleContainerMouseMove}
               onMouseUp={handleContainerMouseUp}
-              className="relative w-[340px] sm:w-[400px] md:w-[440px] aspect-[9/16] rounded-3xl overflow-hidden shadow-2xl border-4 border-stone-900 bg-stone-900 select-none"
+              className="relative w-[340px] sm:w-[400px] md:w-[440px] rounded-3xl overflow-hidden shadow-2xl border-4 border-stone-900 bg-stone-900 select-none"
+              style={{
+                aspectRatio: selectedTemplate.aspectRatio === '9/16' ? '9 / 16' : selectedTemplate.aspectRatio === '3/4' ? '3 / 4' : '4 / 5',
+              }}
             >
               {/* 1. Base Template Image */}
               {selectedTemplate.baseImageUrl && (
@@ -1007,19 +1033,30 @@ export default function AdminTemplateMapperPage() {
                 />
               )}
 
-              {/* 2. Warped Photo Layer (Clipped via Polygon) */}
-              <div
-                className="absolute inset-0 overflow-hidden z-10"
-                style={{
-                  clipPath: getPolygonClipPath(quad),
-                }}
-              >
-                <img
-                  src={testPhotoUrl}
-                  alt="Warped Student Photo"
-                  className="w-full h-full object-cover pointer-events-none"
-                />
-              </div>
+              {/* 2. Warped Photo Layer (Tilted, Sized, and Clipped via Quadrilateral) */}
+              {(() => {
+                const qm = getQuadBoundsAndRotation(quad);
+                return (
+                  <div
+                    className="absolute overflow-hidden z-10"
+                    style={{
+                      left: `${qm.minX}%`,
+                      top: `${qm.minY}%`,
+                      width: `${qm.bboxW}%`,
+                      height: `${qm.bboxH}%`,
+                      transform: `rotate(${qm.rotation}deg)`,
+                      transformOrigin: 'center center',
+                      clipPath: qm.relativeClipPath,
+                    }}
+                  >
+                    <img
+                      src={testPhotoUrl}
+                      alt="Warped Student Photo"
+                      className="w-full h-full object-cover pointer-events-none scale-105"
+                    />
+                  </div>
+                );
+              })()}
 
               {/* 3. Foreground Mask Canvas Layer */}
               <canvas
@@ -1055,14 +1092,18 @@ export default function AdminTemplateMapperPage() {
               {/* 5. DRAGGABLE QUAD NODE HANDLES (When in Quad Mode & Nodes Visible) */}
               {activeTool === 'quad' && showNodes && (
                 <>
-                  {/* Polygon outline wireframe */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-30">
+                  {/* Polygon outline wireframe with viewBox 0 0 100 100 */}
+                  <svg
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 w-full h-full pointer-events-none z-30"
+                  >
                     <polygon
-                      points={`${quad.topLeft.x * 4.4},${quad.topLeft.y * 7.82} ${quad.topRight.x * 4.4},${quad.topRight.y * 7.82} ${quad.bottomRight.x * 4.4},${quad.bottomRight.y * 7.82} ${quad.bottomLeft.x * 4.4},${quad.bottomLeft.y * 7.82}`}
+                      points={`${quad.topLeft.x},${quad.topLeft.y} ${quad.topRight.x},${quad.topRight.y} ${quad.bottomRight.x},${quad.bottomRight.y} ${quad.bottomLeft.x},${quad.bottomLeft.y}`}
                       fill="rgba(59, 130, 246, 0.15)"
                       stroke="#2563EB"
-                      strokeWidth="2"
-                      strokeDasharray="4 4"
+                      strokeWidth="0.7"
+                      strokeDasharray="1.5 1.5"
                     />
                   </svg>
 
