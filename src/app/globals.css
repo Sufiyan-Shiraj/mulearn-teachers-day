@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Cinzel:wght@500;700;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Sacramento&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-script: 'Caveat', cursive;
+  --font-hand: 'Patrick Hand', cursive;
+  --font-display: 'Cinzel', serif;
+  --font-typewriter: 'Courier Prime', monospace;
+  --font-cursive: 'Sacramento', cursive;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  --color-cream: #FAF6F0;
+  --color-cream-dark: #F3EBDD;
+  --color-cream-light: #FFFCF7;
+  --color-brand-red: #7A1F1F;
+  --color-brand-red-dark: #5C1515;
+  --color-brand-gold: #D49B4B;
+  --color-slate-dark: #1C1917;
+}
+
+body {
+  background-color: #FAF6F0;
+  color: #1C1917;
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(#E8DFC8 0.75px, transparent 0.75px),
+    radial-gradient(#E8DFC8 0.75px, #FAF6F0 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+/* Scrapbook Custom Fonts */
+.font-serif-heading {
+  font-family: var(--font-serif);
+}
+
+.font-script-accent {
+  font-family: var(--font-script);
+}
+
+.font-handwritten {
+  font-family: var(--font-hand);
+}
+
+.font-display-bold {
+  font-family: var(--font-display);
+}
+
+.font-typewriter {
+  font-family: var(--font-typewriter);
+}
+
+.font-sacramento {
+  font-family: var(--font-cursive);
+}
+
+/* 3D Flip Card Styles */
+.perspective-1000 {
+  perspective: 1200px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Washi Tape Strip Styles */
+.washi-tape-polka {
+  background: repeating-radial-gradient(circle at 50% 50%, #E2D794 0, #E2D794 2px, transparent 2px, transparent 8px), #ECE4A3;
+  opacity: 0.92;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.washi-tape-red {
+  background: repeating-linear-gradient(45deg, #B91C1C, #B91C1C 6px, #991B1B 6px, #991B1B 12px);
+  opacity: 0.88;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.washi-tape-gold {
+  background: #E5A83B;
+  opacity: 0.85;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.washi-tape-purple {
+  background: repeating-linear-gradient(-45deg, #C084FC, #C084FC 4px, #A855F7 4px, #A855F7 8px);
+  opacity: 0.85;
+}
+
+/* Torn Paper Edge Effects */
+.torn-paper-bottom {
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% 92%,
+    98% 95%,
+    96% 91%,
+    93% 97%,
+    90% 93%,
+    87% 96%,
+    84% 91%,
+    80% 95%,
+    76% 92%,
+    73% 97%,
+    70% 93%,
+    66% 96%,
+    62% 91%,
+    58% 95%,
+    55% 92%,
+    50% 97%,
+    46% 93%,
+    42% 96%,
+    38% 91%,
+    35% 95%,
+    30% 92%,
+    26% 97%,
+    22% 93%,
+    18% 96%,
+    14% 91%,
+    10% 95%,
+    6% 92%,
+    3% 96%,
+    0% 92%
+  );
+}
+
+.torn-paper-top {
+  clip-path: polygon(
+    0% 8%,
+    3% 4%,
+    6% 8%,
+    10% 5%,
+    14% 9%,
+    18% 4%,
+    22% 7%,
+    26% 3%,
+    30% 8%,
+    35% 5%,
+    38% 9%,
+    42% 4%,
+    46% 7%,
+    50% 3%,
+    55% 8%,
+    58% 5%,
+    62% 9%,
+    66% 4%,
+    70% 7%,
+    73% 3%,
+    76% 8%,
+    80% 5%,
+    84% 9%,
+    87% 4%,
+    90% 7%,
+    93% 3%,
+    96% 9%,
+    98% 5%,
+    100% 8%,
+    100% 100%,
+    0% 100%
+  );
+}
+
+/* Notebook Perforated Holes */
+.binder-hole {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #E8DFC8;
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Polaroid Photo Frame Styling */
+.polaroid-shadow {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.scrapbook-card-shadow {
+  box-shadow: 0 20px 35px -10px rgba(70, 30, 20, 0.18), 0 10px 15px -5px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth Scrolling & Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F3EBDD;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4C5B0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B8A58D;
+}
