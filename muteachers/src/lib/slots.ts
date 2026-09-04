@@ -64,14 +64,14 @@ export const SLOTS: Record<ArtKey, Slot> = {
   disco: {
     box: [18.82, 39.44, 68.44, 40.34],
     rot: -7.9,
-    over: [10.455, 34.545, 85.727, 50.205],
+    over: [10.455, 33.265, 85.727, 51.484],
     /* the polaroid's own white lower border, parallel at -7.9° */
     name: [17.5, 81.5, 70.0, 7.0],
     nameRot: -7.9,
     scaleX: 1.08,
     nameSize: 40,
     /* centered directly under the 'Happy TEACHERS DAY' gold heart flourish */
-    logo: { x: 50.0, y: 30.3, w: 13.0, invert: true, opacity: 0.9 },
+    logo: { x: 50.0, y: 31.4, w: 12.0, invert: true, opacity: 0.95 },
   },
   scrapbook: {
     box: [16.6, 24.34, 69.5, 49.51],
