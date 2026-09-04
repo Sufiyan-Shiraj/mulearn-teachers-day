@@ -1,4 +1,5 @@
-import type { CardElement, Template } from './types'
+import type { ArtKey, CardElement, Template } from './types'
+import { SLOTS } from './slots'
 
 /* helpers keep the template table readable */
 const t = (
@@ -10,13 +11,23 @@ const t = (
   color: '#1a1a1a', align: 'center', lh: 1.25, plate: 'none', ...o,
 })
 
+/**
+ * The photo slot for a template. Its position, size and angle come straight
+ * from lib/slots.ts, measured off the artwork, so the photo lands inside the
+ * printed frame instead of near it. `frame: 'slot'` means the artwork already
+ * draws the frame — the punched overlay does the clipping, so nothing is
+ * painted around the photo here.
+ */
 const p = (
-  id: string, face: 'front' | 'back', box: [number, number, number, number],
+  id: string, art: ArtKey,
   o: Partial<Extract<CardElement, { kind: 'photo' }>> = {},
-): CardElement => ({
-  kind: 'photo', id, face, box: { x: box[0], y: box[1], w: box[2], h: box[3] },
-  rot: 0, frame: 'polaroid', zoom: 1, ox: 0, oy: 0, tape: 'none', ...o,
-})
+): CardElement => {
+  const [x, y, w, h] = SLOTS[art].box
+  return {
+    kind: 'photo', id, face: 'front', box: { x, y, w, h },
+    rot: SLOTS[art].rot, frame: 'slot', zoom: 1, ox: 0, oy: 0, tape: 'none', ...o,
+  }
+}
 
 export const makeDeco = (
   id: string, face: 'front' | 'back', deco: Extract<CardElement, { kind: 'deco' }>['deco'],
@@ -40,7 +51,7 @@ export const TEMPLATES: Template[] = [
     dark: true,
     thumbAlign: 'top',
     elements: [
-      p('dc-photo', 'front', [17.6, 39.9, 65.4, 41.2], { rot: -7.4, frame: 'slot' }),
+      p('dc-photo', 'disco'),
       t('dc-msg', 'front', [14, 29.5, 72, 8], {
         text: 'Thank you for being more than a teacher — you are a guide, an inspiration, and a reason I believe in myself.',
         font: 'classic', size: 27, color: '#fdf7ec', align: 'center', lh: 1.45, label: 'Message', maxLen: 220,
@@ -70,7 +81,7 @@ export const TEMPLATES: Template[] = [
     dark: true,
     isNew: true,
     elements: [
-      p('sc-photo', 'front', [20.6, 28.6, 65.6, 41.6], { rot: 6.2, frame: 'slot' }),
+      p('sc-photo', 'scrapbook'),
       t('sc-msg', 'front', [17, 86.5, 66, 5], {
         text: '', placeholder: 'write here…', font: 'playful', size: 38,
         color: '#33302b', align: 'center', rot: 3.2, label: 'Message', maxLen: 60,
@@ -100,7 +111,7 @@ export const TEMPLATES: Template[] = [
     dark: true,
     isNew: true,
     elements: [
-      p('v-photo', 'front', [47.5, 20.5, 41.5, 33.5], { rot: 7.8, frame: 'slot' }),
+      p('v-photo', 'velvet'),
       t('v-msg', 'front', [13, 71, 74, 16], {
         text: 'Thank you for inspiring me every day!', font: 'playful', size: 40,
         color: '#3a2b20', align: 'center', lh: 1.35, label: 'Message', maxLen: 140,
@@ -133,7 +144,7 @@ export const TEMPLATES: Template[] = [
     dark: true,
     isNew: true,
     elements: [
-      p('ty-photo', 'front', [26.5, 29.5, 45.0, 33.5], { rot: -10.3, frame: 'slot' }),
+      p('ty-photo', 'thankyou'),
       t('ty-msg', 'front', [8.5, 76.0, 83.0, 11.0], {
         text: "Happy Teacher's Day!", font: 'playful', size: 44, color: '#3a231c',
         align: 'center', label: 'Message', maxLen: 90,
@@ -162,7 +173,7 @@ export const TEMPLATES: Template[] = [
     art: 'pressed',
     accent: '#c98f8a',
     elements: [
-      p('pr-photo', 'front', [28.2, 30.5, 43.6, 30.5], { rot: 0, frame: 'slot' }),
+      p('pr-photo', 'pressed'),
       t('pr-msg', 'front', [26.0, 80.5, 48.0, 11.5], {
         text: '', placeholder: 'To: / From: note…', font: 'playful', size: 38,
         color: '#5b4a43', align: 'center', label: 'Note', maxLen: 80,
@@ -192,7 +203,7 @@ export const TEMPLATES: Template[] = [
     accent: '#1a1a1a',
     dark: true,
     elements: [
-      p('gr-photo', 'front', [14.8, 24.8, 48.4, 43.2], { rot: 0, frame: 'arch-slot' }),
+      p('gr-photo', 'grateful'),
       t('gr-msg', 'front', [13.5, 77.0, 73.0, 12.0], {
         text: "Happy Teacher's Day!", font: 'playful', size: 42, color: '#2e2a26',
         align: 'center', label: 'Message', maxLen: 90,
@@ -221,7 +232,7 @@ export const TEMPLATES: Template[] = [
     art: 'lilac',
     accent: '#8c63a9',
     elements: [
-      p('li-photo', 'front', [31.5, 31.5, 43.0, 31.5], { rot: 3.5, frame: 'slot' }),
+      p('li-photo', 'lilac'),
       t('li-msg', 'front', [16.0, 79.0, 68.0, 11.5], {
         text: "Happy Teacher's Day!", font: 'playful', size: 44,
         color: '#4b385e', align: 'center', label: 'Message', maxLen: 120,

@@ -5,7 +5,7 @@ import { DECO_GROUPS, DECO_LABEL } from '../../lib/decoMeta'
 import { Decoration } from '../art/Decorations'
 import { AlignIcon } from './EditorBits'
 import { useCard } from '../../lib/store'
-import { normalizePhoto } from '../../lib/image'
+import { clampPan, normalizePhoto, panLimit } from '../../lib/image'
 
 export const SWATCHES = ['#1a1a1a', '#7b0e11', '#c08a52', '#ecd9c0', '#ffffff', '#2f4858', '#7f9166', '#8c63a9', '#d2372f', '#e0a63c']
 
@@ -162,13 +162,45 @@ export function ColorPanel({ el }: { el: CardElement | null }) {
 }
 
 /* ---------------- photo ---------------- */
+
+/**
+ * "Fit" keeps the photo in the frame printed on the template artwork, which
+ * is what every template starts with — the artwork does the framing and the
+ * photo tucks in behind it. The rest lift the photo out onto the card with a
+ * frame of its own, so they are offered separately rather than as peers.
+ */
+const FRAMES = [
+  { key: 'slot', label: 'Fit' },
+  { key: 'polaroid', label: 'Polaroid' },
+  { key: 'plain', label: 'Plain' },
+  { key: 'arch', label: 'Arch' },
+  { key: 'circle', label: 'Circle' },
+] as const
+
 export function PhotoPanel() {
   const doc = useCard(s => s.doc)
   const setPhoto = useCard(s => s.setPhoto)
   const update = useCard(s => s.update)
   const commit = useCard(s => s.commit)
+  const bringForward = useCard(s => s.bringForward)
+  const sendBackward = useCard(s => s.sendBackward)
   const file = useRef<HTMLInputElement>(null)
   const slot = doc.elements.find(e => e.kind === 'photo') as Extract<CardElement, { kind: 'photo' }> | undefined
+
+  /* panning only has somewhere to go once the photo is zoomed past its window */
+  const limit = slot ? panLimit(slot.zoom) : 0
+  const canPan = limit > 0.5
+
+  /* zooming back out has to pull the pan in with it, or the photo would
+     uncover a corner of its window the moment the slider is released */
+  const setZoom = (zoom: number) => {
+    if (!slot) return
+    update(slot.id, {
+      zoom,
+      ox: clampPan(slot.ox, zoom),
+      oy: clampPan(slot.oy, zoom),
+    } as Partial<CardElement>, { history: false })
+  }
 
   return (
     <div className="ep-photo">
@@ -192,28 +224,57 @@ export function PhotoPanel() {
             <input className="ep-range" type="range" min={1} max={2.6} step={.02} value={slot.zoom}
               style={{ ['--fill' as string]: pct(slot.zoom, 1, 2.6) }}
               aria-label="Photo zoom"
-              onChange={e => update(slot.id, { zoom: Number(e.target.value) } as Partial<CardElement>, { history: false })}
+              onChange={e => setZoom(Number(e.target.value))}
               onPointerUp={commit} />
             <span className="ep-row-value">{Math.round(slot.zoom * 100)}%</span>
           </div>
-          <div className="ep-row">
+
+          <div className="ep-row" data-disabled={canPan ? undefined : ''}>
+            <span className="ep-row-label">Left / right</span>
+            <input className="ep-range" type="range" min={-limit || -1} max={limit || 1} step={.5}
+              value={clampPan(slot.ox, slot.zoom)} disabled={!canPan}
+              style={{ ['--fill' as string]: pct(clampPan(slot.ox, slot.zoom), -limit || -1, limit || 1) }}
+              aria-label="Photo horizontal position"
+              onChange={e => update(slot.id, { ox: Number(e.target.value) } as Partial<CardElement>, { history: false })}
+              onPointerUp={commit} />
+            <span className="ep-row-value">{Math.round(clampPan(slot.ox, slot.zoom))}</span>
+          </div>
+
+          <div className="ep-row" data-disabled={canPan ? undefined : ''}>
             <span className="ep-row-label">Up / down</span>
-            <input className="ep-range" type="range" min={-30} max={30} step={1} value={slot.oy}
-              style={{ ['--fill' as string]: pct(slot.oy, -30, 30) }}
+            <input className="ep-range" type="range" min={-limit || -1} max={limit || 1} step={.5}
+              value={clampPan(slot.oy, slot.zoom)} disabled={!canPan}
+              style={{ ['--fill' as string]: pct(clampPan(slot.oy, slot.zoom), -limit || -1, limit || 1) }}
               aria-label="Photo vertical position"
               onChange={e => update(slot.id, { oy: Number(e.target.value) } as Partial<CardElement>, { history: false })}
               onPointerUp={commit} />
-            <span className="ep-row-value">{slot.oy}</span>
+            <span className="ep-row-value">{Math.round(clampPan(slot.oy, slot.zoom))}</span>
           </div>
+
+          {!canPan && <p className="ep-hint ep-hint--tight">Zoom in to move the photo around inside its frame.</p>}
+
           <div className="ep-row">
             <span className="ep-row-label">Frame</span>
             <div className="ep-frames">
-              {(['polaroid', 'plain', 'arch', 'circle'] as const).map(f => (
-                <button key={f} className="ep-frame" data-on={slot.frame === f ? '' : undefined}
-                  onClick={() => update(slot.id, { frame: f } as Partial<CardElement>)}>{f}</button>
+              {FRAMES.map(f => (
+                <button key={f.key} className="ep-frame"
+                  data-on={slot.frame === f.key || (f.key === 'slot' && slot.frame === 'arch-slot') ? '' : undefined}
+                  onClick={() => update(slot.id, { frame: f.key } as Partial<CardElement>)}>{f.label}</button>
               ))}
             </div>
           </div>
+
+          <div className="ep-row">
+            <span className="ep-row-label">Layer</span>
+            <div className="ep-frames">
+              <button className="ep-frame" onClick={() => sendBackward(slot.id)}>Send back</button>
+              <button className="ep-frame" onClick={() => bringForward(slot.id)}>Bring forward</button>
+            </div>
+          </div>
+
+          <button className="ep-reset" onClick={() => update(slot.id, { zoom: 1, ox: 0, oy: 0 } as Partial<CardElement>)}>
+            Reset framing
+          </button>
         </>
       )}
     </div>

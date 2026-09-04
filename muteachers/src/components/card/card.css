@@ -21,8 +21,18 @@
 
 .c-design { position: absolute; inset: 0; }
 
-/* ---------------- elements ---------------- */
-.c-el { position: absolute; transform-origin: 50% 50%; z-index: 2; }
+/* ---------------- elements ----------------
+   Stacking inside a card, bottom to top:
+     0  .ta         the artwork
+     1  .c-el--photo the user's photo, tucked into the printed frame
+     2  .ta-over     the artwork punched out over the photo, so the tape
+                    and trinkets printed across the frame still cover it
+     3  everything the user adds — text and stickers ride on top
+     7  whatever is selected, so its handles are always reachable      */
+.c-el { position: absolute; transform-origin: 50% 50%; z-index: 3; }
+/* only a photo fitted to the printed frame goes under the artwork; one the
+   user gave its own polaroid or arch is meant to sit on top of the card */
+.c-el--photo[data-slot] { z-index: 1; }
 .c-el.is-selected, .c-el.is-editing { z-index: 7; }
 .c-el--text { display: flex; }
 .c-el--photo, .c-el--deco { pointer-events: none; }

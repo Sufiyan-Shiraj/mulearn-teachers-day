@@ -8,7 +8,7 @@ import { Button } from '../components/ui/Button'
 import { Burst, HeartDoodle, Sparkle } from '../components/art/Doodles'
 import { getTemplate } from '../lib/templates'
 import { saveToLibrary, useCard } from '../lib/store'
-import { canNativeShare, copy, encodeCard, nativeShare, whatsappUrl } from '../lib/share'
+import { buildCardLink, canNativeShare, copy, nativeShare, whatsappUrl } from '../lib/share'
 import { renderCard, saveBlob, saveCardImages, shotFile, type Shot } from '../lib/exportCard'
 import { useReveal } from '../lib/useReveal'
 import { useAuth } from '../context/AuthContext'
@@ -23,34 +23,38 @@ export default function Share() {
   const { user, openAuthModal } = useAuth()
   const [flipped, setFlipped] = useState(false)
   const [link, setLink] = useState('')
+  const [linkOk, setLinkOk] = useState(true)
   const [open, setOpen] = useState<null | 'share' | 'print'>(null)
   const [copied, setCopied] = useState(false)
   const [shots, setShots] = useState<Shot[] | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<'' | 'shared' | 'downloaded'>('')
+  const [saveErr, setSaveErr] = useState(false)
   const nav = useNavigate()
   const tpl = useMemo(() => getTemplate(doc.templateId), [doc.templateId])
   const exportRef = useRef<HTMLDivElement>(null)
   const page = useReveal<HTMLDivElement>([open])
 
+  /* Save the card, then work out the link to hand out. A stored card only
+     needs its slug; if the save failed the whole card has to ride in the
+     fragment, which is usually too long to share — `linkOk` says which. */
   useEffect(() => {
     let live = true
 
-    // 1. Save to Supabase and local storage
-    saveCardToDb(doc, user).then(async (slug) => {
+    saveCardToDb(doc, user).then(async ({ stored }) => {
       if (!live) return
-      // Encode card into hash as resilient fallback
-      const hash = await encodeCard(doc)
-      const primaryUrl = `${window.location.origin}/c/${slug}#${hash}`
-      setLink(primaryUrl)
+      const { url, complete } = await buildCardLink(doc, stored)
+      if (!live) return
+      setLink(url)
+      setLinkOk(complete)
       saveToLibrary({
         id: doc.id,
         templateId: doc.templateId,
-        link: primaryUrl,
+        link: url,
         to: doc.to,
         createdAt: doc.createdAt,
       })
-    })
+    }).catch(() => { if (live) setLinkOk(false) })
 
     return () => { live = false }
   }, [doc, user])
@@ -70,14 +74,19 @@ export default function Share() {
     return () => { live = false; clearTimeout(id) }
   }, [doc])
 
+  /* the link exists at all / the link is short enough to send somewhere */
+  const ready = !!link
+  const sendable = ready && linkOk
+
   const doCopy = async () => {
+    if (!ready) return
     if (await copy(link)) { setCopied(true); setTimeout(() => setCopied(false), 2200) }
   }
 
   const ensureShots = async () => {
     if (shots) return shots
     const root = exportRef.current
-    if (!root) return []
+    if (!root) throw new Error('nothing to render')
     const s = await renderCard(root)
     setShots(s)
     return s
@@ -85,9 +94,9 @@ export default function Share() {
 
   const saveImages = async () => {
     setSaving(true)
+    setSaveErr(false)
     try {
       const s = await ensureShots()
-      if (!s.length) return
       const how = await saveCardImages(s, {
         title: "A Teacher's Day card",
         text: doc.to ? `A card for ${doc.to}` : BLURB,
@@ -96,15 +105,26 @@ export default function Share() {
         setSaved(how)
         setTimeout(() => setSaved(''), 3200)
       }
+    } catch (e) {
+      console.error('Saving the card image failed:', e)
+      setSaveErr(true)
+      setTimeout(() => setSaveErr(false), 4000)
     } finally { setSaving(false) }
   }
 
   const saveOne = async (face: 'front' | 'back') => {
     setSaving(true)
+    setSaveErr(false)
     try {
       const s = await ensureShots()
       const one = s.find(x => x.face === face)
-      if (one) { const f = shotFile(one); saveBlob(f, f.name) }
+      if (!one) throw new Error(`no ${face} to save`)
+      const f = shotFile(one)
+      saveBlob(f, f.name)
+    } catch (e) {
+      console.error('Saving the card image failed:', e)
+      setSaveErr(true)
+      setTimeout(() => setSaveErr(false), 4000)
     } finally { setSaving(false) }
   }
 
@@ -176,10 +196,14 @@ export default function Share() {
                 )}
               </span>
               <span className="sh-opt-t">
-                {saved ? savedLabel : saving ? 'Saving the image…' : 'Save the Picture'}
-                <em>{saved
-                  ? 'Both sides, full resolution.'
-                  : shots ? 'Both sides as PNGs, straight to your files.' : 'Preparing the image…'}</em>
+                {saveErr ? 'Could not save the image'
+                  : saved ? savedLabel
+                  : saving ? 'Saving the image…'
+                  : 'Save the Picture'}
+                <em>{saveErr ? 'Something went wrong — try again.'
+                  : saved ? 'Both sides, full resolution.'
+                  : shots ? 'Both sides as PNGs, straight to your files.'
+                  : 'Preparing the image…'}</em>
               </span>
               {saving ? <span className="sh-spin" aria-hidden /> : <Chev />}
             </button>
@@ -207,16 +231,28 @@ export default function Share() {
                   <input value={doc.from} placeholder="Ananya" onChange={e => setMeta({ from: e.target.value })} />
                 </label>
                 <div className="sh-link">
-                  <input readOnly value={link} aria-label="Card link" onFocus={e => e.currentTarget.select()} />
-                  <button onClick={doCopy} className={copied ? 'is-copied' : undefined}>{copied ? 'Copied!' : 'Copy'}</button>
+                  <input readOnly value={link} aria-label="Card link"
+                    placeholder="Preparing your link…"
+                    onFocus={e => e.currentTarget.select()} />
+                  <button onClick={doCopy} disabled={!ready} className={copied ? 'is-copied' : undefined}>{copied ? 'Copied!' : 'Copy'}</button>
                 </div>
-                <div className="sh-share-row">
-                  <a className="sh-chan sh-chan--wa" href={whatsappUrl(link, BLURB)} target="_blank" rel="noreferrer">
+                {ready && !linkOk && (
+                  <p className="sh-link-warn" role="status">
+                    This card could not be saved online, so its link has to carry the whole
+                    card and is too long for WhatsApp or email. Use <strong>Save the Picture</strong> and
+                    send the images instead.
+                  </p>
+                )}
+                <div className="sh-share-row" data-waiting={ready ? undefined : ''}>
+                  <a className="sh-chan sh-chan--wa" data-off={sendable ? undefined : ''}
+                    href={sendable ? whatsappUrl(link, BLURB) : undefined}
+                    aria-disabled={sendable ? undefined : true}
+                    target="_blank" rel="noreferrer">
                     <svg viewBox="0 0 24 24" aria-hidden><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.9 2.1c.1.2.1.4 0 .6l-.4.5-.3.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1l1-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.6.3.1.2.1.7-.1 1.3Z" fill="currentColor" /></svg>
                     WhatsApp
                   </a>
                   {canNativeShare() && (
-                    <button className="sh-chan" onClick={() => nativeShare(link, BLURB)}>
+                    <button className="sh-chan" disabled={!ready} onClick={() => nativeShare(link, BLURB)}>
                       <svg viewBox="0 0 24 24" fill="none" aria-hidden>
                         <path d="M12 15.4V3.6M8.2 7.2 12 3.4l3.8 3.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M5.6 11.4v8a1.4 1.4 0 0 0 1.4 1.4h10a1.4 1.4 0 0 0 1.4-1.4v-8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -224,7 +260,11 @@ export default function Share() {
                       More apps
                     </button>
                   )}
-                  <a className="sh-chan" href={`mailto:?subject=${encodeURIComponent('A Teacher’s Day card for you')}&body=${encodeURIComponent(BLURB + '\n\n' + link)}`}>
+                  <a className="sh-chan" data-off={sendable ? undefined : ''}
+                    aria-disabled={sendable ? undefined : true}
+                    href={sendable
+                      ? `mailto:?subject=${encodeURIComponent('A Teacher’s Day card for you')}&body=${encodeURIComponent(BLURB + '\n\n' + link)}`
+                      : undefined}>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
                       <rect x="2.8" y="5" width="18.4" height="14" rx="2.6" stroke="currentColor" strokeWidth="1.6" />
                       <path d="m3.6 7 8.4 6 8.4-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -271,10 +311,10 @@ export default function Share() {
           </div>
 
           <div className="sh-hidden-render" ref={exportRef} aria-hidden>
-            <div className="sh-render-side" data-face="front">
+            <div className="sh-render-side" data-export="front">
               <CardCanvas doc={doc} template={tpl} face="front" mode="view" />
             </div>
-            <div className="sh-render-side" data-face="back">
+            <div className="sh-render-side" data-export="back">
               <CardCanvas doc={doc} template={tpl} face="back" mode="view" />
             </div>
           </div>

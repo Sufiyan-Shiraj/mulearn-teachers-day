@@ -43,3 +43,21 @@ export function approxDataUrlBytes(d: string) {
   const i = d.indexOf(',')
   return Math.round((d.length - i - 1) * 0.75)
 }
+
+/**
+ * How far a photo may be panned inside its window before it stops covering it.
+ *
+ * The image fills its window with object-fit: cover, then `scale(zoom)` grows
+ * it, leaving (zoom - 1) / 2 of the window spare on each side. `translate` is
+ * applied before that scale, so a pan of p% shifts the picture by p% * zoom —
+ * hence the limit below. At zoom 1 there is no spare room and no pan at all,
+ * which is why the sliders go dead until the photo is zoomed in.
+ */
+export function panLimit(zoom: number) {
+  return Math.max(0, (50 * (zoom - 1)) / zoom)
+}
+
+export function clampPan(v: number, zoom: number) {
+  const l = panLimit(zoom)
+  return Math.min(l, Math.max(-l, v))
+}

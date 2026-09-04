@@ -27,10 +27,24 @@ export interface LeaderboardUser {
 
 
 
+export interface SaveResult {
+  slug: string
+  /**
+   * true once the card is readable by anyone else. Only then can a link be
+   * just the slug — until it is, the whole card has to travel in the URL,
+   * and the share sheet has to know the difference.
+   */
+  stored: boolean
+}
+
 /**
- * Save a card to Supabase (and local storage library)
+ * Save a card to Supabase (and local storage library).
+ *
+ * postgrest reports failures in `error` rather than throwing, so the result
+ * is checked explicitly — silently returning a slug for a row that was never
+ * written hands the recipient a dead link.
  */
-export async function saveCardToDb(doc: CardDoc, user?: UserProfile | null): Promise<string> {
+export async function saveCardToDb(doc: CardDoc, user?: UserProfile | null): Promise<SaveResult> {
   // Always save locally first
   const shareLink = `${window.location.origin}/c/${doc.id}`
   saveToLibrary({
@@ -41,28 +55,32 @@ export async function saveCardToDb(doc: CardDoc, user?: UserProfile | null): Pro
     createdAt: doc.createdAt,
   })
 
-  if (isSupabaseConfigured) {
-    try {
-      const payload: any = {
-        teacher_name: doc.to || 'My Teacher',
-        message: doc.from ? `From ${doc.from}` : 'Happy Teachers Day',
-        photo_url: doc.photo || '',
-        share_slug: doc.id,
-        custom_config: { doc },
-        updated_at: new Date().toISOString(),
-      }
+  if (!isSupabaseConfigured) return { slug: doc.id, stored: false }
 
-      if (user?.id && !user.id.startsWith('demo-')) {
-        payload.owner_id = user.id
-      }
-
-      await supabase.from('cards').upsert(payload, { onConflict: 'share_slug' })
-    } catch (e) {
-      console.warn('Supabase card save warning:', e)
+  try {
+    const payload: any = {
+      teacher_name: doc.to || 'My Teacher',
+      message: doc.from ? `From ${doc.from}` : 'Happy Teachers Day',
+      photo_url: doc.photo || '',
+      share_slug: doc.id,
+      custom_config: { doc },
+      updated_at: new Date().toISOString(),
     }
-  }
 
-  return doc.id
+    if (user?.id && !user.id.startsWith('demo-')) {
+      payload.owner_id = user.id
+    }
+
+    const { error } = await supabase.from('cards').upsert(payload, { onConflict: 'share_slug' })
+    if (error) {
+      console.warn('Supabase card save failed:', error.message)
+      return { slug: doc.id, stored: false }
+    }
+    return { slug: doc.id, stored: true }
+  } catch (e) {
+    console.warn('Supabase card save warning:', e)
+    return { slug: doc.id, stored: false }
+  }
 }
 
 /**

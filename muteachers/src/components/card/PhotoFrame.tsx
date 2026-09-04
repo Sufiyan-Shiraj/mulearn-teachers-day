@@ -1,9 +1,16 @@
 import type { PhotoElement } from '../../lib/types'
+import { clampPan } from '../../lib/image'
 import { Decoration } from '../art/Decorations'
 
 interface Props { el: PhotoElement; src?: string; mode: 'view' | 'edit' | 'thumb' }
 
 export function PhotoFrame({ el, src, mode }: Props) {
+  /* clamped on the way out as well as on the way in: a card saved before the
+     limits existed, or one whose zoom was pulled back after panning, must
+     still cover its window rather than showing a strip of bare card */
+  const ox = clampPan(el.ox, el.zoom)
+  const oy = clampPan(el.oy, el.zoom)
+
   const img = src ? (
     <img
       className="c-photo-img"
@@ -11,7 +18,7 @@ export function PhotoFrame({ el, src, mode }: Props) {
       alt=""
       draggable={false}
       style={{
-        transform: `scale(${el.zoom}) translate(${el.ox}%, ${el.oy}%)`,
+        transform: `scale(${el.zoom}) translate(${ox}%, ${oy}%)`,
       }}
     />
   ) : (

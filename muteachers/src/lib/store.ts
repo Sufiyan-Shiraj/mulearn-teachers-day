@@ -44,6 +44,7 @@ interface State {
   addText: (face: Face) => string
   remove: (id: string) => void
   bringForward: (id: string) => void
+  sendBackward: (id: string) => void
   setPhoto: (dataUrl: string | undefined) => void
   setMeta: (patch: Partial<Pick<CardDoc, 'from' | 'to'>>) => void
   undo: () => void
@@ -155,11 +156,22 @@ export const useCard = create<State>((set, get) => ({
     set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [], selectedId: null, editingId: null })
   },
 
+  /* paint order is document order, so moving an element within the list is
+     what changes which piece of the card covers which */
   bringForward: (id) => {
     const s = get()
     const el = s.doc.elements.find(e => e.id === id)
     if (!el) return
     const doc = { ...s.doc, elements: [...s.doc.elements.filter(e => e.id !== id), el] }
+    persist(doc)
+    set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [] })
+  },
+
+  sendBackward: (id) => {
+    const s = get()
+    const el = s.doc.elements.find(e => e.id === id)
+    if (!el) return
+    const doc = { ...s.doc, elements: [el, ...s.doc.elements.filter(e => e.id !== id)] }
     persist(doc)
     set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [] })
   },

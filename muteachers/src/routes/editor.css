@@ -185,6 +185,20 @@
   background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-soft);
 }
 .ep-frame[data-on] { background: var(--ink); color: #fff; box-shadow: none; }
+.ep-frame:hover { color: var(--ink); }
+
+/* a row whose control has nothing to do yet — the pan sliders before zoom */
+.ep-row[data-disabled] { opacity: .45; }
+.ep-hint--tight { margin: -2px 0 0; font-size: 12px; line-height: 1.45; }
+
+.ep-reset {
+  align-self: flex-start; margin-top: 2px;
+  padding: 7px 13px; border-radius: 999px; font-size: 12px;
+  background: none; color: var(--ink-soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: color .16s, box-shadow .16s;
+}
+.ep-reset:hover { color: var(--crimson); box-shadow: inset 0 0 0 1px var(--crimson); }
 
 /* history */
 .ed-history { display: flex; gap: 18px; margin-top: 26px; }

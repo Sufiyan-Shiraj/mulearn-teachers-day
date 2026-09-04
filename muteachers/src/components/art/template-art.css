@@ -94,8 +94,12 @@
   transform: rotate(-.8deg);
 }
 
-/* overlay layer — art that sits above the photo and text */
-.ta-over { position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: visible; }
+/* The punched copy of the artwork, laid back over the photo. It is cropped
+   to the printed frame, so it is placed by the `over` rect in lib/slots.ts
+   and must not be re-fitted — object-fit: fill keeps it pixel-aligned with
+   the full-bleed copy underneath. */
+.ta-over { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: visible; background: none; }
+.ta-punch { position: absolute; object-fit: fill; }
 
 /* faint ruled lines on the inside of the card */
 .ta-rules {

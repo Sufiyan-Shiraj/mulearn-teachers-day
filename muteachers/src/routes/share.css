@@ -97,7 +97,17 @@
 .sh-chan svg { transition: transform .24s var(--e-spring); }
 .sh-chan:hover svg { transform: scale(1.1); }
 .sh-chan--wa:hover { color: #128c7e; }
-.sh-chan:disabled { opacity: .5; pointer-events: none; }
+.sh-chan:disabled, .sh-chan[data-off] { opacity: .45; pointer-events: none; cursor: default; }
+/* the whole row while the link is still being minted */
+.sh-share-row[data-waiting] { opacity: .6; }
+
+.sh-link-warn {
+  margin: 10px 0 0; padding: 9px 12px;
+  border-radius: 10px; border: 1px dashed var(--gold);
+  background: var(--surface);
+  font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
+}
+.sh-link-warn strong { color: var(--ink); }
 
 .sh-note { margin-top: 12px; font-size: 12px; line-height: 1.5; color: var(--muted); }
 
@@ -110,8 +120,30 @@
 .sh-card { width: 100%; max-width: min(440px, 100%, calc(62dvh * var(--card-ar, .714))); }
 .sh-actions { display: flex; align-items: center; gap: 18px; width: 100%; justify-content: space-between; max-width: 520px; }
 
-.sh-export { position: fixed; left: -10000px; top: 0; width: 1000px; }
-.sh-export > div { width: 1000px; margin-bottom: 20px; }
+/* ---------------- the card on stage ---------------- */
+.sh-card-box { width: 100%; max-width: min(440px, 100%, calc(58dvh * var(--card-ar, .714))); }
+.sh-flip-hint {
+  display: block; margin: 14px auto 0; padding: 7px 16px;
+  font-family: var(--f-sans); font-size: 13px; color: var(--ink-soft);
+  background: none; border: 1px dashed var(--rule); border-radius: 999px;
+  cursor: pointer; transition: color .18s var(--e-out), border-color .18s var(--e-out);
+}
+.sh-flip-hint:hover { color: var(--crimson); border-color: var(--crimson); }
+
+/* ---------------- print drawer ---------------- */
+.sh-print-note { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.sh-print-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------------- the off-screen copy that gets exported ----------------
+   Kept in the layout (not display:none) because html-to-image can only
+   render a node the browser has actually laid out, but parked off-screen
+   and out of the a11y tree. The fixed 1000px width matches DESIGN_W, so
+   the card's container units resolve exactly as they do on screen. */
+.sh-hidden-render {
+  position: fixed; left: -10000px; top: 0;
+  width: 1000px; pointer-events: none;
+}
+.sh-render-side { width: 1000px; margin-bottom: 20px; }
 
 @media (max-width: 900px) {
   .sh-steps { padding: 4px 18px 4px; }
@@ -127,15 +159,16 @@
   .sh-scrap { display: none; }
   .sh-next { text-align: left; margin-top: 20px; }
   .sh-stage { gap: 18px; }
-  .sh-card { max-width: min(320px, 80vw, calc(50dvh * var(--card-ar, .714))); }
+  .sh-card-box { max-width: min(320px, 80vw, calc(50dvh * var(--card-ar, .714))); }
   .sh-actions { flex-direction: column-reverse; gap: 10px; }
   .sh-actions .btn { width: 100%; }
 }
 
 @media print {
-  .nav, .sb, .sh-side, .sh-actions, .paper-grain { display: none !important; }
+  .nav, .sb, .sh-side, .sh-actions, .paper-grain,
+  .sh-hidden-render, .sh-flip-hint { display: none !important; }
   .sh-main { padding: 0; }
-  .sh-card { max-width: 100%; }
+  .sh-card-box { max-width: 100%; }
 }
 
 /* ---------------- save + feedback ---------------- */

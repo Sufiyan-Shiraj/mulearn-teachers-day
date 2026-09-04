@@ -5,6 +5,7 @@
    on top of this by <CardCanvas/>.
    ============================================================ */
 import type { ArtKey, Face } from '../../lib/types'
+import { SLOTS } from '../../lib/slots'
 import { Decoration } from './Decorations'
 import { PressedSpray, SingleBloom } from './Botanical'
 import './template-art.css'
@@ -25,8 +26,40 @@ const noise = (
 const rules = <div className="ta-rules" aria-hidden />
 
 /* ------------------------------------------------------------------ */
-function PhotoArt({ src, face, back }: { src: string; face: Face; back: React.ReactNode }) {
-  if (face === 'back') return <>{back}</>
+/**
+ * The front of a card is one flat piece of artwork with an empty frame
+ * printed into it, so it is painted in two passes:
+ *
+ *   layer="back"   the artwork itself, under everything
+ *   layer="front"  `<id>-over.webp` — the same artwork with the empty
+ *                  paper punched out to alpha, cropped to the frame —
+ *                  laid back over the photo
+ *
+ * The photo sits between the two, so it shows through the punched hole
+ * while the tape, disco balls and hearts the designer laid across the
+ * frame still cover it. The back of a card is drawn in CSS and has no
+ * photo, so it only ever paints on the back layer.
+ */
+function PhotoArt({ art, src, face, layer, back }: {
+  art: ArtKey; src: string; face: Face; layer: Layer; back: React.ReactNode
+}) {
+  if (face === 'back') return layer === 'front' ? null : <>{back}</>
+
+  if (layer === 'front') {
+    const [x, y, w, h] = SLOTS[art].over
+    return (
+      <div className="ta ta-over" aria-hidden>
+        <img
+          className="ta-punch"
+          src={src.replace(/\.jpg$/, '-over.webp')}
+          alt=""
+          draggable={false}
+          style={{ left: `${x}%`, top: `${y}%`, width: `${w}%`, height: `${h}%` }}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="ta">
       <img className="ta-full" src={src} alt="" draggable={false} />
@@ -156,21 +189,25 @@ function LilacBack() {
 }
 
 /* ---------------- Main Art Component ---------------- */
-export function TemplateArt({ art, face }: Props) {
-  switch (art) {
-    case 'disco':
-      return <PhotoArt src="/templates/disco.jpg" face={face} back={<DiscoBack />} />
-    case 'scrapbook':
-      return <PhotoArt src="/templates/scrapbook.jpg" face={face} back={<ScrapBack />} />
-    case 'velvet':
-      return <PhotoArt src="/templates/velvet.jpg" face={face} back={<VelvetBack />} />
-    case 'thankyou':
-      return <PhotoArt src="/templates/thankyou.jpg" face={face} back={<ThankYouBack />} />
-    case 'pressed':
-      return <PhotoArt src="/templates/pressed.jpg" face={face} back={<PressedBack />} />
-    case 'grateful':
-      return <PhotoArt src="/templates/grateful.jpg" face={face} back={<GratefulBack />} />
-    case 'lilac':
-      return <PhotoArt src="/templates/lilac.jpg" face={face} back={<LilacBack />} />
-  }
+const BACKS: Record<ArtKey, () => React.ReactElement> = {
+  disco: DiscoBack,
+  scrapbook: ScrapBack,
+  velvet: VelvetBack,
+  thankyou: ThankYouBack,
+  pressed: PressedBack,
+  grateful: GratefulBack,
+  lilac: LilacBack,
+}
+
+export function TemplateArt({ art, face, layer = 'back' }: Props) {
+  const Back = BACKS[art]
+  return (
+    <PhotoArt
+      art={art}
+      src={`/templates/${art}.jpg`}
+      face={face}
+      layer={layer}
+      back={<Back />}
+    />
+  )
 }

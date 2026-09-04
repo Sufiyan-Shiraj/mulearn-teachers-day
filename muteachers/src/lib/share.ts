@@ -59,6 +59,36 @@ export async function buildHashLink(doc: CardDoc): Promise<string> {
 }
 
 /**
+ * Past roughly this many characters a link stops being a link. WhatsApp's
+ * wa.me endpoint and every mail client drop or truncate the text, and it is
+ * useless pasted anywhere. A card carrying a photo encodes to well over
+ * 100_000 characters — the photo is already JPEG, so deflate wins nothing —
+ * which is why a self-contained link can only ever be a fallback.
+ */
+export const MAX_SHARE_URL = 2000
+
+export interface CardLink {
+  url: string
+  /** false when the link had to be truncated away — the card is local-only */
+  complete: boolean
+}
+
+/**
+ * The link to hand out for a card.
+ *
+ * Once the card is saved server-side its slug is all a link needs, and a
+ * short link is the only kind that survives WhatsApp, mail and a paste into
+ * a chat. Only when the save failed does the whole card have to ride in the
+ * fragment, and then it is likely too long to share at all — `complete` says
+ * which case you are in so the UI can be honest about it.
+ */
+export async function buildCardLink(doc: CardDoc, stored: boolean): Promise<CardLink> {
+  if (stored) return { url: `${location.origin}/c/${doc.id}`, complete: true }
+  const hash = await buildHashLink(doc)
+  return { url: hash, complete: hash.length <= MAX_SHARE_URL }
+}
+
+/**
  * Prefer a short link when the companion server is running, and fall
  * back to the self-contained hash link when it isn't.
  */

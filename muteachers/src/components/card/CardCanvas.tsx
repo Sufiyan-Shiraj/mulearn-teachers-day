@@ -210,8 +210,13 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
           }
 
           if (el.kind === 'photo') {
+            /* a photo fitted to the frame printed on the artwork tucks under
+               it; any other frame is a photo laid on top of the card */
+            const fitted = el.frame === 'slot' || el.frame === 'arch-slot'
             return (
-              <div key={el.id} {...common} data-fresh={justAdded || freshId === el.id ? '' : undefined}>
+              <div key={el.id} {...common}
+                data-slot={fitted ? '' : undefined}
+                data-fresh={justAdded || freshId === el.id ? '' : undefined}>
                 <PhotoFrame el={el as PhotoElement} src={doc.photo} mode={mode} />
                 {edit && (
                   <ElementChrome
