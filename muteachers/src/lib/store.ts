@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { CardDoc, CardElement, DecoKey, FontKey, TextElement } from './types'
 import { getTemplate, TEMPLATES } from './templates'
+import { SLOTS } from './slots'
 import { nid } from './id'
 
 const LS_CURRENT = 'mut.card.current'
@@ -63,6 +64,22 @@ function restore(): CardDoc | null {
     if (!raw) return null
     const d = JSON.parse(raw) as CardDoc
     if (!d?.templateId || !Array.isArray(d.elements)) return null
+    const tpl = TEMPLATES.find(t => t.id === d.templateId)
+    const slot = tpl ? SLOTS[tpl.art] : (SLOTS as Record<string, typeof SLOTS.disco>)[d.templateId]
+    if (slot) {
+      d.elements = d.elements.map(e => {
+        if (e.kind === 'text' && (e.rot === 0 || !('scaleX' in e))) {
+          return {
+            ...e,
+            rot: slot.nameRot ?? 0,
+            scaleX: slot.scaleX ?? 1,
+            box: { x: slot.name[0], y: slot.name[1], w: slot.name[2], h: slot.name[3] },
+            size: slot.nameSize,
+          }
+        }
+        return e
+      })
+    }
     return d
   } catch { return null }
 }
@@ -93,6 +110,11 @@ export const useCard = create<State>((set, get) => ({
     const doc = newDoc(templateId)
     doc.photo = cur.photo
     doc.from = cur.from; doc.to = cur.to
+    const curName = cur.elements.find(e => e.kind === 'text') as TextElement | undefined
+    if (curName?.text) {
+      const newName = doc.elements.find(e => e.kind === 'text') as TextElement | undefined
+      if (newName) newName.text = curName.text
+    }
     persist(doc)
     set({ doc, past: [...get().past, clone(cur)].slice(-40), future: [], selectedId: null, editingId: null })
   },

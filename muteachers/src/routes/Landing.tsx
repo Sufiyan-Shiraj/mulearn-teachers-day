@@ -23,7 +23,7 @@ export default function Landing() {
   const rail = useRef<HTMLDivElement>(null)
   const page = useReveal<HTMLDivElement>()
   const userPhoto = useCard(s => s.doc.photo)
-  const demoPhoto = userPhoto ?? '/demo-photo.jpg'
+  const demoPhoto = userPhoto ?? '/WhatsApp Image 2026-09-04 at 20.28.30.jpeg'
 
   const shown = TEMPLATES.filter(t => tag === 'all' || t.tags.includes(tag as never))
 
@@ -121,7 +121,7 @@ export default function Landing() {
                   onClick={() => {
                     if (!user) {
                       openAuthModal({
-                          title: 'First — what’s your name?',
+                        title: 'First — what’s your name?',
                         subtitle: 'It goes on your selfies and on the leaderboard.',
                         redirectTo: '/photo',
                         onSuccess: () => {
@@ -179,11 +179,15 @@ function HeroCollage() {
       </div>
 
       {/* A phone held out at arm's length, mid-selfie — the same chrome the
-          camera screen actually shows, so the hero is a preview of the thing
-          you are about to do rather than a picture of a finished card. */}
+          camera screen actually shows, previewing the selfie action. */}
       <div className="ld-cl-phone ld-plane" style={{ ['--d' as string]: '.55', ['--r' as string]: '-4deg' }}>
         <div className="ld-cl-screen">
-          <img src="/demo-photo.jpg" alt="" draggable={false} />
+          <img
+            src="/WhatsApp Image 2026-09-04 at 20.28.30.jpeg"
+            onError={(e) => { e.currentTarget.src = '/WhatsApp Image 2026-09-04 at 20.28.30.jpeg' }}
+            alt="Selfie with teacher"
+            draggable={false}
+          />
           <span className="ld-cl-chip">
             <svg viewBox="0 0 20 18" aria-hidden fill="none">
               <rect x="1.4" y="4.2" width="17.2" height="12.4" rx="3" stroke="currentColor" strokeWidth="1.5" />
@@ -200,7 +204,7 @@ function HeroCollage() {
       {/* Foreground handwritten torn note */}
       <div className="ld-cl-note ld-plane" style={{ ['--d' as string]: '.92', ['--r' as string]: '-1.6deg' }}>
         got one with<br />
-        <span>Ms. Nair!</span>
+        <span>Ms Sharika!</span>
         <HeartDoodle className="ld-cl-note-heart" size={16} />
       </div>
 

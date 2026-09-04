@@ -8,6 +8,7 @@ import { Burst, StarDoodle } from '../components/art/Doodles'
 import { MoveIcon, ToolIcons } from '../components/editor/EditorBits'
 import { NamePanel, PhotoPanel, TeacherField, TemplatePanel } from '../components/editor/Panels'
 import { getTemplate } from '../lib/templates'
+import { SLOTS } from '../lib/slots'
 import { scrollIntoView } from '../lib/useReveal'
 import { useCard } from '../lib/store'
 import { useIsMobile } from '../lib/useIsMobile'
@@ -71,6 +72,22 @@ export default function Editor() {
 
   /* a card restored from storage may predate the photo being measured */
   useEffect(() => { ensurePhotoAspect() }, [ensurePhotoAspect, doc.photo])
+
+  /* migration for template name rotation and stretch if still using default rot 0 / unstretched */
+  useEffect(() => {
+    const slot = SLOTS[tpl.art]
+    if (slot) {
+      const el = doc.elements.find(e => e.kind === 'text')
+      if (el && (el.scaleX === undefined || (slot.nameRot !== undefined && el.rot === 0 && slot.nameRot !== 0))) {
+        update(el.id, {
+          rot: slot.nameRot ?? 0,
+          scaleX: slot.scaleX ?? 1,
+          box: { x: slot.name[0], y: slot.name[1], w: slot.name[2], h: slot.name[3] },
+          size: slot.nameSize,
+        }, { history: false })
+      }
+    }
+  }, [tpl.art, doc.elements, update])
 
   useEffect(() => { const t = setTimeout(clearJustAdded, 900); return () => clearTimeout(t) }, [clearJustAdded])
   useEffect(() => {

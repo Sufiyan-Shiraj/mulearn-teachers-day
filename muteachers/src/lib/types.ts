@@ -49,6 +49,8 @@ export interface TextElement extends Base {
   gradient?: string
   /** label shown in the "what am I editing" hint */
   label?: string
+  /** horizontal scale factor to stretch text to seem flat / fit tilted surface */
+  scaleX?: number
 }
 
 export interface PhotoElement extends Base {

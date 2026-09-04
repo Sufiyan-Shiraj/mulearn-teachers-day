@@ -137,6 +137,16 @@
 .sh-actions { display: flex; align-items: center; gap: 18px; width: 100%; justify-content: space-between; max-width: 520px; }
 
 /* ---------------- the card on stage ---------------- */
+.sh-stage-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 16px; border-radius: 999px;
+  background: var(--surface); border: 1px dashed var(--line-strong);
+  font-family: var(--f-script); font-size: 16px; color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+@media (min-width: 901px) {
+  .sh-stage-badge { display: none; }
+}
 .sh-card-box { width: 100%; max-width: min(440px, 100%, calc(58dvh * var(--card-ar, .714))); }
 .sh-flip-hint {
   display: block; margin: 14px auto 0; padding: 7px 16px;
@@ -162,20 +172,18 @@
 .sh-render-side { width: 1000px; margin-bottom: 20px; }
 
 @media (max-width: 900px) {
-  .sh-steps { padding: 4px 18px 4px; }
-  .sh-main { grid-template-columns: 1fr; gap: 16px; padding: 4px 18px calc(30px + var(--safe-b)); }
+  .sh-steps { padding: 4px 18px 2px; }
+  .sh-main { grid-template-columns: 1fr; gap: 12px; padding: 2px 16px calc(30px + var(--safe-b)); }
   .sh-side { display: contents; }
-  .sh-title { order: 1; margin-inline: auto; text-align: center; }
-  .sh-sub { order: 2; text-align: center; margin-top: 4px; }
-  .sh-stage { order: 3; }
-  .sh-next { order: 4; margin-top: 4px; }
-  .sh-title { font-size: clamp(26px, 8vw, 34px); }
+  .sh-title { order: 1; margin-inline: auto; text-align: center; font-size: clamp(22px, 6.8vw, 30px); line-height: 1.15; }
   .sh-title-burst, .sh-title-heart { display: none; }
-  .sh-sub { margin-top: 12px; font-size: 14px; }
+  .sh-sub { order: 2; text-align: center; margin-top: 4px; font-size: 13.5px; }
+  .sh-auth-box { order: 3; margin-top: 6px; }
+  .sh-next { order: 4; text-align: left; margin-top: 10px; padding: 16px 14px; }
+  .sh-stage { order: 5; margin-top: 20px; gap: 12px; }
+  .sh-start-new { order: 6; margin-top: 14px; text-align: center; }
   .sh-scrap { display: none; }
-  .sh-next { text-align: left; margin-top: 20px; }
-  .sh-stage { gap: 18px; }
-  .sh-card-box { max-width: min(320px, 80vw, calc(50dvh * var(--card-ar, .714))); }
+  .sh-card-box { max-width: min(340px, 86vw, calc(52dvh * var(--card-ar, .714))); }
   .sh-actions { flex-direction: column-reverse; gap: 10px; }
   .sh-actions .btn { width: 100%; }
 }
@@ -220,6 +228,10 @@
   background: #e9f2e6; color: #37603a;
   font-size: 13.5px; font-weight: 600;
   animation: m-pop .34s var(--e-spring) both;
+}
+.sh-toast--err {
+  background: #fdf0f0;
+  color: #c92a2a;
 }
 
 /* entrance */
@@ -308,11 +320,19 @@
    a web page, so this is the loudest thing on the screen and everything else
    is an alternative to it. */
 .sh-post {
-  margin: 6px 0 18px;
-  padding: 16px;
+  margin: 12px 0 16px;
+  padding: 14px;
   border-radius: 16px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-soft), var(--sh-sm);
+}
+.sh-post-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
 }
 .sh-formats { display: flex; gap: 8px; margin-bottom: 12px; }
 .sh-format {
@@ -334,9 +354,10 @@
 .sh-format-box[data-shape="card"]   { height: 26px; width: 19px; }
 
 .sh-post-btn {
-  width: 100%; height: 54px; border-radius: 14px;
+  width: 100%; height: 50px; border-radius: 14px;
   background: var(--ink); color: #fff;
-  font-family: var(--f-sans); font-size: 16px; font-weight: 600;
+  font-family: var(--f-sans); font-size: 15.5px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
   cursor: pointer;
   transition: transform .18s var(--e-spring), background .18s;
 }
@@ -344,3 +365,208 @@
 .sh-post-btn:active { transform: scale(.98); }
 .sh-post-btn:disabled { opacity: .6; pointer-events: none; }
 .sh-post-note { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
+/* ---------------- native share hub ---------------- */
+.sh-native-share-hub {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sh-native-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.sh-native-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  min-height: 54px;
+  border-radius: 14px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.18s var(--e-spring), box-shadow 0.18s, filter 0.18s;
+  user-select: none;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.sh-native-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.sh-native-btn:active {
+  transform: scale(0.97);
+}
+
+.sh-native-btn:disabled,
+.sh-native-btn[data-off] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.sh-native-btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+}
+
+.sh-native-btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sh-native-btn-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.sh-native-btn-text strong {
+  font-family: var(--f-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sh-native-btn-text small {
+  font-family: var(--f-sans);
+  font-size: 11px;
+  opacity: 0.88;
+  font-weight: 500;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 1. WhatsApp Msg */
+.sh-native-btn--wa-msg {
+  background: linear-gradient(135deg, #25D366 0%, #1da851 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+}
+.sh-native-btn--wa-msg:hover {
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45);
+  color: #ffffff;
+}
+
+/* 2. WhatsApp Status */
+.sh-native-btn--wa-status {
+  background: linear-gradient(135deg, #128C7E 0%, #075E54 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(18, 140, 126, 0.32);
+}
+.sh-native-btn--wa-status:hover {
+  box-shadow: 0 6px 18px rgba(18, 140, 126, 0.44);
+  color: #ffffff;
+}
+
+/* 3. Instagram Story */
+.sh-native-btn--insta {
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(225, 48, 108, 0.35);
+}
+.sh-native-btn--insta:hover {
+  box-shadow: 0 6px 18px rgba(225, 48, 108, 0.48);
+  color: #ffffff;
+}
+
+/* 4. Snapchat */
+.sh-native-btn--snap {
+  background: linear-gradient(135deg, #FFFC00 0%, #fae100 100%);
+  color: #000000;
+  box-shadow: 0 4px 14px rgba(250, 225, 0, 0.45);
+}
+.sh-native-btn--snap:hover {
+  box-shadow: 0 6px 18px rgba(250, 225, 0, 0.58);
+  color: #000000;
+}
+.sh-native-btn--snap .sh-native-btn-icon {
+  background: rgba(0, 0, 0, 0.08);
+}
+.sh-native-btn--snap .sh-native-btn-text small {
+  color: rgba(0, 0, 0, 0.72);
+}
+
+@media (max-width: 360px) {
+  .sh-native-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sh-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sh-btn-quick {
+  height: 44px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: var(--sh-sm);
+  transition: transform 0.16s var(--e-spring), background 0.16s, border-color 0.16s, color 0.16s;
+}
+.sh-btn-quick:hover {
+  transform: translateY(-1.5px);
+  border-color: var(--ink);
+  background: var(--paper);
+}
+.sh-btn-quick:active {
+  transform: scale(0.97);
+}
+.sh-btn-quick:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.sh-btn-quick.is-copied {
+  background: #e9f5ec;
+  color: #1e7e34;
+  border-color: #28a745;
+  animation: m-pop 0.3s var(--e-spring);
+}
+
+.sh-btn-ico {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.sh-btn-wa-main .sh-btn-ico {
+  width: 22px;
+  height: 22px;
+}
+
+.sh-spin--light {
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;
+}

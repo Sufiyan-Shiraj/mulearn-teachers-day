@@ -122,6 +122,16 @@ export const Step5Share: React.FC<Step5ShareProps> = ({
               What&apos;s next?
             </h3>
 
+            {/* Primary Share Action */}
+            <button
+              onClick={handleShareCardClick}
+              disabled={isPublishing}
+              className="w-full py-3.5 px-6 rounded-2xl bg-[#7A1F1F] hover:bg-[#5C1515] text-white font-bold text-base shadow-lg flex items-center justify-center gap-3 transition transform active:scale-98"
+            >
+              <Share2 className="w-5 h-5 text-amber-300" />
+              <span>{isPublishing ? 'Publishing...' : 'Share Card Now'}</span>
+            </button>
+
             {/* Option 1: Share Digitally */}
             <div
               onClick={handleShareCardClick}

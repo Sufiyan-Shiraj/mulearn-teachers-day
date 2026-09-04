@@ -282,7 +282,7 @@ export function canShareFiles(files: File[]) {
  * but there the sheet is a detour around the download the button promises,
  * and it may sit open indefinitely, so a pointing device gets the file.
  */
-function prefersShareSheet() {
+export function prefersShareSheet() {
   return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
 }
 

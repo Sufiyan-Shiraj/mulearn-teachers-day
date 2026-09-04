@@ -33,6 +33,12 @@ function pick(seed: string, n: number) {
 
 const clean = (v: string | undefined) => (v ?? '').trim().replace(/\s+/g, ' ')
 
+function getTeacherName(doc: CardDoc): string {
+  if (doc.to && doc.to.trim()) return doc.to.trim()
+  const teacherEl = doc.elements?.find(e => e.kind === 'text') as { text?: string } | undefined
+  return (teacherEl?.text ?? '').trim()
+}
+
 /** "Happy Teacher's Day, Ms. Nair!" — or just the wish, when nobody is named */
 function greeting(to: string) {
   return to ? `Happy Teacher’s Day, ${to}!` : 'Happy Teacher’s Day!'
@@ -44,7 +50,7 @@ function greeting(to: string) {
  * is what their teacher receives.
  */
 export function defaultNote(doc: CardDoc): string {
-  const to = clean(doc.to)
+  const to = clean(getTeacherName(doc))
   const from = clean(doc.from)
   const line = `${greeting(to)} ${TAILS[pick(doc.id, TAILS.length)]}`
   return from ? `${line}\n— ${from}` : line
@@ -52,7 +58,7 @@ export function defaultNote(doc: CardDoc): string {
 
 /** subject line for mail, and the heading the OS share sheet shows */
 export function shareTitle(doc: CardDoc): string {
-  const to = clean(doc.to)
+  const to = clean(getTeacherName(doc))
   return to ? `Happy Teacher’s Day, ${to}!` : 'A Teacher’s Day card for you'
 }
 

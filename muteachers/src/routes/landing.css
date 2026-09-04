@@ -109,7 +109,7 @@
   position: absolute; left: 4%; top: 22%; width: 16%; height: 44%;
   transform: rotate(-2deg);
 }
-/* ---- the phone, mid-selfie ----
+/* ---- the phone, mid-selfie (vertical / portrait) ----
    Sized and detailed to read as a phone at a glance: a dark bezel, a screen
    that bleeds to its edges, and the camera chrome the real capture screen
    shows, so the hero previews the action instead of showing a finished card. */
@@ -129,8 +129,8 @@
 }
 .ld-cl-screen img {
   width: 100%; height: 100%; object-fit: cover;
-  transform: scaleX(-1);                     /* a front camera shows you mirrored */
-  filter: grayscale(.15) contrast(1.04) saturate(1.05);
+  object-position: center 18%;
+  filter: contrast(1.02) saturate(1.04);
 }
 .ld-cl-chip {
   position: absolute; left: 50%; top: 5%; transform: translateX(-50%);

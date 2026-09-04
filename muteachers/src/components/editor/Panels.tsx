@@ -60,7 +60,8 @@ export function NamePanel() {
 
   const home = SLOTS[getTemplate(templateId).art]
   const [hx, hy, hw, hh] = home.name
-  const moved = Math.abs(el.box.x - hx) > 1 || Math.abs(el.box.y - hy) > 1
+  const targetRot = home.nameRot ?? 0
+  const moved = Math.abs(el.box.x - hx) > 1 || Math.abs(el.box.y - hy) > 1 || Math.abs((el.rot ?? 0) - targetRot) > 1
 
   return (
     <div className="ep-photo">
@@ -81,7 +82,7 @@ export function NamePanel() {
       {moved && (
         <button className="ep-reset"
           onClick={() => update(el.id, {
-            box: { x: hx, y: hy, w: hw, h: hh }, rot: 0, size: home.nameSize,
+            box: { x: hx, y: hy, w: hw, h: hh }, rot: targetRot, scaleX: home.scaleX ?? 1, size: home.nameSize,
           } as Partial<CardElement>)}>
           Put it back where it belongs
         </button>

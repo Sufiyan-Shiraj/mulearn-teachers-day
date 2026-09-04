@@ -93,6 +93,8 @@ const TextView = memo(function TextView({ el }: { el: TextElement }) {
         fontStyle: el.italic ? 'italic' : undefined,
         textTransform: el.upper ? 'uppercase' : undefined,
         textShadow: el.shadow,
+        transform: el.scaleX ? `scaleX(${el.scaleX})` : undefined,
+        transformOrigin: 'center center',
         opacity: empty ? 0.42 : 1,
         ...(el.gradient ? {
           backgroundImage: el.gradient,
@@ -181,6 +183,8 @@ function EditableText({ el }: { el: TextElement }) {
         fontStyle: el.italic ? 'italic' : undefined,
         textTransform: el.upper ? 'uppercase' : undefined,
         textShadow: el.shadow,
+        transform: el.scaleX ? `scaleX(${el.scaleX})` : undefined,
+        transformOrigin: 'center center',
         ...(el.gradient ? {
           backgroundImage: el.gradient,
           WebkitBackgroundClip: 'text',

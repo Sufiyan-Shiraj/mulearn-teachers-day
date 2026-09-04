@@ -23,7 +23,7 @@ export default function Gallery() {
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         {TEMPLATES.map(t => (
           <div key={t.id} style={{ width: 240 }}>
-            <CardCanvas doc={{ ...newDoc(t.id), photo: '/demo-photo.jpg' }} template={t} />
+            <CardCanvas doc={{ ...newDoc(t.id), photo: '/WhatsApp Image 2026-09-04 at 20.28.30.jpeg' }} template={t} />
             <div style={{ fontSize: 12, textAlign: 'center', marginTop: 6 }}>{t.name}</div>
           </div>
         ))}

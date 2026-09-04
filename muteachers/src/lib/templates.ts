@@ -9,11 +9,13 @@ import { SLOTS } from './slots'
  * and resized on the preview if someone wants it somewhere else.
  */
 const name = (id: string, art: ArtKey): CardElement => {
-  const [x, y, w, h] = SLOTS[art].name
+  const slot = SLOTS[art]
+  const [x, y, w, h] = slot.name
   return {
-    kind: 'text', id, box: { x, y, w, h }, rot: 0,
+    kind: 'text', id, box: { x, y, w, h }, rot: slot.nameRot ?? 0,
+    scaleX: slot.scaleX ?? 1,
     text: '', placeholder: 'Your teacher’s name',
-    font: 'playful', size: SLOTS[art].nameSize,
+    font: 'playful', size: slot.nameSize,
     color: NAME_INK[art], align: 'center', lh: 1.2,
     plate: 'none', label: 'Teacher’s name', maxLen: 40,
   }
