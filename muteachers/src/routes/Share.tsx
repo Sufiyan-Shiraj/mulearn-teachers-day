@@ -9,7 +9,7 @@ import { getTemplate } from '../lib/templates'
 import { saveToLibrary, useCard } from '../lib/store'
 import { buildCardLink, canNativeShare, copy, nativeShare, whatsappUrl } from '../lib/share'
 import { defaultNote, imageShareText, imageShareTitle, mailto, shareTitle } from '../lib/message'
-import { FORMATS, canShareFiles, prefersShareSheet, renderCard, reframe, saveBlob, saveCardImages, shotFile, type FormatKey, type Shot } from '../lib/exportCard'
+import { FORMATS, renderCard, reframe, saveBlob, saveCardImages, shotFile, type FormatKey, type Shot } from '../lib/exportCard'
 import { useReveal } from '../lib/useReveal'
 import { useAuth } from '../context/AuthContext'
 import { saveCardToDb } from '../lib/storage'
@@ -178,19 +178,62 @@ export default function Share() {
       const messageText = (waNote || note).trim()
       const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
 
-      if (prefersShareSheet() && canShareFiles([file])) {
-        await navigator.share({
-          files: [file],
-          title: imageShareTitle(doc),
-          text: fullText,
-        })
-        setWaModalOpen(false)
-        showToast('Shared to WhatsApp!')
+      // Check if Web Share API with files is available
+      const canShareWithFiles = typeof navigator !== 'undefined'
+        && typeof navigator.share === 'function'
+        && (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] }))
+
+      if (canShareWithFiles) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: imageShareTitle(doc),
+            text: fullText,
+          })
+          setWaModalOpen(false)
+          showToast('Shared to WhatsApp!')
+          return
+        } catch (shareErr) {
+          if ((shareErr as DOMException)?.name === 'AbortError') {
+            // User dismissed the share dialog — do not trigger download fallback
+            return
+          }
+          // Some mobile browsers reject sharing text and files together; retry with files only
+          try {
+            await copy(fullText)
+            await navigator.share({
+              files: [file],
+              title: imageShareTitle(doc),
+            })
+            setWaModalOpen(false)
+            showToast('Card shared & caption copied!')
+            return
+          } catch (err2) {
+            if ((err2 as DOMException)?.name === 'AbortError') return
+            console.warn('navigator.share retry failed:', err2)
+          }
+        }
+      }
+
+      // Fallback for environments where the browser cannot dispatch files directly (e.g. desktop web)
+      let copiedImage = false
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ [file.type]: file })
+          ])
+          copiedImage = true
+        } catch {}
+      }
+
+      window.open(whatsappUrl(activeLink, messageText), '_blank', 'noreferrer')
+      setWaModalOpen(false)
+
+      if (copiedImage) {
+        showToast('Card image copied! Just paste (Ctrl+V) in WhatsApp')
       } else {
         saveBlob(file, file.name)
-        window.open(whatsappUrl(activeLink, messageText), '_blank', 'noreferrer')
-        setWaModalOpen(false)
-        showToast('Card saved & WhatsApp opened!')
+        showToast('Card saved! Attach it in WhatsApp')
       }
     } catch (e) {
       if ((e as DOMException)?.name !== 'AbortError') {
@@ -213,23 +256,50 @@ export default function Share() {
       const messageText = (waNote || note).trim()
       const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
 
+      // Always copy the caption & link so the student can paste into Stories/DMs
       if (activeLink) {
         await copy(fullText)
       } else {
         await copy(messageText)
       }
 
-      if (prefersShareSheet() && canShareFiles([file])) {
-        await navigator.share({
-          files: [file],
-          title: imageShareTitle(doc),
-        })
-        setInstaModalOpen(false)
-        showToast('Caption copied! Choose Stories or Chats in Instagram')
+      const canShareWithFiles = typeof navigator !== 'undefined'
+        && typeof navigator.share === 'function'
+        && (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] }))
+
+      if (canShareWithFiles) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: imageShareTitle(doc),
+          })
+          setInstaModalOpen(false)
+          showToast('Caption copied! Choose Stories or Chats in Instagram')
+          return
+        } catch (shareErr) {
+          if ((shareErr as DOMException)?.name === 'AbortError') return
+          console.warn('Instagram navigator.share failed:', shareErr)
+        }
+      }
+
+      // Fallback
+      let copiedImage = false
+      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ [file.type]: file })
+          ])
+          copiedImage = true
+        } catch {}
+      }
+
+      window.open('https://www.instagram.com/', '_blank', 'noreferrer')
+      setInstaModalOpen(false)
+
+      if (copiedImage) {
+        showToast('Card & caption copied! Paste into Instagram')
       } else {
         saveBlob(file, file.name)
-        window.open('https://www.instagram.com/', '_blank', 'noreferrer')
-        setInstaModalOpen(false)
         showToast('Card saved & caption copied! Open Instagram')
       }
     } catch (e) {
