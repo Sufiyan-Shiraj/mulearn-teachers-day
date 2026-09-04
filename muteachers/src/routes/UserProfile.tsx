@@ -44,7 +44,7 @@ export default function UserProfile() {
       <TopNav back={{ to: '/', label: 'Back' }} />
 
       <main className="shell up-main">
-        {/* Profile Header Scrapbook Card */}
+        {/* profile header */}
         <header className="up-card">
           <span className="up-tape" aria-hidden>
             <Decoration deco="tape-kraft" />
@@ -83,7 +83,7 @@ export default function UserProfile() {
           </div>
         </header>
 
-        {/* User's Created Cards Section */}
+        {/* everything they have posted */}
         <section className="up-cards-section">
           <div className="up-section-head">
             <h2>
@@ -116,7 +116,7 @@ export default function UserProfile() {
                   <li key={doc.id} className="up-grid-cell">
                     <Link to={`/c/${doc.id}`} className="up-card-link" title={`View card for ${doc.to || 'Teacher'}`}>
                       <span className="up-card-crop">
-                        <CardCanvas doc={doc} template={tpl} face="front" mode="thumb" />
+                        <CardCanvas doc={doc} template={tpl} mode="thumb" />
                       </span>
                     </Link>
                     <div className="up-card-meta">

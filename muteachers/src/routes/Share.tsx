@@ -24,7 +24,7 @@ export default function Share() {
   const [note, setNote] = useState(() => defaultNote(doc))
   const [open, setOpen] = useState<null | 'share' | 'print'>(null)
   const [copied, setCopied] = useState(false)
-  const [shots, setShots] = useState<Shot[] | null>(null)
+  const [shot, setShot] = useState<Shot | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<'' | 'shared' | 'downloaded'>('')
   const [saveErr, setSaveErr] = useState(false)
@@ -68,7 +68,7 @@ export default function Share() {
       if (!root) return
       try {
         const s = await renderCard(root)
-        if (live) setShots(s)
+        if (live) setShot(s)
       } catch { /* saving falls back to rendering on demand */ }
     }, 400)
     return () => { live = false; clearTimeout(id) }
@@ -97,12 +97,12 @@ export default function Share() {
     if (await copy(link)) { setCopied(true); setTimeout(() => setCopied(false), 2200) }
   }
 
-  const ensureShots = async () => {
-    if (shots) return shots
+  const ensureShot = async () => {
+    if (shot) return shot
     const root = exportRef.current
     if (!root) throw new Error('nothing to render')
     const s = await renderCard(root)
-    setShots(s)
+    setShot(s)
     return s
   }
 
@@ -111,9 +111,7 @@ export default function Share() {
     setPosting(true)
     setSaveErr(false)
     try {
-      const s = await ensureShots()
-      const front = s.find(x => x.face === 'front') ?? s[0]
-      const shaped = await reframe(front, format)
+      const shaped = await reframe(await ensureShot(), format)
       const how = await shareCardImages([shaped], {
         title: imageShareTitle(doc),
         text: imageShareText(doc, note),
@@ -130,9 +128,7 @@ export default function Share() {
     setSaving(true)
     setSaveErr(false)
     try {
-      const s = await ensureShots()
-      const front = s.find(x => x.face === 'front') ?? s[0]
-      const how = await saveCardImages([await reframe(front, format)], {
+      const how = await saveCardImages([await reframe(await ensureShot(), format)], {
         title: imageShareTitle(doc),
         text: imageShareText(doc, note),
       })
@@ -147,14 +143,11 @@ export default function Share() {
     } finally { setSaving(false) }
   }
 
-  const saveOne = async (face: 'front' | 'back') => {
+  const savePrint = async () => {
     setSaving(true)
     setSaveErr(false)
     try {
-      const s = await ensureShots()
-      const one = s.find(x => x.face === face)
-      if (!one) throw new Error(`no ${face} to save`)
-      const f = shotFile(one)
+      const f = shotFile(await ensureShot())
       saveBlob(f, f.name)
     } catch (e) {
       console.error('Saving the selfie failed:', e)
@@ -257,8 +250,8 @@ export default function Share() {
                   : saving ? 'Saving the image…'
                   : 'Save the Picture'}
                 <em>{saveErr ? 'Something went wrong — try again.'
-                  : saved ? 'Both sides, full resolution.'
-                  : shots ? 'Both sides as PNGs, straight to your files.'
+                  : saved ? 'Full resolution, in your photos.'
+                  : shot ? 'A PNG, straight to your files.'
                   : 'Preparing the image…'}</em>
               </span>
               {saving ? <span className="sh-spin" aria-hidden /> : <Chev />}
@@ -272,7 +265,7 @@ export default function Share() {
                   <path d="M7 14h10v6.6H7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
                 </svg>
               </span>
-              <span className="sh-opt-t">Print it<em>Send it to a printer at 5×7&Prime;.</em></span>
+              <span className="sh-opt-t">Print it<em>Give your teacher a real copy.</em></span>
               <Chev />
             </button>
 
@@ -304,7 +297,7 @@ export default function Share() {
                 </label>
 
                 <div className="sh-link">
-                  <input readOnly value={link} aria-label="Card link"
+                  <input readOnly value={link} aria-label="Link to this selfie"
                     placeholder="Preparing your link…"
                     onFocus={e => e.currentTarget.select()} />
                   <button onClick={doCopy} disabled={!ready} className={copied ? 'is-copied' : undefined}>{copied ? 'Copied!' : 'Copy'}</button>
@@ -349,12 +342,11 @@ export default function Share() {
             {open === 'print' && (
               <div className="sh-drawer">
                 <p className="sh-print-note">
-                  Save both sides as high-res images, then print them back-to-back
-                  on a 5×7&Prime; piece of cardstock.
+                  Download it at full resolution and print it as a 4×6&Prime; photo —
+                  the kind that ends up taped inside a staffroom cupboard.
                 </p>
                 <div className="sh-print-actions">
-                  <Button variant="dark" size="sm" onClick={() => saveOne('front')} disabled={saving}>Download front</Button>
-                  <Button variant="ghost" size="sm" onClick={() => saveOne('back')} disabled={saving}>Download inside</Button>
+                  <Button variant="dark" size="sm" onClick={savePrint} disabled={saving}>Download the photo</Button>
                 </div>
               </div>
             )}
@@ -369,7 +361,7 @@ export default function Share() {
 
         <section className="sh-stage">
           <div className="sh-card-box">
-            <CardCanvas doc={doc} template={tpl} face="front" mode="view" className="sh-card" />
+            <CardCanvas doc={doc} template={tpl} mode="view" className="sh-card" />
           </div>
         </section>
       </main>
@@ -379,8 +371,8 @@ export default function Share() {
           into position: absolute, and its two full-size card faces then add
           thousands of pixels of empty scroll to the page. */}
       <div className="sh-hidden-render" ref={exportRef} aria-hidden>
-        <div className="sh-render-side" data-export="front">
-          <CardCanvas doc={doc} template={tpl} face="front" mode="view" />
+        <div className="sh-render-side" data-export>
+          <CardCanvas doc={doc} template={tpl} mode="view" />
         </div>
       </div>
     </div>

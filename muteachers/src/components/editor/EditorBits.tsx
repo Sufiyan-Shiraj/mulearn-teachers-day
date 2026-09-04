@@ -7,11 +7,13 @@ export const ToolIcons: Record<string, ReactNode> = {
       <path d="M15.4 18.5V9.8m0 2.2a2.6 2.6 0 1 1 0 3.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
-  card: (
+  /* a polaroid: the picture window, then the fat white border it is printed on */
+  frame: (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-      <rect x="3.2" y="2.6" width="12" height="16" rx="2.2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8.8 5.4h12a2.2 2.2 0 0 1 2.2 2.2v11.6a2.2 2.2 0 0 1-2.2 2.2H8.8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" opacity=".45" />
-      <path d="M6 9.4h6.4M6 12.6h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="3.6" y="2.8" width="16.8" height="18.4" rx="1.8" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="6.2" y="5.4" width="11.6" height="10" rx="0.8" stroke="currentColor" strokeWidth="1.5" opacity=".55" />
+      <path d="M6.2 13.2l3-2.8 2.6 2.4 2.4-1.9 3.6 3.1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" opacity=".55" />
+      <path d="M8.4 18.4h7.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   ),
   text: (

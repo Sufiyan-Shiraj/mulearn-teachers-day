@@ -9,8 +9,6 @@
 
 export const DESIGN_W = 1000
 
-export type Face = 'front' | 'back'
-
 export type FontKey =
   | 'playful' | 'elegant' | 'typewriter'
   | 'handwritten' | 'classic' | 'bold'
@@ -22,7 +20,6 @@ export interface Box { x: number; y: number; w: number; h: number }
 
 interface Base {
   id: string
-  face: Face
   box: Box
   rot: number
   /** element cannot be moved / deleted by the user */

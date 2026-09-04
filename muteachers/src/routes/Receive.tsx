@@ -118,7 +118,7 @@ export default function Receive() {
           <HeartDoodle size={40} />
           <h1>This link looks incomplete</h1>
           <p>Ask for the link again — the whole selfie travels inside it, so it has to be copied in full.</p>
-          <Link className="rc-cta" to="/">Make your own card</Link>
+          <Link className="rc-cta" to="/">Take your own selfie</Link>
         </div>
       </div>
     )
@@ -156,7 +156,7 @@ export default function Receive() {
           style={isSupported ? { rotateX: tiltX, rotateY: tiltY } : undefined}
         >
           <CardCanvas
-            doc={doc} template={tpl} face="front" mode="view"
+            doc={doc} template={tpl} mode="view"
             className="rc-card"
             style={{ ['--card-ar' as string]: String(tpl.aspect) }}
           />

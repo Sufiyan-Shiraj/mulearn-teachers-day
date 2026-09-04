@@ -11,7 +11,7 @@ import { SLOTS } from './slots'
 const name = (id: string, art: ArtKey): CardElement => {
   const [x, y, w, h] = SLOTS[art].name
   return {
-    kind: 'text', id, face: 'front', box: { x, y, w, h }, rot: 0,
+    kind: 'text', id, box: { x, y, w, h }, rot: 0,
     text: '', placeholder: 'Your teacher’s name',
     font: 'playful', size: SLOTS[art].nameSize,
     color: NAME_INK[art], align: 'center', lh: 1.2,
@@ -38,16 +38,16 @@ const p = (
 ): CardElement => {
   const [x, y, w, h] = SLOTS[art].box
   return {
-    kind: 'photo', id, face: 'front', box: { x, y, w, h },
+    kind: 'photo', id, box: { x, y, w, h },
     rot: SLOTS[art].rot, frame: 'slot', zoom: 1, ox: 0, oy: 0, tape: 'none', ...o,
   }
 }
 
 export const makeDeco = (
-  id: string, face: 'front' | 'back', deco: Extract<CardElement, { kind: 'deco' }>['deco'],
+  id: string, deco: Extract<CardElement, { kind: 'deco' }>['deco'],
   box: [number, number, number, number], rot = 0, color?: string,
 ): CardElement => ({
-  kind: 'deco', id, face, deco, box: { x: box[0], y: box[1], w: box[2], h: box[3] }, rot, color })
+  kind: 'deco', id, deco, box: { x: box[0], y: box[1], w: box[2], h: box[3] }, rot, color })
 
 /* ================================================================== */
 

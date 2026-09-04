@@ -64,7 +64,7 @@ export default function MyCards() {
             <div className="mc-auth-callout">
               <Sparkle size={18} color="var(--gold)" />
               <p>
-                <strong>Want these on your profile?</strong> Add your name and your cards show up on your public profile and the leaderboard.
+                <strong>Want these on your profile?</strong> Add your name and your selfies show up on your public profile and the leaderboard.
               </p>
               <button type="button" onClick={openAuthModal} className="mc-auth-btn">
                 Add your name
@@ -78,9 +78,9 @@ export default function MyCards() {
             <div className="mc-empty-art">
               <HeartDoodle size={44} color="var(--muted-2)" />
             </div>
-            <h2>No cards yet</h2>
-            <p>Pick a design, add a photo of you and your teacher, and write something true.</p>
-            <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>Create a Card</ButtonLink>
+            <h2>No selfies yet</h2>
+            <p>Go find a teacher who made a difference and get a photo with them.</p>
+            <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>Take a selfie</ButtonLink>
           </div>
         ) : (
           <ul className="mc-grid stagger">
@@ -92,8 +92,8 @@ export default function MyCards() {
                   <button className="mc-card" disabled={!doc} onClick={() => { if (doc) { loadDoc(doc); nav('/preview') } }}>
                     <span className="mc-card-crop">
                       {doc
-                        ? <CardCanvas doc={doc} template={tpl} face="front" mode="thumb" />
-                        : <span className="mc-card-missing">Loading card…</span>}
+                        ? <CardCanvas doc={doc} template={tpl} mode="thumb" />
+                        : <span className="mc-card-missing">Loading…</span>}
                     </span>
                   </button>
                   <div className="mc-meta">

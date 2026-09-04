@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
-import type { CardDoc, CardElement, DecoElement, Face, PhotoElement, Template, TextElement } from '../../lib/types'
+import type { CardDoc, CardElement, DecoElement, PhotoElement, Template, TextElement } from '../../lib/types'
 import { clampBox } from '../../lib/types'
 import { FONTS } from '../../lib/fonts'
 import { TemplateArt } from '../art/TemplateArt'
@@ -17,7 +17,6 @@ export type CanvasMode = 'view' | 'edit' | 'thumb'
 interface Props {
   doc: CardDoc
   template: Template
-  face: Face
   mode?: CanvasMode
   className?: string
   style?: CSSProperties
@@ -205,7 +204,7 @@ function DecoView({ el }: { el: DecoElement }) {
 
 /* ------------------------------------------------------------------ */
 
-export function CardCanvas({ doc, template, face, mode = 'view', className, style }: Props) {
+export function CardCanvas({ doc, template, mode = 'view', className, style }: Props) {
   const selectedId = useCard(s => s.selectedId)
   const editingId = useCard(s => s.editingId)
   const select = useCard(s => s.select)
@@ -214,7 +213,7 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
   const freshId = useCard(s => s.freshId)
   const edit = mode === 'edit'
 
-  const items = doc.elements.filter(e => e.face === face)
+  const items = doc.elements
 
   return (
     <div
@@ -304,7 +303,7 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
           )
         })}
 
-        <TemplateArt art={template.art} layer="front" />
+        <TemplateArt art={template.art} layer="over" />
       </div>
     </div>
   )

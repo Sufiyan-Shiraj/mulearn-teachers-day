@@ -8,7 +8,7 @@ import type { ArtKey } from '../../lib/types'
 import { SLOTS } from '../../lib/slots'
 import './template-art.css'
 
-type Layer = 'back' | 'front'
+type Layer = 'under' | 'over'
 type Props = { art: ArtKey; layer?: Layer }
 
 /* ------------------------------------------------------------------ */
@@ -16,8 +16,8 @@ type Props = { art: ArtKey; layer?: Layer }
  * A template is one flat piece of artwork with an empty frame printed into
  * it, painted in two passes:
  *
- *   layer="back"   the artwork itself, under everything
- *   layer="front"  `<id>-over.webp` — the same artwork with the empty
+ *   layer="under"  the artwork itself, beneath everything
+ *   layer="over"   `<id>-over.webp` — the same artwork with the empty
  *                  paper punched out to alpha, cropped to the frame —
  *                  laid back over the photo
  *
@@ -26,7 +26,7 @@ type Props = { art: ArtKey; layer?: Layer }
  * frame still cover it.
  */
 function PhotoArt({ art, src, layer }: { art: ArtKey; src: string; layer: Layer }) {
-  if (layer === 'front') {
+  if (layer === 'over') {
     const [x, y, w, h] = SLOTS[art].over
     return (
       <div className="ta ta-over" aria-hidden>
@@ -49,6 +49,6 @@ function PhotoArt({ art, src, layer }: { art: ArtKey; src: string; layer: Layer 
 }
 
 /* ---------------- Main Art Component ---------------- */
-export function TemplateArt({ art, layer = 'back' }: Props) {
+export function TemplateArt({ art, layer = 'under' }: Props) {
   return <PhotoArt art={art} src={`/templates/${art}.jpg`} layer={layer} />
 }

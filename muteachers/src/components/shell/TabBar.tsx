@@ -36,7 +36,7 @@ export function TabBar() {
         }
       },
     },
-    { to: '/my-cards', label: 'My Posts', icon: <HeartIcon /> },
+    { to: '/my-posts', label: 'My Posts', icon: <HeartIcon /> },
     { to: '/leaderboards', label: 'Boards', icon: <TrophyIcon /> },
     {
       to: user?.username ? `/u/${user.username}` : '#auth',

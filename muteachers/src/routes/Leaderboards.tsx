@@ -99,7 +99,7 @@ export default function Leaderboards() {
             <div className="lb-empty-art">
               <Trophy />
             </div>
-            <h2 className="lb-empty-title">No cards ranked yet</h2>
+            <h2 className="lb-empty-title">Nobody on the board yet</h2>
             <p className="lb-empty-desc">
               Be the first to get a selfie with a teacher and claim the #1 spot!
             </p>

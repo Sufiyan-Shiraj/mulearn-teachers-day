@@ -25,7 +25,7 @@ export default function AddPhoto() {
     if (!loading && !user) {
       openAuthModal({
         title: 'First — what’s your name?',
-        subtitle: 'It goes on your card so your teacher knows who it’s from.',
+        subtitle: 'It goes on the photo so your teacher knows who it’s from.',
         redirectTo: '/photo',
       })
       nav('/', { replace: true })

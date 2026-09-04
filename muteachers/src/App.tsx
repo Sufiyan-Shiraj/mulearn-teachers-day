@@ -19,7 +19,6 @@ const Leaderboards = lazy(() => import('./routes/Leaderboards'))
 const UserProfile = lazy(() => import('./routes/UserProfile'))
 /* internal QA surfaces — dev only */
 const Gallery = lazy(() => import('./routes/_Gallery'))
-const CardDebug = lazy(() => import('./routes/_Card'))
 
 /**
  * Pull the rest of the flow in while the browser is idle.
@@ -126,11 +125,12 @@ export function App() {
               <Route path="/share" element={<Share />} />
               <Route path="/c" element={<Receive />} />
               <Route path="/c/:id" element={<Receive />} />
-              <Route path="/my-cards" element={<MyCards />} />
+              <Route path="/my-posts" element={<MyCards />} />
+              {/* the page was called My Cards when links to it were shared */}
+              <Route path="/my-cards" element={<Navigate to="/my-posts" replace />} />
               <Route path="/leaderboards" element={<Leaderboards />} />
               <Route path="/u/:username" element={<UserProfile />} />
               {import.meta.env.DEV && <Route path="/_gallery" element={<Gallery />} />}
-              {import.meta.env.DEV && <Route path="/_card" element={<CardDebug />} />}
               <Route path="*" element={<Landing />} />
             </Routes>
           </Transition>

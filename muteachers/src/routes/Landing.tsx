@@ -137,7 +137,7 @@ export default function Landing() {
                   aria-label={`Use the ${t.name} template`}
                 >
                   <span className="ld-tile-crop" data-align={t.thumbAlign ?? 'center'}>
-                    <CardCanvas doc={{ ...newDoc(t.id), photo: demoPhoto }} template={t} face="front" mode="thumb" />
+                    <CardCanvas doc={{ ...newDoc(t.id), photo: demoPhoto }} template={t} mode="thumb" />
                   </span>
                   <span className="ld-tile-name">{t.name}</span>
                 </button>

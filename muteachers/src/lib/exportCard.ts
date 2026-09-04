@@ -1,6 +1,6 @@
 import { toJpeg, toPng } from 'html-to-image'
 
-export interface Shot { face: string; dataUrl: string; blob: Blob }
+export interface Shot { dataUrl: string; blob: Blob }
 
 /**
  * The shapes a selfie gets posted in.
@@ -39,13 +39,160 @@ export const EXPORT_ATTR = 'data-export'
 const EXT = FORMAT === 'png' ? 'png' : 'jpg'
 const MIME = FORMAT === 'png' ? 'image/png' : 'image/jpeg'
 
+/**
+ * Wait until there is actually something to photograph.
+ *
+ * html-to-image snapshots whatever has loaded at that instant, so anything
+ * still in flight comes out as a blank box. The old warm-up pass was a guess
+ * at how long that takes; this waits on the real thing.
+ */
+async function readyToRender(node: HTMLElement) {
+  const imgs = Array.from(node.querySelectorAll('img'))
+
+  /* `complete` means the browser is finished with it either way — a picture
+     that failed is complete with no pixels. Waiting on a load event for one
+     of those waits for an event that already fired, forever, which is worse
+     than a bad export: it is a button that never comes back. */
+  const settled = (img: HTMLImageElement) => {
+    if (img.complete) return img.naturalWidth > 0 ? img.decode().catch(() => undefined) : undefined
+    return new Promise<void>(res => {
+      const done = () => res()
+      img.addEventListener('load', done, { once: true })
+      img.addEventListener('error', done, { once: true })
+      setTimeout(done, 8000)
+    })
+  }
+
+  await Promise.all<unknown>([document.fonts?.ready, ...imgs.map(settled)])
+
+  /* A selfie without its frame is not worth posting, and it is exactly what
+     a blank export looks like. Say so, so the button can offer another go. */
+  const lost = imgs.filter(i => i.naturalWidth < 1)
+  if (lost.length) throw new Error(`${lost.length} picture(s) did not load`)
+}
+
+/* ------------------------------------------------------------------
+   Freezing the pictures before the snapshot.
+
+   html-to-image does not photograph the images on screen — it re-fetches
+   every one of them over the network and inlines the bytes it gets back.
+   When one of those fetches fails it swallows the error and leaves the
+   original `/templates/disco.jpg` in place, which resolves against nothing
+   inside the snapshot and renders as an empty box. That is the blank export:
+   the paper and the teacher's name come out fine, and every picture is gone.
+
+   So the pictures are taken from the copies the browser has already decoded
+   and is showing on screen. No network, nothing to fail. It also caps the
+   long edge, which matters on a phone: a camera photo arrives as a several
+   megabyte data URL, and the whole card has to fit in one data URL that
+   Safari is willing to load.
+   ------------------------------------------------------------------ */
+
+/** no export is wider than this, so nothing needs more pixels than this */
+const MAX_INLINE_PX = 2400
+
+const frozen = new Map<string, string>()
+
+function freeze(img: HTMLImageElement): string | null {
+  const src = img.currentSrc || img.src
+  if (!src) return null
+  const cached = frozen.get(src)
+  if (cached) return cached
+  if (img.naturalWidth < 1) return null
+
+  const k = Math.min(1, MAX_INLINE_PX / Math.max(img.naturalWidth, img.naturalHeight))
+  const c = document.createElement('canvas')
+  c.width = Math.round(img.naturalWidth * k)
+  c.height = Math.round(img.naturalHeight * k)
+  const ctx = c.getContext('2d')
+  if (!ctx) return null
+  ctx.drawImage(img, 0, 0, c.width, c.height)
+
+  /* the punched overlay is transparent where the photo shows through, so it
+     has to stay PNG; the artwork and the photo are photographs, and JPEG
+     keeps the payload small enough to survive a phone */
+  const alpha = /\.(png|webp)(\?|$)/i.test(src) || src.startsWith('data:image/png')
+  let out: string
+  try {
+    out = alpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92)
+  } catch {
+    /* a cross-origin picture taints the canvas — leave it to html-to-image */
+    return null
+  }
+  frozen.set(src, out)
+  return out
+}
+
+/** Swap in the frozen copies for the length of the snapshot, then put the
+ *  live ones back so the card on screen is untouched. */
+function freezeImages(node: HTMLElement) {
+  const undo: Array<[HTMLImageElement, string]> = []
+  let missed = 0
+  for (const img of Array.from(node.querySelectorAll('img'))) {
+    const src = img.currentSrc || img.src
+    if (!src || src.startsWith('data:image/jpeg') || src.startsWith('data:image/png')) continue
+    const url = freeze(img)
+    if (!url) { missed += 1; continue }
+    undo.push([img, img.getAttribute('src') ?? ''])
+    img.setAttribute('src', url)
+  }
+  if (missed) console.warn(`export: ${missed} image(s) could not be frozen; falling back to a re-fetch`)
+  return () => undo.forEach(([img, src]) => img.setAttribute('src', src))
+}
+
+/**
+ * Is this a picture, or is it an empty rectangle?
+ *
+ * Safari in particular will hand back a canvas drawn before the snapshot
+ * finished loading, and the result is the paper with nothing on it. Rather
+ * than trust the render, look at what came out: a real selfie has hundreds
+ * of colours in it, and a blank one has about three.
+ */
+async function looksBlank(dataUrl: string) {
+  const img = new Image()
+  img.src = dataUrl
+  try { await img.decode() } catch { return true }
+  const c = document.createElement('canvas')
+  c.width = 32; c.height = 32
+  const ctx = c.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return false
+  ctx.drawImage(img, 0, 0, 32, 32)
+  const { data } = ctx.getImageData(0, 0, 32, 32)
+  const seen = new Set<number>()
+  for (let i = 0; i < data.length; i += 4) {
+    /* coarse buckets, so film grain in one flat colour is still one colour */
+    seen.add(((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4))
+    if (seen.size > 6) return false
+  }
+  return true
+}
+
+async function shoot(node: HTMLElement) {
+  const thaw = freezeImages(node)
+  const opts = { pixelRatio: EXPORT_SCALE, backgroundColor: '#faf5f1' }
+  try {
+    return FORMAT === 'png'
+      ? await toPng(node, opts)
+      : await toJpeg(node, { ...opts, quality: JPEG_QUALITY })
+  } finally { thaw() }
+}
+
 async function render(node: HTMLElement): Promise<{ dataUrl: string; blob: Blob }> {
-  /* first pass warms webfonts and images so the second is faithful */
-  await toPng(node, { pixelRatio: 0.4, cacheBust: true })
-  const opts = { pixelRatio: EXPORT_SCALE, cacheBust: true, backgroundColor: '#faf5f1' }
-  const dataUrl = FORMAT === 'png'
-    ? await toPng(node, opts)
-    : await toJpeg(node, { ...opts, quality: JPEG_QUALITY })
+  await readyToRender(node)
+
+  /* Two more goes before giving up. A first render that comes back empty is
+     usually a browser that had not finished with the snapshot yet, and the
+     next one lands — which is why this used to do a throwaway pass every
+     time. Now it only pays for that when something actually went wrong, and
+     when nothing works it says so instead of handing over a blank page. */
+  let dataUrl = ''
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    dataUrl = await shoot(node)
+    if (!(await looksBlank(dataUrl))) break
+    if (attempt === 2) throw new Error('the selfie rendered blank')
+    await new Promise(r => setTimeout(r, 120 * (attempt + 1)))
+  }
+
   const blob = await (await fetch(dataUrl)).blob()
   return { dataUrl, blob }
 }
@@ -55,15 +202,12 @@ async function render(node: HTMLElement): Promise<{ dataUrl: string; blob: Blob 
  * Throws when neither side is there rather than returning nothing, so a
  * broken export surfaces instead of looking like a save that did nothing.
  */
-export async function renderCard(root: HTMLElement): Promise<Shot[]> {
-  const out: Shot[] = []
-  for (const face of ['front', 'back'] as const) {
-    const node = root.querySelector<HTMLElement>(`[${EXPORT_ATTR}='${face}']`)
-    if (!node) continue
-    out.push({ face, ...(await render(node)) })
-  }
-  if (!out.length) throw new Error(`no [${EXPORT_ATTR}] sides found to render`)
-  return out
+/** Render the selfie sitting in `root`. Throws rather than returning nothing,
+ *  so a broken export surfaces instead of looking like a save that did little. */
+export async function renderCard(root: HTMLElement): Promise<Shot> {
+  const node = root.querySelector<HTMLElement>(`[${EXPORT_ATTR}]`)
+  if (!node) throw new Error(`no [${EXPORT_ATTR}] node to render`)
+  return render(node)
 }
 
 /**
@@ -104,7 +248,7 @@ export async function reframe(shot: Shot, format: FormatKey): Promise<Shot> {
 
   const dataUrl = c.toDataURL(MIME, FORMAT === 'png' ? undefined : JPEG_QUALITY)
   const blob = await (await fetch(dataUrl)).blob()
-  return { face: `${shot.face}-${format}`, dataUrl, blob }
+  return { dataUrl, blob }
 }
 
 export function saveBlob(blob: Blob, filename: string) {
@@ -119,9 +263,8 @@ export function saveBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 4000)
 }
 
-export function shotFile(s: Shot, stem = 'teachers-day-card') {
-  return new File([s.blob], `${stem}-${s.face === 'front' ? 'front' : 'inside'}.${EXT}`,
-    { type: MIME, lastModified: Date.now() })
+export function shotFile(s: Shot, stem = 'teachers-day-selfie') {
+  return new File([s.blob], `${stem}.${EXT}`, { type: MIME, lastModified: Date.now() })
 }
 
 /** true when the browser can hand image files to the OS share sheet */

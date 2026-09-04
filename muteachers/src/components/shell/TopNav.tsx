@@ -18,7 +18,7 @@ const LINKS: { to: string; label: string }[] = []
 const SHEET = [
   { to: '/', label: 'Home' },
   { to: '/photo', label: 'Take a selfie' },
-  { to: '/my-cards', label: 'My Posts' },
+  { to: '/my-posts', label: 'My Posts' },
   { to: '/leaderboards', label: 'Leaderboards' },
 ]
 
@@ -54,7 +54,7 @@ export function TopNav({ back }: Props) {
               Leaderboards
             </Link>
 
-            <Link to="/my-cards" className="nav-tape">
+            <Link to="/my-posts" className="nav-tape">
               My Posts
               <svg className="nav-tape-ul" viewBox="0 0 120 8" preserveAspectRatio="none" aria-hidden>
                 <path d="M3 5.4C24 2.6 46 1.7 68 2.3c17 .5 34 1.6 49 3" stroke="var(--red)" strokeWidth="1.8" fill="none" strokeLinecap="round" />

@@ -19,20 +19,12 @@ export default function Gallery() {
           </div>
         </div>
       ))}
-      <h3 style={{ fontSize: 13, margin: '24px 0 10px' }}>Templates — front</h3>
+      <h3 style={{ fontSize: 13, margin: '24px 0 10px' }}>Templates</h3>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         {TEMPLATES.map(t => (
           <div key={t.id} style={{ width: 240 }}>
-            <CardCanvas doc={{ ...newDoc(t.id), photo: '/demo-photo.jpg' }} template={t} face="front" />
+            <CardCanvas doc={{ ...newDoc(t.id), photo: '/demo-photo.jpg' }} template={t} />
             <div style={{ fontSize: 12, textAlign: 'center', marginTop: 6 }}>{t.name}</div>
-          </div>
-        ))}
-      </div>
-      <h3 style={{ fontSize: 13, margin: '24px 0 10px' }}>Templates — back</h3>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        {TEMPLATES.map(t => (
-          <div key={t.id} style={{ width: 240 }}>
-            <CardCanvas doc={newDoc(t.id)} template={t} face="back" />
           </div>
         ))}
       </div>

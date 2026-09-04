@@ -15,14 +15,14 @@ import { useAuth } from '../context/AuthContext'
 import type { CardElement } from '../lib/types'
 import './editor.css'
 
-type Tool = 'card' | 'photo' | 'name'
-type Sheet = null | 'card' | 'photo' | 'name'
+type Tool = 'frame' | 'photo' | 'name'
+type Sheet = null | 'frame' | 'photo' | 'name'
 
 /* Three things you can change about a selfie: which frame it sits in, how the
    photo is cropped inside it, and the teacher's name. That is the whole tool
    set — the stickers, fonts, colours and hand-written notes belonged to a card. */
 const TOOLS: { key: Tool; label: string }[] = [
-  { key: 'card', label: 'Frame' },
+  { key: 'frame', label: 'Frame' },
   { key: 'photo', label: 'Photo' },
   { key: 'name', label: 'Name' },
 ]
@@ -129,7 +129,7 @@ export default function Editor() {
      one needs the bottom sheet. Sending every button to the sheet meant a
      phone-shaped dialog sliding up over the desktop editor. */
   const SIDEBAR_FOR: Record<Exclude<Sheet, null>, Tool> = {
-    card: 'card', photo: 'photo', name: 'name',
+    frame: 'frame', photo: 'photo', name: 'name',
   }
   const openPanel = (which: Exclude<Sheet, null>) => {
     if (isMobile) setSheet(s => (s === which ? null : which))
@@ -166,7 +166,7 @@ export default function Editor() {
           </header>
 
           <div className="ed-panel-body">
-            {tool === 'card' && <TemplatePanel />}
+            {tool === 'frame' && <TemplatePanel />}
             {tool === 'photo' && <PhotoPanel />}
             {tool === 'name' && <NamePanel />}
           </div>
@@ -178,7 +178,7 @@ export default function Editor() {
           {nudge && <p className="ed-teacher-nudge" role="status">Pop their name in first — that&rsquo;s what puts you on the board.</p>}
 
           <div className="ed-card-wrap" style={{ ['--card-ar' as string]: String(tpl.aspect) }} onPointerDown={e => { if (e.target === e.currentTarget) { select(null); setEditing(null) } }}>
-            <CardCanvas doc={doc} template={tpl} face="front" mode="edit" className="ed-card" />
+            <CardCanvas doc={doc} template={tpl} mode="edit" className="ed-card" />
           </div>
 
           <p className="ed-hint">
@@ -188,7 +188,7 @@ export default function Editor() {
           <div className="ed-dock">
           {/* -------- contextual toolbar -------- */}
           <div className="ed-toolbar" data-active={selected ? '' : undefined}>
-            <ToolbarBtn label="Frame" icon={ToolIcons.card} onClick={() => openPanel('card')} />
+            <ToolbarBtn label="Frame" icon={ToolIcons.frame} onClick={() => openPanel('frame')} />
             <ToolbarBtn label="Photo" icon={ToolIcons.photo} onClick={() => openPanel('photo')} />
             <ToolbarBtn label="Name" active accent icon={<span className="ed-tb-aa">Aa</span>}
               onClick={() => openPanel('name')} />
@@ -240,7 +240,7 @@ export default function Editor() {
           <button className="ed-scrim" onClick={() => setSheet(null)} aria-label="Close panel" />
           <div className="ed-sheet" role="dialog" aria-modal="true">
             <span className="ed-sheet-grip" />
-            {sheet === 'card' && (<><h3>Pick a frame</h3><TemplatePanel /></>)}
+            {sheet === 'frame' && (<><h3>Pick a frame</h3><TemplatePanel /></>)}
             {sheet === 'photo' && (<><h3>Your photo</h3><PhotoPanel /></>)}
             {sheet === 'name' && (<><h3>Teacher’s name</h3><NamePanel /></>)}
           </div>

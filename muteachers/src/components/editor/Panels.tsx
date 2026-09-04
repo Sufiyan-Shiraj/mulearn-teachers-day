@@ -116,7 +116,7 @@ export function TemplatePanel() {
             aria-label={`Use the ${t.name} card`}
           >
             <span className="ep-tpl-crop">
-              <CardCanvas doc={{ ...newDoc(t.id), photo }} template={t} face="front" mode="thumb" />
+              <CardCanvas doc={{ ...newDoc(t.id), photo }} template={t} mode="thumb" />
             </span>
             <span className="ep-tpl-name">{t.name}</span>
           </button>

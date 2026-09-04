@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CardDoc, CardElement, DecoKey, Face, FontKey, TextElement } from './types'
+import type { CardDoc, CardElement, DecoKey, FontKey, TextElement } from './types'
 import { getTemplate, TEMPLATES } from './templates'
 import { nid } from './id'
 
@@ -21,7 +21,6 @@ export function newDoc(templateId: string): CardDoc {
 
 interface State {
   doc: CardDoc
-  face: Face
   selectedId: string | null
   editingId: string | null
   past: CardDoc[]
@@ -35,13 +34,12 @@ interface State {
   startCard: (templateId: string) => void
   loadDoc: (d: CardDoc) => void
   setTemplate: (templateId: string) => void
-  setFace: (f: Face) => void
   select: (id: string | null) => void
   setEditing: (id: string | null) => void
   update: (id: string, patch: Partial<CardElement>, opts?: { history?: boolean }) => void
   beginChange: () => void
-  addDeco: (deco: DecoKey, face: Face, color?: string) => string
-  addText: (face: Face) => string
+  addDeco: (deco: DecoKey, color?: string) => string
+  addText: () => string
   remove: (id: string) => void
   bringForward: (id: string) => void
   sendBackward: (id: string) => void
@@ -71,7 +69,6 @@ function restore(): CardDoc | null {
 
 export const useCard = create<State>((set, get) => ({
   doc: restore() ?? newDoc(TEMPLATES[0].id),
-  face: 'front',
   selectedId: null,
   editingId: null,
   past: [],
@@ -85,10 +82,10 @@ export const useCard = create<State>((set, get) => ({
     // carry the photo across if the user already picked one
     if (cur.photo) doc.photo = cur.photo
     persist(doc)
-    set({ doc, past: [], future: [], selectedId: null, editingId: null, face: 'front' })
+    set({ doc, past: [], future: [], selectedId: null, editingId: null })
   },
 
-  loadDoc: (d) => { persist(d); set({ doc: d, past: [], future: [], selectedId: null, editingId: null, face: 'front' }) },
+  loadDoc: (d) => { persist(d); set({ doc: d, past: [], future: [], selectedId: null, editingId: null }) },
 
   setTemplate: (templateId) => {
     const cur = get().doc
@@ -100,7 +97,6 @@ export const useCard = create<State>((set, get) => ({
     set({ doc, past: [...get().past, clone(cur)].slice(-40), future: [], selectedId: null, editingId: null })
   },
 
-  setFace: (f) => set({ face: f, selectedId: null, editingId: null }),
   select: (id) => set({ selectedId: id, editingId: id === null ? null : get().editingId }),
   setEditing: (id) => set({ editingId: id, selectedId: id ?? get().selectedId }),
 
@@ -132,11 +128,11 @@ export const useCard = create<State>((set, get) => ({
     set({ past: [...s.past, clone(s.doc)].slice(-40), future: [] })
   },
 
-  addDeco: (deco, face, color) => {
+  addDeco: (deco, color) => {
     const s = get()
     const id = `deco-${nid(6)}`
     const el: CardElement = {
-      kind: 'deco', id, face, deco, color,
+      kind: 'deco', id, deco, color,
       box: { x: 50, y: 46, w: deco.startsWith('tape') || deco.startsWith('sticker') ? 34 : 16, h: 0 },
       rot: (Math.random() * 16 - 8),
     }
@@ -146,11 +142,11 @@ export const useCard = create<State>((set, get) => ({
     return id
   },
 
-  addText: (face) => {
+  addText: () => {
     const s = get()
     const id = `text-${nid(6)}`
     const el: TextElement = {
-      kind: 'text', id, face, box: { x: 12, y: 44, w: 76, h: 10 }, rot: 0,
+      kind: 'text', id, box: { x: 12, y: 44, w: 76, h: 10 }, rot: 0,
       text: '', placeholder: 'Type here…', font: 'playful', size: 44,
       color: getTemplate(s.doc.templateId).dark ? '#fdf7ec' : '#2b2320',
       align: 'center', lh: 1.3, plate: 'none', label: 'Your text', maxLen: 220,
