@@ -1,0 +1,206 @@
+@keyframes hiw-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hiw-modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+
+.hiw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(26, 20, 18, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  animation: hiw-overlay-in 0.22s ease-out both;
+}
+
+.hiw-modal {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: var(--card, #fffdf8);
+  border: 1px solid var(--border-strong, #dfd5c4);
+  border-radius: 24px;
+  padding: 2.2rem 1.8rem 1.8rem;
+  box-shadow: 0 24px 60px rgba(44, 25, 20, 0.28), 0 4px 14px rgba(44, 25, 20, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: hiw-modal-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hiw-tape {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-1deg);
+  width: 120px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hiw-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border, #e5dccf);
+  background: var(--surface, #fbf7ee);
+  color: var(--muted, #6d645a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.hiw-close:hover {
+  background: #f1e9dc;
+  color: var(--fg, #1f1b18);
+  transform: rotate(90deg);
+}
+
+.hiw-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.4rem;
+  width: 100%;
+}
+
+.hiw-title {
+  font-family: var(--font-serif, 'Playfair Display', serif);
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--fg, #221d19);
+  line-height: 1.25;
+  margin: 0.2rem 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.hiw-desc {
+  font-size: 0.95rem;
+  color: var(--muted, #6d645a);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+.hiw-steps {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1.6rem;
+  text-align: left;
+}
+
+.hiw-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  background: #faf6ee;
+  border: 1px solid #ebdccb;
+  border-radius: 16px;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.hiw-step:hover {
+  background: #f5eedf;
+  transform: translateY(-1px);
+}
+
+.hiw-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--red, #861f21);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(134, 31, 33, 0.25);
+}
+
+.hiw-step-content {
+  flex: 1;
+}
+
+.hiw-step-content h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--fg, #1f1b18);
+  font-family: var(--font-sans, -apple-system, sans-serif);
+}
+
+.hiw-step-content p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted, #6d645a);
+  line-height: 1.45;
+}
+
+.hiw-actions {
+  width: 100%;
+}
+
+.hiw-btn {
+  width: 100%;
+  padding: 0.9rem 1.4rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.hiw-btn:active {
+  transform: scale(0.97);
+}
+
+.hiw-btn--primary {
+  background: var(--red, #861f21);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(134, 31, 33, 0.32);
+}
+
+.hiw-btn--primary:hover {
+  background: #6e1719;
+  box-shadow: 0 6px 20px rgba(134, 31, 33, 0.42);
+}
+
+@media (max-width: 480px) {
+  .hiw-modal {
+    padding: 2rem 1.3rem 1.5rem;
+    border-radius: 20px;
+  }
+  .hiw-title {
+    font-size: 1.4rem;
+  }
+  .hiw-step {
+    padding: 0.8rem 0.85rem;
+    gap: 0.75rem;
+  }
+}

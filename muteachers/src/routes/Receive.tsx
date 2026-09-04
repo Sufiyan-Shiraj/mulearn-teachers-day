@@ -1,19 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import confetti from 'canvas-confetti'
 import { CardCanvas } from '../components/card/CardCanvas'
 import { HeartDoodle, Sparkle } from '../components/art/Doodles'
 import { Decoration } from '../components/art/Decorations'
 import { Logo } from '../components/shell/Logo'
+import { HowItWorksModal } from '../components/receive/HowItWorksModal'
 import { getTemplate } from '../lib/templates'
 import { decodeCard, fetchCard } from '../lib/share'
 import { fetchCardFromDb, likeCardInDb } from '../lib/storage'
+import { useAuth } from '../context/AuthContext'
+import { useCard } from '../lib/store'
 import type { CardDoc } from '../lib/types'
 import { motion } from 'framer-motion'
 import { usePointerParallax } from '../lib/useParallax'
 import './receive.css'
 
 export default function Receive() {
+  const navigate = useNavigate()
+  const { user, openAuthModal } = useAuth()
+  const startCard = useCard(s => s.startCard)
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false)
   const [doc, setDoc] = useState<CardDoc | null>(null)
   const [creator, setCreator] = useState<{ name: string; username: string; avatarUrl?: string } | undefined>()
   const [likes, setLikes] = useState(0)
@@ -124,6 +131,29 @@ export default function Receive() {
     )
   }
 
+  const handleMakeOwn = () => {
+    setIsHowItWorksOpen(true)
+  }
+
+  const handleContinueFromHowItWorks = () => {
+    setIsHowItWorksOpen(false)
+    const tplId = doc?.templateId || 'disco'
+    if (user?.displayName) {
+      startCard(tplId)
+      navigate('/photo')
+    } else {
+      openAuthModal({
+        title: 'First — what’s your name?',
+        subtitle: 'It goes on your selfie card so your teacher knows who it’s from.',
+        redirectTo: '/photo',
+        onSuccess: () => {
+          startCard(tplId)
+          navigate('/photo')
+        },
+      })
+    }
+  }
+
   return (
     <div className="rc" ref={containerRef}>
       <div className="rc-sky" aria-hidden>
@@ -163,7 +193,6 @@ export default function Receive() {
         </motion.div>
 
         <div className="rc-actions-row">
-
           {/* Heart / Like appreciation button */}
           <button
             type="button"
@@ -185,14 +214,28 @@ export default function Receive() {
       </main>
 
       <footer className="rc-foot">
-        <Link to="/" className="rc-make">
-          Make one of your own
-          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden>
-            <path d="M3 10h13M11.5 5.2 16.4 10l-4.9 4.8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <button
+          type="button"
+          className="rc-make-btn"
+          onClick={handleMakeOwn}
+          aria-label="Make your own selfie card for your teacher"
+        >
+          <span className="rc-make-sparkle" aria-hidden>✨</span>
+          <span className="rc-make-label">Make one for your teacher</span>
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="none" aria-hidden className="rc-make-arrow">
+            <path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-        </Link>
-        <Logo height={18} />
+        </button>
+        <div className="rc-foot-brand">
+          <Logo height={18} />
+        </div>
       </footer>
+
+      <HowItWorksModal
+        isOpen={isHowItWorksOpen}
+        onClose={() => setIsHowItWorksOpen(false)}
+        onContinue={handleContinueFromHowItWorks}
+      />
     </div>
   )
 }
