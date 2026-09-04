@@ -92,3 +92,26 @@
 .ph-cam-stage { animation: m-rise .7s var(--e-out) .1s both; }
 .ph-cam-tips  { animation: m-rise .6s var(--e-out) .24s both; }
 .ph-cam-note  { animation: m-rise .6s var(--e-out) .34s both; }
+
+/* ---------------- a phone held sideways ----------------
+   There is no room for a headline and a tips card when the screen is this
+   short, and the camera explains itself. The words come back the moment the
+   phone is turned upright. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .ph-cam-main {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 2px 14px 12px;
+    align-items: start;
+  }
+  .ph-cam-copy { display: contents; }
+  .ph-cam-title, .ph-cam-sub, .ph-cam-tips, .ph-cam-washi, .ph-cam-note { display: none; }
+  .ph-cam-stage { width: 100%; }
+  /* the step bar alone is 89px of a 390px-tall screen — the nav and the back
+     link still say where you are, and it comes back the moment you turn the
+     phone upright */
+  .ph-steps { display: none; }
+  .ph { --nav-h: 56px; }
+  .ph-upload { margin-top: 6px; }
+  .cam { height: calc(100dvh - 178px); min-height: 168px; }
+}

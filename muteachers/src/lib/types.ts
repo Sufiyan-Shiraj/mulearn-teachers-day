@@ -64,6 +64,13 @@ export interface PhotoElement extends Base {
   oy: number
   tape?: 'none' | 'dots' | 'kraft' | 'red' | 'washi'
   caption?: string
+  /**
+   * Where the photo sits against the template artwork.
+   * Left unset it follows the frame — a fitted photo tucks under the art, a
+   * photo given its own polaroid or arch sits on top — and once the user
+   * says otherwise, their choice sticks through any later frame change.
+   */
+  lift?: boolean
 }
 
 export type DecoKey =
@@ -118,8 +125,30 @@ export interface CardDoc {
   elements: CardElement[]
   /** data URL of the user photo */
   photo?: string
+  /** the photo's own width / height, measured when it is added */
+  photoAr?: number
   from: string
   to: string
   createdAt: number
   updatedAt: number
+}
+
+/* ------------------------------------------------------------------
+   Nothing may be pushed entirely off the card.
+
+   The card clips its contents, so an element dragged past the edge has
+   no hit area left and cannot be grabbed back — it is simply gone. This
+   keeps a strip of every element on the paper, which is enough to catch
+   hold of and drag back.
+   ------------------------------------------------------------------ */
+export const KEEP_ON_CARD = 14
+
+export function clampBox(box: Box): Box {
+  const w = Math.max(box.w, 4)
+  const h = Math.max(box.h, 4)
+  return {
+    ...box,
+    x: Math.min(100 - KEEP_ON_CARD, Math.max(KEEP_ON_CARD - w, box.x)),
+    y: Math.min(100 - KEEP_ON_CARD, Math.max(KEEP_ON_CARD - h, box.y)),
+  }
 }

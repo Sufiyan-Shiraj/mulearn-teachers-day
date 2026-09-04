@@ -47,17 +47,32 @@ export function approxDataUrlBytes(d: string) {
 /**
  * How far a photo may be panned inside its window before it stops covering it.
  *
- * The image fills its window with object-fit: cover, then `scale(zoom)` grows
- * it, leaving (zoom - 1) / 2 of the window spare on each side. `translate` is
- * applied before that scale, so a pan of p% shifts the picture by p% * zoom —
- * hence the limit below. At zoom 1 there is no spare room and no pan at all,
- * which is why the sliders go dead until the photo is zoomed in.
+ * The image fills the window with object-fit: cover, so whichever axis is the
+ * looser fit already overflows before any zoom is applied — a tall photo in a
+ * wide slot has plenty of room to slide up and down at zoom 1. `scale(zoom)`
+ * then grows both axes. `translate` runs before that scale, so a pan of p%
+ * shifts the picture by p% * zoom, which is where the divide comes from.
+ *
+ * `ratio` is how much longer the image is than the window on this axis once
+ * cover has done its work: max(imageAspect / slotAspect, 1) across, and the
+ * reciprocal down. Pass 1 when the photo's shape is not known yet and the
+ * limit falls back to what the zoom alone provides.
  */
-export function panLimit(zoom: number) {
-  return Math.max(0, (50 * (zoom - 1)) / zoom)
+export function panLimit(zoom: number, ratio = 1) {
+  return Math.max(0, (50 * (zoom * Math.max(ratio, 1) - 1)) / zoom)
 }
 
-export function clampPan(v: number, zoom: number) {
-  const l = panLimit(zoom)
+export function clampPan(v: number, zoom: number, ratio = 1) {
+  const l = panLimit(zoom, ratio)
   return Math.min(l, Math.max(-l, v))
+}
+
+/**
+ * The two ratios for a photo of aspect `photoAr` sitting in a window of
+ * aspect `slotAr` — horizontal first, then vertical. One of them is always 1:
+ * cover matches one axis exactly and lets the other spill.
+ */
+export function coverRatios(photoAr?: number, slotAr?: number): [number, number] {
+  if (!photoAr || !slotAr || !isFinite(photoAr) || !isFinite(slotAr)) return [1, 1]
+  return photoAr > slotAr ? [photoAr / slotAr, 1] : [1, slotAr / photoAr]
 }

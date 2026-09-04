@@ -336,17 +336,21 @@ export default function Share() {
               {flipped ? 'See front' : 'See inside'}
             </button>
           </div>
-
-          <div className="sh-hidden-render" ref={exportRef} aria-hidden>
-            <div className="sh-render-side" data-export="front">
-              <CardCanvas doc={doc} template={tpl} face="front" mode="view" />
-            </div>
-            <div className="sh-render-side" data-export="back">
-              <CardCanvas doc={doc} template={tpl} face="back" mode="view" />
-            </div>
-          </div>
         </section>
       </main>
+
+      {/* Kept outside the animated stage on purpose. It is position: fixed so
+          it costs no layout — but a transform anywhere above it turns that
+          into position: absolute, and its two full-size card faces then add
+          thousands of pixels of empty scroll to the page. */}
+      <div className="sh-hidden-render" ref={exportRef} aria-hidden>
+        <div className="sh-render-side" data-export="front">
+          <CardCanvas doc={doc} template={tpl} face="front" mode="view" />
+        </div>
+        <div className="sh-render-side" data-export="back">
+          <CardCanvas doc={doc} template={tpl} face="back" mode="view" />
+        </div>
+      </div>
     </div>
   )
 }

@@ -225,7 +225,9 @@
 /* entrance */
 .sh-title { animation: m-fade-up .55s var(--e-out) .05s both; }
 .sh-sub   { animation: m-fade-up .55s var(--e-out) .13s both; }
-.sh-stage { animation: m-rise .8s var(--e-out) .08s both; }
+/* Opacity only. An animation that touches transform keeps filling after it
+   ends, which makes the element a containing block for position: fixed. */
+.sh-stage { animation: m-fade .7s var(--e-out) .08s both; }
 
 /* auth callouts */
 .sh-auth-box {

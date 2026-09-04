@@ -10,6 +10,7 @@ import { ColorPanel, DecoPanel, FontGrid, HandwritePanel, PhotoPanel, SWATCHES, 
 import { getTemplate } from '../lib/templates'
 import { scrollIntoView } from '../lib/useReveal'
 import { useCard } from '../lib/store'
+import { useIsMobile } from '../lib/useIsMobile'
 import { useAuth } from '../context/AuthContext'
 import type { CardElement, DecoKey, FontKey } from '../lib/types'
 import './editor.css'
@@ -45,11 +46,15 @@ export default function Editor() {
   const canRedo = useCard(s => s.future.length > 0)
   const clearJustAdded = useCard(s => s.clearJustAdded)
   const clearFresh = useCard(s => s.clearFresh)
+  const ensurePhotoAspect = useCard(s => s.ensurePhotoAspect)
   const freshId = useCard(s => s.freshId)
 
   const [tool, setTool] = useState<Tool>('text')
   const [sheet, setSheet] = useState<Sheet>(null)
-  const [touched, setTouched] = useState(false)
+  const isMobile = useIsMobile()
+  /* anything at all having been changed — a sticker, a photo nudge, a
+     word — not only a text box having been opened */
+  const touched = canUndo
   const nextRef = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
   const { user, loading, openAuthModal } = useAuth()
@@ -69,6 +74,9 @@ export default function Editor() {
   const selected = doc.elements.find(e => e.id === selectedId) ?? null
   const selectedText = selected?.kind === 'text' ? selected : null
 
+  /* a card restored from storage may predate the photo being measured */
+  useEffect(() => { ensurePhotoAspect() }, [ensurePhotoAspect, doc.photo])
+
   useEffect(() => { const t = setTimeout(clearJustAdded, 900); return () => clearTimeout(t) }, [clearJustAdded])
   useEffect(() => {
     if (!freshId) return
@@ -79,7 +87,7 @@ export default function Editor() {
   /* the moment an edit finishes, bring the way forward back into view */
   const wasEditing = useRef(false)
   useEffect(() => {
-    if (editingId) { wasEditing.current = true; setTouched(true); return }
+    if (editingId) { wasEditing.current = true; return }
     if (!wasEditing.current) return
     wasEditing.current = false
     const t = setTimeout(() => scrollIntoView(nextRef.current, 'nearest'), 260)
@@ -107,6 +115,17 @@ export default function Editor() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [redo, remove, select, selectedId, undo])
+
+  /* A wide screen has the panels open in the sidebar already; only a narrow
+     one needs the bottom sheet. Sending every button to the sheet meant a
+     phone-shaped dialog sliding up over the desktop editor. */
+  const SIDEBAR_FOR: Record<Exclude<Sheet, null>, Tool> = {
+    card: 'card', font: 'text', size: 'text', color: 'colors', align: 'text', more: 'text',
+  }
+  const openPanel = (which: Exclude<Sheet, null>) => {
+    if (isMobile) setSheet(s => (s === which ? null : which))
+    else setTool(SIDEBAR_FOR[which])
+  }
 
   const addDecoHere = (d: DecoKey) => { addDeco(d, face); setSheet(null) }
   const addNote = (text: string, font: FontKey) => {
@@ -167,23 +186,6 @@ export default function Editor() {
             {tool === 'colors' && <ColorPanel el={selected} />}
             {tool === 'photo' && <PhotoPanel />}
           </div>
-
-          <div className="ed-history">
-            <button className="ed-hist-btn" onClick={undo} disabled={!canUndo} aria-label="Undo">
-              <svg viewBox="0 0 22 22" fill="none" aria-hidden>
-                <path d="M4 11a7.4 7.4 0 1 0 2.3-5.3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                <path d="M3.4 3.4V8h4.6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>Undo</span>
-            </button>
-            <button className="ed-hist-btn" onClick={redo} disabled={!canRedo} aria-label="Redo">
-              <svg viewBox="0 0 22 22" fill="none" aria-hidden>
-                <path d="M18 11a7.4 7.4 0 1 1-2.3-5.3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-                <path d="M18.6 3.4V8H14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>Redo</span>
-            </button>
-          </div>
         </aside>
 
         {/* -------- stage -------- */}
@@ -206,24 +208,46 @@ export default function Editor() {
           <div className="ed-toolbar" data-active={selected ? '' : undefined}>
             <ToolbarBtn label="Edit Text" active accent
               icon={<span className="ed-tb-aa">Aa</span>}
-              onClick={() => { if (selectedText) setEditing(selectedText.id); else setSheet('more') }} />
-            <ToolbarBtn label="Card" icon={ToolIcons.card} onClick={() => setSheet(s => s === 'card' ? null : 'card')} />
-            <ToolbarBtn label="Font" icon={<AaIcon small />} onClick={() => setSheet(s => s === 'font' ? null : 'font')} />
-            <ToolbarBtn label="Size" icon={<SizeIcon />} onClick={() => setSheet(s => s === 'size' ? null : 'size')} />
+              onClick={() => { if (selectedText) setEditing(selectedText.id); else openPanel('more') }} />
+            <ToolbarBtn label="Card" icon={ToolIcons.card} onClick={() => openPanel('card')} />
+            <ToolbarBtn label="Font" icon={<AaIcon small />} onClick={() => openPanel('font')} />
+            <ToolbarBtn label="Size" icon={<SizeIcon />} onClick={() => openPanel('size')} />
             <ToolbarBtn label="Color" icon={<span className="ed-tb-dot" style={{ background: (selected && 'color' in selected && selected.color) || '#1a1a1a' }} />}
-              onClick={() => setSheet(s => s === 'color' ? null : 'color')} />
-            <ToolbarBtn label="Align" icon={<AlignIcon v={(selectedText?.align ?? 'center') as 'left'} />} onClick={() => setSheet(s => s === 'align' ? null : 'align')} />
+              onClick={() => openPanel('color')} />
+            <ToolbarBtn label="Align" icon={<AlignIcon v={(selectedText?.align ?? 'center') as 'left'} />} onClick={() => openPanel('align')} />
             <ToolbarBtn label="Move" className="ed-tb-desk" icon={<MoveIcon />}
               onClick={() => selected && update(selected.id, { box: { ...selected.box, x: 50 - selected.box.w / 2 } } as Partial<CardElement>)} />
             <ToolbarBtn label="Delete" className="ed-tb-desk" icon={<TrashIcon />} onClick={() => selectedId && remove(selectedId)} />
-            <ToolbarBtn label="More" className="ed-tb-mob" icon={<DotsIcon />} onClick={() => setSheet(s => s === 'more' ? null : 'more')} />
+            <ToolbarBtn label="More" className="ed-tb-mob" icon={<DotsIcon />} onClick={() => openPanel('more')} />
           </div>
 
-          <div className="ed-next" ref={nextRef} data-ready={touched && !editingId ? '' : undefined}>
-            <Button variant="dark" size="lg" trailing={<ArrowRight />} onClick={goNext}
-              className={touched && !editingId ? 'm-attention' : undefined}>
-              Next
-            </Button>
+          {/* undo / redo used to live in the sidebar, which is hidden on a
+              phone — so on the screen where a misplaced sticker is easiest
+              to make, there was no way to take it back */}
+          <div className="ed-dock-row">
+            <div className="ed-history">
+              <button className="ed-hist-btn" onClick={undo} disabled={!canUndo} aria-label="Undo" title="Undo">
+                <svg viewBox="0 0 22 22" fill="none" aria-hidden>
+                  <path d="M4 11a7.4 7.4 0 1 0 2.3-5.3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                  <path d="M3.4 3.4V8h4.6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Undo</span>
+              </button>
+              <button className="ed-hist-btn" onClick={redo} disabled={!canRedo} aria-label="Redo" title="Redo">
+                <svg viewBox="0 0 22 22" fill="none" aria-hidden>
+                  <path d="M18 11a7.4 7.4 0 1 1-2.3-5.3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+                  <path d="M18.6 3.4V8H14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Redo</span>
+              </button>
+            </div>
+
+            <div className="ed-next" ref={nextRef} data-nudge={touched && !editingId ? '' : undefined}>
+              <Button variant="dark" size="lg" trailing={<ArrowRight />} onClick={goNext}
+                className={touched && !editingId ? 'm-attention' : undefined}>
+                Next
+              </Button>
+            </div>
           </div>
           </div>
         </section>
@@ -231,7 +255,7 @@ export default function Editor() {
       </main>
 
       {/* -------- mobile sheets -------- */}
-      {sheet && (
+      {isMobile && sheet && (
         <>
           <button className="ed-scrim" onClick={() => setSheet(null)} aria-label="Close panel" />
           <div className="ed-sheet" role="dialog" aria-modal="true">

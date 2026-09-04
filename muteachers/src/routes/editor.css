@@ -177,15 +177,28 @@
 
 /* photo */
 .ep-photo { display: flex; flex-direction: column; gap: 12px; }
-.ep-photo-prev { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 14px; background: var(--surface-2); }
-.ep-photo-prev--empty { display: grid; place-items: center; font-size: 13px; color: var(--muted); }
+/* The preview hosts a real <PhotoFrame>, which sizes its trimmings in design
+   units — so it needs the same container-query context the card provides, at
+   its own scale. The aspect ratio comes from the slot and is set inline. */
+.ep-photo-prev {
+  position: relative; width: 100%;
+  border-radius: 14px; overflow: hidden;
+  background: var(--surface-2);
+  container-type: inline-size;
+  --u: 0.1cqw;
+}
+.ep-photo-prev--empty { aspect-ratio: 4/3; display: grid; place-items: center; font-size: 13px; color: var(--muted); }
 .ep-frames { display: flex; gap: 6px; flex-wrap: wrap; }
 .ep-frame {
   padding: 6px 11px; border-radius: 999px; font-size: 12px; text-transform: capitalize;
   background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-soft);
 }
-.ep-frame[data-on] { background: var(--ink); color: #fff; box-shadow: none; }
 .ep-frame:hover { color: var(--ink); }
+/* after :hover, and repeating it — otherwise hovering the selected chip
+   turns its label dark on a dark pill and the text disappears */
+.ep-frame[data-on], .ep-frame[data-on]:hover {
+  background: var(--ink); color: #fff; box-shadow: none;
+}
 
 /* a row whose control has nothing to do yet — the pan sliders before zoom */
 .ep-row[data-disabled] { opacity: .45; }
@@ -201,7 +214,7 @@
 .ep-reset:hover { color: var(--crimson); box-shadow: inset 0 0 0 1px var(--crimson); }
 
 /* history */
-.ed-history { display: flex; gap: 18px; margin-top: 26px; }
+.ed-history { display: flex; gap: 10px; }
 .ed-hist-btn {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
   color: var(--ink-soft); font-size: 11px;
@@ -222,11 +235,14 @@
 
 /* the card's controls, sitting together as one dock rather than being
    dragged on top of each other with a negative margin */
+/* One line, always. Wrapping put undo/redo and Next on a second row that
+   fell below the fold — so the toolbar gives up a little padding instead. */
 .ed-dock {
   display: flex; align-items: center; justify-content: center;
-  gap: 16px; flex-wrap: wrap;
-  margin-top: 4px;
+  gap: 12px; flex-wrap: nowrap;
+  margin-top: 4px; max-width: 100%;
 }
+.ed-dock-row { display: flex; align-items: center; gap: 12px; flex: none; }
 
 .ed-face-switch {
   display: inline-flex; padding: 3px; border-radius: 999px;
@@ -242,7 +258,10 @@
   width: 100%; display: flex; justify-content: center;
   padding: 6px 0 2px;
 }
-.ed-card { width: 100%; max-width: min(430px, 100%, calc((92dvh - var(--nav-h) - 150px) * var(--card-ar, .714))); }
+/* Measured: the stage starts 226px down, and the face switch, hint and dock
+   under the card take about 200px between them. The card gets what is left,
+   so the whole editor sits on one screen without scrolling to reach Next. */
+.ed-card { width: 100%; max-width: min(430px, 100%, calc((100dvh - 440px) * var(--card-ar, .714))); }
 
 .ed-hint {
   display: inline-flex; align-items: center; gap: 8px;
@@ -252,14 +271,14 @@
 
 /* ---------------- contextual toolbar ---------------- */
 .ed-toolbar {
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 2px; min-width: 0;
   padding: 8px 12px; border-radius: 20px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-soft), 0 4px 14px rgba(60,36,18,.08), 0 18px 40px rgba(60,36,18,.1);
 }
 .ed-tb {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
-  padding: 8px 14px; border-radius: 13px;
+  padding: 8px 10px; border-radius: 13px;
   color: var(--ink-soft); transition: background .16s, color .16s;
 }
 .ed-tb-ico { height: 22px; display: grid; place-items: center; }
@@ -272,7 +291,7 @@
 .ed-tb-mob { display: none; }
 
 .ed-next { position: relative; z-index: 46; }
-.ed-next[data-ready]::before {
+.ed-next[data-nudge]::before {
   content: 'Looks good? →';
   position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%);
   font-family: var(--f-script); font-size: 16px; color: var(--muted);
@@ -320,54 +339,68 @@
 }
 
 @media (max-width: 860px) {
+  /* the dock's own height, and everything that is not the card, in two
+     numbers the layout below can be written against */
+  /* Measured, not guessed: 260px of chrome sits above the card (nav, back
+     row, step bar, face switch), the dock below it is 124px, and the hint
+     between them needs about 36px. The card takes whatever is left, so it
+     never runs under the dock and the page does not need to scroll. */
+  .ed { --ed-dock-h: 126px; --ed-chrome: 436px; }
   .ed-steps { padding: 4px 18px 4px; }
   .ed-main {
     grid-template-columns: 1fr;
     gap: 0;
-    padding: 6px 18px calc(150px + var(--safe-b));
+    padding: 6px 16px calc(var(--ed-dock-h) + 16px + var(--safe-b));
   }
   .ed-rail { display: none; }
   .ed-panel { padding-top: 0; }
-  .ed-panel-head { text-align: center; margin-bottom: 10px; }
-  .ed-panel-title { font-size: 26px; }
-  .ed-panel-title em { display: inline; font-size: 1.15em; margin-left: 6px; }
-  .ed-panel-sub { max-width: none; margin-top: 6px; font-size: 13.5px; }
-  .ed-panel-body, .ed-history { display: none; }
+  /* the step bar directly above already says which step this is */
+  .ed-panel-head, .ed-panel-body { display: none; }
 
-  .ed-stage { gap: 10px; position: static; }
-  /* both children are position: fixed on a phone, so the dock steps out of
-     the way and lets them place themselves as they did before */
-  .ed-dock { display: contents; }
-  .ed-card { max-width: min(340px, 84vw, calc(46dvh * var(--card-ar, .714))); }
+  .ed-stage { gap: 8px; position: static; }
+  /* the card takes exactly the height left between the chrome and the dock */
+  .ed-card { max-width: min(340px, 86vw, calc((100dvh - var(--ed-chrome)) * var(--card-ar, .714))); }
   .ed-hint { font-size: 11.5px; padding: 0 10px; }
 
+  /* One fixed dock rather than two separately floating pieces. Next keeps
+     its place in the column even while it is still invisible, so the dock is
+     always the same height — which is what lets the card below know exactly
+     how much room it has instead of running underneath. */
+  .ed-dock {
+    position: fixed; left: 10px; right: 10px; bottom: calc(8px + var(--safe-b));
+    z-index: 45; margin: 0;
+    /* reverse, so the tool strip sits on the screen edge and Next floats
+       above it — the order it reads in the markup, upside down on purpose */
+    display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 8px;
+  }
+
   .ed-toolbar {
-    grid-column: 1;
-    position: fixed; left: 10px; right: 10px; width: auto; bottom: calc(10px + var(--safe-b)); z-index: 45;
-    justify-self: stretch; align-self: end;
-    margin-top: 0; justify-content: space-between; gap: 0; padding: 6px 6px;
-    border-radius: 22px;
+    width: 100%;
+    justify-content: space-between; gap: 0; padding: 6px 4px;
+    border-radius: 20px;
   }
   .ed-tb { flex: 1; padding: 8px 2px; gap: 4px; }
   .ed-tb-label { font-size: 10px; }
   .ed-tb-desk { display: none; }
   .ed-tb-mob { display: flex; }
 
-  /* Next rides in just above the tool bar once there is something to move on to */
-  .ed-next {
-    grid-column: 1; justify-self: end;
-    position: fixed; right: 12px; bottom: calc(84px + var(--safe-b));
-    margin: 0; z-index: 46;
-    transform: translateY(18px) scale(.94);
-    opacity: 0; pointer-events: none;
-    transition: transform .36s var(--e-out), opacity .28s var(--e-out);
+  /* Next is the way through a four-step flow, so it is always reachable;
+     it only grows a little louder once there is something worth keeping */
+  .ed-next { position: relative; margin: 0; z-index: 46; }
+  .ed-dock-row { width: 100%; justify-content: space-between; gap: 10px; }
+
+  /* labels off — the icons are standard and the row has a button to fit in */
+  .ed-history { gap: 6px; }
+  .ed-hist-btn span { display: none; }
+  .ed-hist-btn > svg {
+    padding: 9px; background: var(--surface);
+    box-shadow: inset 0 0 0 1px var(--line-soft), 0 4px 14px rgba(60,36,18,.10);
   }
-  .ed-next[data-ready] { transform: none; opacity: 1; pointer-events: auto; }
   .ed-next .btn {
-    --btn-h: 48px; padding: 0 22px;
+    --btn-h: 46px; padding: 0 22px;
     box-shadow: 0 6px 18px rgba(20,14,10,.3), 0 18px 44px rgba(20,14,10,.22);
   }
-  .ed-next[data-ready]::before { display: none; }
+  .ed-next[data-nudge]::before { display: none; }
 }
 
 
@@ -375,7 +408,11 @@
 .ed-panel-head  { animation: m-fade-up .5s var(--e-out) .06s both; }
 .ed-panel-body  { animation: m-fade-up .5s var(--e-out) .14s both; }
 .ed-rail        { animation: m-fade-left .5s var(--e-out) .02s both; }
-.ed-stage       { animation: m-rise .7s var(--e-out) .06s both; }
+/* Opacity only, deliberately. An animation that touches `transform` keeps
+   filling after it ends, which makes the element a containing block for
+   `position: fixed` — and the dock lives inside the stage, so on a phone it
+   would anchor to the stage instead of the bottom of the screen. */
+.ed-stage       { animation: m-fade .55s var(--e-out) .06s both; }
 .ed-toolbar     { animation: m-fade-up .5s var(--e-out) .22s both; }
 
 .ed-rail-btn { position: relative; }

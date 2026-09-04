@@ -204,3 +204,48 @@
   .cam-deck-side { font-size: 11px; }
   .cam-use { height: 46px; padding: 0 18px; font-size: 14px; }
 }
+
+/* ---------------- a phone held sideways ----------------
+   Landscape phones are ~900px wide, so every width-based rule above treats
+   them as a desktop and gives the stage a 4/3 box that is taller than the
+   whole screen — which is why the shutter row fell off the bottom. Height is
+   the thing that is actually scarce here, so this keys on that instead, and
+   takes the shape a camera app takes when you turn it: the picture fills the
+   height it has, and the controls stand up beside it. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .cam { display: flex; align-items: stretch; border-radius: 20px; }
+
+  .cam-stage {
+    flex: 1 1 auto; min-width: 0;
+    height: auto; aspect-ratio: auto;
+  }
+
+  .cam-deck {
+    flex: none; width: 84px;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto 1fr;
+    gap: 6px; padding: 10px 8px;
+  }
+
+  .cam-top { padding: 10px 12px; }
+  .cam-round { width: 36px; height: 36px; }
+  .cam-round svg { width: 16px; height: 16px; }
+  .cam-chip { font-size: 11px; padding: 6px 12px; }
+  .cam-count { font-size: 74px; }
+
+  .cam-shutter-ring { width: 54px; height: 54px; }
+  .cam-shutter-spark, .cam-deck-label { display: none; }
+  .cam-thumb { width: 34px; height: 34px; }
+  .cam-deck-ico { width: 34px; height: 34px; }
+
+  /* Icons only. The labels are bare text nodes inside the buttons, so they
+     are collapsed rather than hidden — with them the three controls need
+     more height than a sideways phone has, and the last one gets cut off.
+     Each button still carries its aria-label. */
+  .cam-deck-side { gap: 0; font-size: 0; }
+  .cam-deck-side .cam-deck-ico, .cam-deck-side .cam-thumb { font-size: 1rem; }
+  .cam-use { height: 42px; padding: 0 12px; font-size: 12.5px; gap: 5px; }
+
+  /* the settings menu drops from the top chrome and must clear the deck */
+  .cam-menu { right: 10px; top: 52px; }
+}

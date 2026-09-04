@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type { CardDoc, CardElement, DecoElement, Face, PhotoElement, Template, TextElement } from '../../lib/types'
+import { clampBox } from '../../lib/types'
 import { FONTS } from '../../lib/fonts'
 import { TemplateArt } from '../art/TemplateArt'
 import { Decoration } from '../art/Decorations'
@@ -25,11 +26,15 @@ interface Props {
 /* ------------------------------------------------------------------ */
 
 function elStyle(el: CardElement): CSSProperties {
-  const h = el.kind === 'text' ? undefined : `${el.box.h}%`
+  /* a safety net as well as a rule: a card saved before the bounds existed
+     can hold an element that is entirely off the paper, and clamping here
+     brings it back within reach instead of leaving it lost */
+  const box = clampBox(el.box)
+  const h = el.kind === 'text' ? undefined : `${box.h}%`
   return {
-    left: `${el.box.x}%`,
-    top: `${el.box.y}%`,
-    width: `${el.box.w}%`,
+    left: `${box.x}%`,
+    top: `${box.y}%`,
+    width: `${box.w}%`,
     height: h,
     transform: `rotate(${el.rot}deg)`,
   }
@@ -72,7 +77,7 @@ function EditableText({ el }: { el: TextElement }) {
   const ref = useRef<HTMLDivElement>(null)
   const editing = useCard(s => s.editingId === el.id)
   const update = useCard(s => s.update)
-  const commit = useCard(s => s.commit)
+  const beginChange = useCard(s => s.beginChange)
   const f = FONTS[el.font]
 
   /* keep the DOM in sync only when the value changes from the outside */
@@ -93,9 +98,14 @@ function EditableText({ el }: { el: TextElement }) {
     sel?.removeAllRanges(); sel?.addRange(r)
   }, [editing])
 
+  /* one undo step per visit to a text box, taken before the first keystroke */
+  const snapped = useRef(false)
+  useEffect(() => { snapped.current = false }, [editing])
+
   const onInput = useCallback(() => {
     const n = ref.current
     if (!n) return
+    if (!snapped.current) { snapped.current = true; beginChange() }
     let v = n.innerText.replace(/\n$/, '')
     if (el.maxLen && v.length > el.maxLen) {
       v = v.slice(0, el.maxLen)
@@ -104,7 +114,7 @@ function EditableText({ el }: { el: TextElement }) {
       const sel = getSelection(); sel?.removeAllRanges(); sel?.addRange(r)
     }
     update(el.id, { text: v } as Partial<CardElement>, { history: false })
-  }, [el.id, el.maxLen, update])
+  }, [el.id, el.maxLen, update, beginChange])
 
   const empty = !el.text.trim()
 
@@ -120,7 +130,6 @@ function EditableText({ el }: { el: TextElement }) {
       data-ph={el.placeholder}
       data-empty={empty || undefined}
       onInput={onInput}
-      onBlur={commit}
       onKeyDown={e => {
         e.stopPropagation()
         if (e.key === 'Escape') { (e.target as HTMLElement).blur(); useCard.getState().setEditing(null) }
@@ -210,14 +219,17 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
           }
 
           if (el.kind === 'photo') {
-            /* a photo fitted to the frame printed on the artwork tucks under
-               it; any other frame is a photo laid on top of the card */
-            const fitted = el.frame === 'slot' || el.frame === 'arch-slot'
+            /* By default a photo fitted to the frame printed on the artwork
+               tucks under it and any other frame lays on top — but `lift`
+               overrides that either way once the user has chosen. */
+            const framed = el.frame === 'slot' || el.frame === 'arch-slot'
+            const fitted = el.lift === undefined ? framed : !el.lift
             return (
               <div key={el.id} {...common}
                 data-slot={fitted ? '' : undefined}
                 data-fresh={justAdded || freshId === el.id ? '' : undefined}>
-                <PhotoFrame el={el as PhotoElement} src={doc.photo} mode={mode} />
+                <PhotoFrame el={el as PhotoElement} src={doc.photo} mode={mode}
+                  photoAr={doc.photoAr} cardAr={template.aspect} />
                 {edit && (
                   <ElementChrome
                     el={el}

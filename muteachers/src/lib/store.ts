@@ -39,13 +39,14 @@ interface State {
   select: (id: string | null) => void
   setEditing: (id: string | null) => void
   update: (id: string, patch: Partial<CardElement>, opts?: { history?: boolean }) => void
-  commit: () => void
+  beginChange: () => void
   addDeco: (deco: DecoKey, face: Face, color?: string) => string
   addText: (face: Face) => string
   remove: (id: string) => void
   bringForward: (id: string) => void
   sendBackward: (id: string) => void
   setPhoto: (dataUrl: string | undefined) => void
+  ensurePhotoAspect: () => void
   setMeta: (patch: Partial<Pick<CardDoc, 'from' | 'to'>>) => void
   undo: () => void
   redo: () => void
@@ -115,8 +116,19 @@ export const useCard = create<State>((set, get) => ({
     set({ doc, past, future: opts?.history === false ? s.future : [] })
   },
 
-  commit: () => {
+  /**
+   * Take a snapshot before an edit starts.
+   *
+   * This used to be `commit()`, called when a drag or a slider was released —
+   * which pushed the card as it was *after* the change, so undo restored the
+   * state you were already looking at and appeared to do nothing. Snapshotting
+   * up front is what makes one undo step equal one interaction.
+   */
+  beginChange: () => {
     const s = get()
+    const last = s.past[s.past.length - 1]
+    const now = JSON.stringify(s.doc)
+    if (last && JSON.stringify(last) === now) return
     set({ past: [...s.past, clone(s.doc)].slice(-40), future: [] })
   },
 
@@ -178,9 +190,36 @@ export const useCard = create<State>((set, get) => ({
 
   setPhoto: (dataUrl) => {
     const s = get()
-    const doc = { ...s.doc, photo: dataUrl, updatedAt: Date.now() }
+    const doc = { ...s.doc, photo: dataUrl, photoAr: undefined, updatedAt: Date.now() }
     persist(doc)
     set({ doc, photoJustAdded: !!dataUrl, past: [...s.past, clone(s.doc)].slice(-40), future: [] })
+
+    get().ensurePhotoAspect()
+  },
+
+  /**
+   * Measure the photo's own shape, if it is not already known.
+   *
+   * How far a photo can be panned depends on how much of it `cover` is
+   * hiding, which needs its aspect against the slot's. Cards saved before
+   * this was recorded — or restored from a link — arrive without it, and
+   * their pan sliders would sit dead for no reason, so this fills the gap
+   * whenever the editor opens rather than only when a picture is chosen.
+   */
+  ensurePhotoAspect: () => {
+    const { photo, photoAr } = get().doc
+    if (!photo || photoAr) return
+    const img = new Image()
+    img.onload = () => {
+      const ar = img.naturalWidth / img.naturalHeight
+      if (!ar || !isFinite(ar)) return
+      const cur = get().doc
+      if (cur.photo !== photo || cur.photoAr) return
+      const next = { ...cur, photoAr: ar }
+      persist(next)
+      set({ doc: next })
+    }
+    img.src = photo
   },
 
   setMeta: (patch) => {

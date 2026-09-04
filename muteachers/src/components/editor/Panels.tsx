@@ -5,13 +5,17 @@ import { DECO_GROUPS, DECO_LABEL } from '../../lib/decoMeta'
 import { Decoration } from '../art/Decorations'
 import { AlignIcon } from './EditorBits'
 import { newDoc, useCard } from '../../lib/store'
-import { TEMPLATES } from '../../lib/templates'
+import { getTemplate, TEMPLATES } from '../../lib/templates'
 import { CardCanvas } from '../card/CardCanvas'
-import { clampPan, normalizePhoto, panLimit } from '../../lib/image'
+import { PhotoFrame } from '../card/PhotoFrame'
+import { clampPan, coverRatios, normalizePhoto, panLimit } from '../../lib/image'
 
 export const SWATCHES = ['#1a1a1a', '#7b0e11', '#c08a52', '#ecd9c0', '#ffffff', '#2f4858', '#7f9166', '#8c63a9', '#d2372f', '#e0a63c']
 
 const pct = (v: number, min: number, max: number) => `${((v - min) / (max - min)) * 100}%`
+
+/* sliders snapshot once when grabbed, so one drag is one undo step */
+const grab = () => useCard.getState().beginChange()
 
 export const PHRASES = [
   'Thank you for everything',
@@ -39,7 +43,6 @@ export function FontGrid({ value, onPick }: { value?: FontKey; onPick: (f: FontK
 /* ---------------- size / colour / align ---------------- */
 export function TextControls({ el }: { el: TextElement | null }) {
   const update = useCard(s => s.update)
-  const commit = useCard(s => s.commit)
   const disabled = !el
 
   return (
@@ -51,8 +54,8 @@ export function TextControls({ el }: { el: TextElement | null }) {
           style={{ ['--fill' as string]: pct(el?.size ?? 48, 12, 160) }}
           value={el?.size ?? 48} disabled={disabled}
           aria-label="Text size"
+          onPointerDown={grab}
           onChange={e => el && update(el.id, { size: Number(e.target.value) } as Partial<CardElement>, { history: false })}
-          onPointerUp={commit}
         />
         <span className="ep-row-value">{Math.round(el?.size ?? 48)}</span>
       </div>
@@ -68,8 +71,9 @@ export function TextControls({ el }: { el: TextElement | null }) {
           ))}
           <label className="ep-sw ep-sw--wheel" title="Custom colour">
             <input type="color" value={el?.color ?? '#1a1a1a'} disabled={disabled}
+              onPointerDown={grab}
               onChange={e => el && update(el.id, { color: e.target.value } as Partial<CardElement>, { history: false })}
-              onBlur={commit} aria-label="Custom text colour" />
+              aria-label="Custom text colour" />
           </label>
         </div>
       </div>
@@ -142,7 +146,6 @@ export function HandwritePanel({ onAdd }: { onAdd: (text: string, font: FontKey)
 /* ---------------- colours ---------------- */
 export function ColorPanel({ el }: { el: CardElement | null }) {
   const update = useCard(s => s.update)
-  const commit = useCard(s => s.commit)
   const can = el && (el.kind === 'text' || el.kind === 'deco')
   return (
     <div className="ep-colors">
@@ -155,8 +158,9 @@ export function ColorPanel({ el }: { el: CardElement | null }) {
         ))}
         <label className="ep-sw ep-sw--lg ep-sw--wheel" title="Custom colour">
           <input type="color" disabled={!can} defaultValue="#7b0e11"
+            onPointerDown={grab}
             onChange={e => el && update(el.id, { color: e.target.value } as Partial<CardElement>, { history: false })}
-            onBlur={commit} aria-label="Custom colour" />
+            aria-label="Custom colour" />
         </label>
       </div>
     </div>
@@ -219,15 +223,17 @@ export function PhotoPanel() {
   const doc = useCard(s => s.doc)
   const setPhoto = useCard(s => s.setPhoto)
   const update = useCard(s => s.update)
-  const commit = useCard(s => s.commit)
-  const bringForward = useCard(s => s.bringForward)
-  const sendBackward = useCard(s => s.sendBackward)
+  const templateAr = useCard(s => getTemplate(s.doc.templateId).aspect)
   const file = useRef<HTMLInputElement>(null)
   const slot = doc.elements.find(e => e.kind === 'photo') as Extract<CardElement, { kind: 'photo' }> | undefined
 
-  /* panning only has somewhere to go once the photo is zoomed past its window */
-  const limit = slot ? panLimit(slot.zoom) : 0
-  const canPan = limit > 0.5
+  /* How much room there is to pan depends on the photo's own shape against
+     the slot's, not on the zoom alone — a tall photo in a wide frame can be
+     slid up and down at zoom 1, which the old flat limit refused to allow. */
+  const slotAr = slot && slot.box.h > 0 ? (slot.box.w / slot.box.h) * templateAr : undefined
+  const [rx, ry] = coverRatios(doc.photoAr, slotAr)
+  const limX = slot ? panLimit(slot.zoom, rx) : 0
+  const limY = slot ? panLimit(slot.zoom, ry) : 0
 
   /* zooming back out has to pull the pan in with it, or the photo would
      uncover a corner of its window the moment the slider is released */
@@ -235,15 +241,27 @@ export function PhotoPanel() {
     if (!slot) return
     update(slot.id, {
       zoom,
-      ox: clampPan(slot.ox, zoom),
-      oy: clampPan(slot.oy, zoom),
+      ox: clampPan(slot.ox, zoom, rx),
+      oy: clampPan(slot.oy, zoom, ry),
     } as Partial<CardElement>, { history: false })
   }
 
+  /* the same rule the card uses, so the buttons show where it really is */
+  const framed = slot ? (slot.frame === 'slot' || slot.frame === 'arch-slot') : false
+  const under = slot ? (slot.lift === undefined ? framed : !slot.lift) : true
+
   return (
     <div className="ep-photo">
-      {doc.photo
-        ? <img className="ep-photo-prev" src={doc.photo} alt="Your photo" />
+      {/* The preview renders the same component the card does, in a box the
+          shape of the slot — so zoom, panning and the frame all show here
+          before you go looking for them on the card. */}
+      {doc.photo && slot
+        ? (
+          <div className="ep-photo-prev" style={{ aspectRatio: String(slotAr ?? 1) }}>
+            <PhotoFrame el={slot} src={doc.photo} mode="view"
+              photoAr={doc.photoAr} cardAr={templateAr} />
+          </div>
+        )
         : <div className="ep-photo-prev ep-photo-prev--empty">No photo yet</div>}
 
       <button className="ep-note-btn" onClick={() => file.current?.click()}>
@@ -262,34 +280,17 @@ export function PhotoPanel() {
             <input className="ep-range" type="range" min={1} max={2.6} step={.02} value={slot.zoom}
               style={{ ['--fill' as string]: pct(slot.zoom, 1, 2.6) }}
               aria-label="Photo zoom"
-              onChange={e => setZoom(Number(e.target.value))}
-              onPointerUp={commit} />
+              onPointerDown={grab}
+              onChange={e => setZoom(Number(e.target.value))} />
             <span className="ep-row-value">{Math.round(slot.zoom * 100)}%</span>
           </div>
 
-          <div className="ep-row" data-disabled={canPan ? undefined : ''}>
-            <span className="ep-row-label">Left / right</span>
-            <input className="ep-range" type="range" min={-limit || -1} max={limit || 1} step={.5}
-              value={clampPan(slot.ox, slot.zoom)} disabled={!canPan}
-              style={{ ['--fill' as string]: pct(clampPan(slot.ox, slot.zoom), -limit || -1, limit || 1) }}
-              aria-label="Photo horizontal position"
-              onChange={e => update(slot.id, { ox: Number(e.target.value) } as Partial<CardElement>, { history: false })}
-              onPointerUp={commit} />
-            <span className="ep-row-value">{Math.round(clampPan(slot.ox, slot.zoom))}</span>
-          </div>
+          <PanRow label="Left / right" axis="ox" limit={limX} slot={slot} ratio={rx} />
+          <PanRow label="Up / down" axis="oy" limit={limY} slot={slot} ratio={ry} />
 
-          <div className="ep-row" data-disabled={canPan ? undefined : ''}>
-            <span className="ep-row-label">Up / down</span>
-            <input className="ep-range" type="range" min={-limit || -1} max={limit || 1} step={.5}
-              value={clampPan(slot.oy, slot.zoom)} disabled={!canPan}
-              style={{ ['--fill' as string]: pct(clampPan(slot.oy, slot.zoom), -limit || -1, limit || 1) }}
-              aria-label="Photo vertical position"
-              onChange={e => update(slot.id, { oy: Number(e.target.value) } as Partial<CardElement>, { history: false })}
-              onPointerUp={commit} />
-            <span className="ep-row-value">{Math.round(clampPan(slot.oy, slot.zoom))}</span>
-          </div>
-
-          {!canPan && <p className="ep-hint ep-hint--tight">Zoom in to move the photo around inside its frame.</p>}
+          {limX < 0.5 && limY < 0.5 && (
+            <p className="ep-hint ep-hint--tight">Zoom in to move the photo inside its frame.</p>
+          )}
 
           <div className="ep-row">
             <span className="ep-row-label">Frame</span>
@@ -302,11 +303,15 @@ export function PhotoPanel() {
             </div>
           </div>
 
+          {/* Any frame can go either side of the artwork — a polaroid tucked
+              under it shows its white border through the printed slot. */}
           <div className="ep-row">
             <span className="ep-row-label">Layer</span>
             <div className="ep-frames">
-              <button className="ep-frame" onClick={() => sendBackward(slot.id)}>Send back</button>
-              <button className="ep-frame" onClick={() => bringForward(slot.id)}>Bring forward</button>
+              <button className="ep-frame" data-on={under ? '' : undefined}
+                onClick={() => update(slot.id, { lift: false } as Partial<CardElement>)}>Behind art</button>
+              <button className="ep-frame" data-on={under ? undefined : ''}
+                onClick={() => update(slot.id, { lift: true } as Partial<CardElement>)}>In front</button>
             </div>
           </div>
 
@@ -315,6 +320,34 @@ export function PhotoPanel() {
           </button>
         </>
       )}
+    </div>
+  )
+}
+
+/** one pan axis, dead when the photo has no room to move on it */
+function PanRow({ label, axis, limit, slot, ratio }: {
+  label: string
+  axis: 'ox' | 'oy'
+  limit: number
+  ratio: number
+  slot: Extract<CardElement, { kind: 'photo' }>
+}) {
+  const update = useCard(s => s.update)
+  const can = limit > 0.5
+  const value = clampPan(slot[axis], slot.zoom, ratio)
+  const min = can ? -limit : -1
+  const max = can ? limit : 1
+
+  return (
+    <div className="ep-row" data-disabled={can ? undefined : ''}>
+      <span className="ep-row-label">{label}</span>
+      <input className="ep-range" type="range" min={min} max={max} step={.5}
+        value={value} disabled={!can}
+        style={{ ['--fill' as string]: pct(value, min, max) }}
+        aria-label={`Photo ${axis === 'ox' ? 'horizontal' : 'vertical'} position`}
+        onPointerDown={grab}
+        onChange={e => update(slot.id, { [axis]: Number(e.target.value) } as Partial<CardElement>, { history: false })} />
+      <span className="ep-row-value">{Math.round(value)}</span>
     </div>
   )
 }
