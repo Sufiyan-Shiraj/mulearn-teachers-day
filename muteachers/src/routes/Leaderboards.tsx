@@ -65,7 +65,7 @@ export default function Leaderboards() {
             <Crown />
             Leaderboards
           </h1>
-          <p className="lb-sub">Create, share and spread smiles! <HeartSolid size={17} color="var(--red)" className="lb-sub-heart" /></p>
+          <p className="lb-sub">Most teachers snapped with. Go find one more! <HeartSolid size={17} color="var(--red)" className="lb-sub-heart" /></p>
           <div className="lb-ranges" role="tablist">
             {RANGES.map(r => (
               <button
@@ -101,10 +101,10 @@ export default function Leaderboards() {
             </div>
             <h2 className="lb-empty-title">No cards ranked yet</h2>
             <p className="lb-empty-desc">
-              Be the first to create and share a Teacher&rsquo;s Day tribute card to claim the #1 spot on the leaderboard!
+              Be the first to get a selfie with a teacher and claim the #1 spot!
             </p>
             <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>
-              Create a Card
+              Take a selfie
             </ButtonLink>
           </div>
         ) : (
@@ -125,7 +125,7 @@ export default function Leaderboards() {
                     <Link to={`/u/${handleSlug}`} className="lb-pod-card" style={{ textDecoration: 'none', color: 'inherit' }}>
                       <strong>{r.name}</strong>
                       <em>{r.handle}</em>
-                      <span className="lb-hearts"><HeartSolid size={13} color="var(--red)" />{fmt(r.hearts)}</span>
+                      <span className="lb-hearts"><span className="lb-tally">{fmt(r.teachers)}</span>{r.teachers === 1 ? 'teacher' : 'teachers'}</span>
                     </Link>
                     <span className="sr-only">Rank {r.rank}, position {i + 1}</span>
                   </li>
@@ -148,7 +148,11 @@ export default function Leaderboards() {
                       <span className="lb-rank">{r.rank}</span>
                       <span className="lb-row-av"><Avatar name={r.name} avatarUrl={r.avatarUrl} /></span>
                       <span className="lb-row-name"><strong>{r.name}</strong><em>{r.handle}</em></span>
-                      <span className="lb-row-hearts"><HeartSolid size={16} color="var(--red)" />{r.hearts}</span>
+                      <span className="lb-row-hearts">
+                        <span className="lb-tally">{r.teachers}</span>
+                        <span className="lb-unit">{r.teachers === 1 ? 'teacher' : 'teachers'}</span>
+                        {r.hearts > 0 && <span className="lb-likes"><HeartSolid size={13} color="var(--red)" />{r.hearts}</span>}
+                      </span>
                       {r.note && <span className="lb-note" style={{ background: r.tint }}>{r.note}</span>}
                     </Link>
                   )
@@ -171,7 +175,7 @@ export default function Leaderboards() {
                 </svg>
               </span>
               <p className="lb-you-unauth-text">
-                Sign in to see your ranking, track appreciation hearts, and climb the leaderboard!
+                Add your name to see where you stand and start counting teachers!
               </p>
               <button
                 type="button"
@@ -193,7 +197,7 @@ export default function Leaderboards() {
               </svg>
             </span>
             <span className="lb-you-rank">
-              {userRank && userRank.hearts > 0 ? `#${userRank.rank}` : '—'}
+              {userRank && userRank.teachers > 0 ? `#${userRank.rank}` : '—'}
             </span>
             <span className="lb-row-av">
               <Avatar name={user.displayName || user.username} avatarUrl={user.avatarUrl} />
@@ -203,18 +207,20 @@ export default function Leaderboards() {
               <em>@{user.username}</em>
             </span>
             <span className="lb-row-hearts">
-              <HeartSolid size={16} color="var(--red)" />
-              {userRank?.hearts ?? 0}
+              <span className="lb-tally">{userRank?.teachers ?? 0}</span>
+              <span className="lb-unit">{(userRank?.teachers ?? 0) === 1 ? 'teacher' : 'teachers'}</span>
             </span>
             <span className="lb-note" style={{ background: userRank?.tint || '#d8c8ea' }}>
-              {userRank?.note || (userRank && userRank.hearts > 0 ? 'Keep shining!' : 'Create a card to join the board!')}
+              {userRank?.note || (userRank && userRank.teachers > 0
+                ? `${userRank.selfies} selfie${userRank.selfies === 1 ? '' : 's'} so far`
+                : 'Take a selfie with a teacher to join the board!')}
             </span>
           </div>
         )}
 
         <p className="lb-foot">
           <svg viewBox="0 0 22 22" fill="none" aria-hidden><path d="M11 2.4v1.8M4 5.2l1.3 1.3M18 5.2l-1.3 1.3M8.4 15.6h5.2M9 18.4h4M11 5.8a4.8 4.8 0 0 1 2.8 8.7H8.2A4.8 4.8 0 0 1 11 5.8Z" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          Keep creating and sharing to climb the leaderboard! <HeartSolid size={14} color="var(--red)" />
+          Every new teacher is a place on the board. <HeartSolid size={14} color="var(--red)" />
         </p>
       </main>
 

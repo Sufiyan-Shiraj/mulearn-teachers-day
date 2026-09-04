@@ -71,7 +71,7 @@ export default function UserProfile() {
           <div className="up-stats">
             <div className="up-stat">
               <strong>{cards.length}</strong>
-              <span>Cards</span>
+              <span>Selfies</span>
             </div>
             <div className="up-stat">
               <strong className="up-stat-hearts">
@@ -87,25 +87,25 @@ export default function UserProfile() {
         <section className="up-cards-section">
           <div className="up-section-head">
             <h2>
-              Cards by {displayName} <HeartDoodle size={20} className="up-head-heart" />
+              Selfies by {displayName} <HeartDoodle size={20} className="up-head-heart" />
             </h2>
-            <p>Every appreciation card published by @{username}</p>
+            <p>Every selfie posted by @{username}</p>
           </div>
 
           {loading ? (
             <div className="up-loading">
               <span className="up-spin" />
-              <p>Finding cards…</p>
+              <p>Finding selfies…</p>
             </div>
           ) : cards.length === 0 ? (
             <div className="up-empty">
               <div className="up-empty-art">
                 <HeartDoodle size={40} color="var(--muted-2)" />
               </div>
-              <h3>No cards published yet</h3>
-              <p>@{username} hasn&rsquo;t published any cards yet, or they might be private.</p>
+              <h3>Nothing posted yet</h3>
+              <p>@{username} hasn&rsquo;t posted a selfie yet.</p>
               <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>
-                Make a Card
+                Take a selfie
               </ButtonLink>
             </div>
           ) : (

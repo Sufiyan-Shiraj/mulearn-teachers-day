@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react'
 
-export const ToolIcons = {
+export const ToolIcons: Record<string, ReactNode> = {
+  name: (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4.5 18.5 8 6.4h1.6l3.5 12.1M6 14.6h5.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M15.4 18.5V9.8m0 2.2a2.6 2.6 0 1 1 0 3.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  ),
   card: (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
       <rect x="3.2" y="2.6" width="12" height="16" rx="2.2" stroke="currentColor" strokeWidth="1.6" />

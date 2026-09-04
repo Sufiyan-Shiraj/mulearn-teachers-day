@@ -19,7 +19,7 @@ export function TabBar() {
     { to: '/', label: 'Home', icon: <HomeIcon /> },
     {
       to: '/photo',
-      label: 'Create',
+      label: 'Selfie',
       icon: <PlusIcon />,
       accent: true,
       onClick: (e) => {
@@ -27,7 +27,7 @@ export function TabBar() {
           e.preventDefault()
           openAuthModal({
                         title: 'First — what’s your name?',
-            subtitle: 'Sign in or sign up to personalize, save, and share your card ✨',
+            subtitle: 'It goes on your selfies and on the leaderboard.',
             redirectTo: '/photo',
             onSuccess: () => {
               nav('/photo')
@@ -36,7 +36,7 @@ export function TabBar() {
         }
       },
     },
-    { to: '/my-cards', label: 'My Cards', icon: <HeartIcon /> },
+    { to: '/my-cards', label: 'My Posts', icon: <HeartIcon /> },
     { to: '/leaderboards', label: 'Boards', icon: <TrophyIcon /> },
     {
       to: user?.username ? `/u/${user.username}` : '#auth',
@@ -47,7 +47,7 @@ export function TabBar() {
           e.preventDefault()
           openAuthModal({
             title: 'What’s your name?',
-            subtitle: 'Sign in to access your cards and creator profile ✨',
+            subtitle: 'It goes on your selfies and on the leaderboard.',
           })
         }
       },

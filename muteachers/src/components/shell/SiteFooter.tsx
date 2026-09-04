@@ -4,7 +4,7 @@ import { HeartSolid, Paperclip } from '../art/Doodles'
 import './footer.css'
 
 const POINTS = [
-  { icon: <LockIcon />, a: 'Your card is', b: 'private & secure' },
+  { icon: <LockIcon />, a: 'Your photos stay', b: 'on your phone' },
   { icon: <PenIcon />, a: 'Write from', b: 'the heart' },
   { icon: <ShareIcon />, a: 'Share instantly', b: 'with your teacher' },
 ]
@@ -51,7 +51,7 @@ export function SiteFooter() {
         </div>
         <Link to="/photo" className="ft-card-scrap">
           <Paperclip size={18} className="ft-card-clip" />
-          <span>One card.<br />A thousand<br />memories. <HeartSolid size={16} color="var(--red)" /></span>
+          <span>One photo.<br />A thousand<br />memories. <HeartSolid size={16} color="var(--red)" /></span>
         </Link>
       </div>
     </footer>

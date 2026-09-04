@@ -1,15 +1,29 @@
 import type { ArtKey, CardElement, Template } from './types'
 import { SLOTS } from './slots'
 
-/* helpers keep the template table readable */
-const t = (
-  id: string, face: 'front' | 'back', box: [number, number, number, number],
-  o: Partial<Extract<CardElement, { kind: 'text' }>> = {},
-): CardElement => ({
-  kind: 'text', id, face, box: { x: box[0], y: box[1], w: box[2], h: box[3] },
-  rot: 0, text: '', placeholder: 'Tap to write…', font: 'playful', size: 46,
-  color: '#1a1a1a', align: 'center', lh: 1.25, plate: 'none', ...o,
-})
+/**
+ * The teacher's name — the only text on a selfie.
+ *
+ * It sits in the writing area the artwork already provides, at a size chosen
+ * for that area, so nobody has to place or style it. It can still be dragged
+ * and resized on the preview if someone wants it somewhere else.
+ */
+const name = (id: string, art: ArtKey): CardElement => {
+  const [x, y, w, h] = SLOTS[art].name
+  return {
+    kind: 'text', id, face: 'front', box: { x, y, w, h }, rot: 0,
+    text: '', placeholder: 'Your teacher’s name',
+    font: 'playful', size: SLOTS[art].nameSize,
+    color: NAME_INK[art], align: 'center', lh: 1.2,
+    plate: 'none', label: 'Teacher’s name', maxLen: 40,
+  }
+}
+
+/** ink that reads on whatever the writing area is printed on */
+const NAME_INK: Record<ArtKey, string> = {
+  disco: '#2c2722', scrapbook: '#2f3a44', velvet: '#3a2b20', thankyou: '#3a231c',
+  pressed: '#5b4a43', grateful: '#2e2a26', lilac: '#4b385e',
+}
 
 /**
  * The photo slot for a template. Its position, size and angle come straight
@@ -52,20 +66,7 @@ export const TEMPLATES: Template[] = [
     thumbAlign: 'top',
     elements: [
       p('dc-photo', 'disco'),
-      t('dc-msg', 'front', [14, 29.5, 72, 8], {
-        text: 'Thank you for being more than a teacher — you are a guide, an inspiration, and a reason I believe in myself.',
-        font: 'classic', size: 27, color: '#fdf7ec', align: 'center', lh: 1.45, label: 'Message', maxLen: 220,
-      }),
-      t('dc-bt', 'back', [12, 13, 76, 6], {
-        text: 'A note for you', font: 'elegant', size: 50, color: '#e8c88a', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('dc-bnote', 'back', [12, 22, 76, 54], {
-        text: '', placeholder: 'Write your personal note here…', font: 'playful', size: 44,
-        color: '#f6ece0', align: 'left', lh: 1.55, label: 'Personal note', maxLen: 600,
-      }),
-      t('dc-bsign', 'back', [12, 80, 76, 6], {
-        text: '', placeholder: '— your name', font: 'playful', size: 34, color: '#e8c88a', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('dc-name', 'disco'),
     ],
   },
 
@@ -82,20 +83,7 @@ export const TEMPLATES: Template[] = [
     isNew: true,
     elements: [
       p('sc-photo', 'scrapbook'),
-      t('sc-msg', 'front', [17, 86.5, 66, 5], {
-        text: '', placeholder: 'write here…', font: 'playful', size: 38,
-        color: '#33302b', align: 'center', rot: 3.2, label: 'Message', maxLen: 60,
-      }),
-      t('sc-bt', 'back', [14, 14, 72, 7], {
-        text: 'Dear Teacher', font: 'playful', size: 56, color: '#2f3a44', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('sc-bnote', 'back', [14, 24, 72, 50], {
-        text: '', placeholder: 'Write your personal note here…', font: 'playful', size: 50,
-        color: '#3a3630', align: 'left', lh: 1.55, label: 'Personal note', maxLen: 600,
-      }),
-      t('sc-bsign', 'back', [14, 78, 72, 7], {
-        text: '', placeholder: '— your name', font: 'playful', size: 38, color: '#7a4a10', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('sc-name', 'scrapbook'),
     ],
   },
 
@@ -112,23 +100,7 @@ export const TEMPLATES: Template[] = [
     isNew: true,
     elements: [
       p('v-photo', 'velvet'),
-      t('v-msg', 'front', [13, 71, 74, 16], {
-        text: 'Thank you for inspiring me every day!', font: 'playful', size: 40,
-        color: '#3a2b20', align: 'center', lh: 1.35, label: 'Message', maxLen: 140,
-      }),
-      /* back */
-      t('v-bt', 'back', [12, 12, 76, 7], {
-        text: 'A note for you', font: 'elegant', size: 62, color: '#e8c88a', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('v-bnote', 'back', [12, 23, 76, 52], {
-        text: '', placeholder: 'Write your personal note here…',
-        font: 'playful', size: 52, color: '#f6ece0', align: 'left', lh: 1.55,
-        label: 'Personal note', maxLen: 600,
-      }),
-      t('v-bsign', 'back', [12, 80, 76, 7], {
-        text: '', placeholder: '— your name', font: 'playful', size: 42,
-        color: '#e8c88a', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('v-name', 'velvet'),
     ],
   },
 
@@ -145,21 +117,7 @@ export const TEMPLATES: Template[] = [
     isNew: true,
     elements: [
       p('ty-photo', 'thankyou'),
-      t('ty-msg', 'front', [8.5, 76.0, 83.0, 11.0], {
-        text: "Happy Teacher's Day!", font: 'playful', size: 44, color: '#3a231c',
-        align: 'center', label: 'Message', maxLen: 90,
-      }),
-      /* back */
-      t('ty-bt', 'back', [12, 13, 76, 7], {
-        text: 'With gratitude', font: 'elegant', size: 54, color: '#f0dcc0', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('ty-bnote', 'back', [12, 24, 76, 52], {
-        text: '', placeholder: 'Write your personal note here…', font: 'playful', size: 50,
-        color: '#fdf7ec', align: 'left', lh: 1.55, label: 'Personal note', maxLen: 600,
-      }),
-      t('ty-bsign', 'back', [12, 80, 76, 7], {
-        text: '', placeholder: '— your name', font: 'playful', size: 38, color: '#e8c88a', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('ty-name', 'thankyou'),
     ],
   },
 
@@ -174,21 +132,7 @@ export const TEMPLATES: Template[] = [
     accent: '#c98f8a',
     elements: [
       p('pr-photo', 'pressed'),
-      t('pr-msg', 'front', [26.0, 80.5, 48.0, 11.5], {
-        text: '', placeholder: 'To: / From: note…', font: 'playful', size: 38,
-        color: '#5b4a43', align: 'center', label: 'Note', maxLen: 80,
-      }),
-      /* back */
-      t('pr-bt', 'back', [12, 14, 76, 7], {
-        text: 'With love', font: 'elegant', size: 54, color: '#a5736e', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('pr-bnote', 'back', [13, 25, 74, 50], {
-        text: '', placeholder: 'Write your personal note here…', font: 'playful', size: 50,
-        color: '#4a3f3a', align: 'left', lh: 1.55, label: 'Personal note', maxLen: 600,
-      }),
-      t('pr-bsign', 'back', [13, 79, 74, 7], {
-        text: '', placeholder: '— your name', font: 'playful', size: 38, color: '#a5736e', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('pr-name', 'pressed'),
     ],
   },
 
@@ -204,21 +148,7 @@ export const TEMPLATES: Template[] = [
     dark: true,
     elements: [
       p('gr-photo', 'grateful'),
-      t('gr-msg', 'front', [13.5, 77.0, 73.0, 12.0], {
-        text: "Happy Teacher's Day!", font: 'playful', size: 42, color: '#2e2a26',
-        align: 'center', label: 'Message', maxLen: 90,
-      }),
-      /* back */
-      t('gr-bt', 'back', [12, 14, 76, 7], {
-        text: 'Thank you', font: 'elegant', size: 54, color: '#ffffff', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('gr-bnote', 'back', [13, 25, 74, 50], {
-        text: '', placeholder: 'Write your personal note here…', font: 'playful', size: 50,
-        color: '#efe7dc', align: 'left', lh: 1.55, label: 'Personal note', maxLen: 600,
-      }),
-      t('gr-bsign', 'back', [13, 79, 74, 7], {
-        text: '', placeholder: '— your name', font: 'playful', size: 38, color: '#c9c2b8', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('gr-name', 'grateful'),
     ],
   },
 
@@ -233,21 +163,7 @@ export const TEMPLATES: Template[] = [
     accent: '#8c63a9',
     elements: [
       p('li-photo', 'lilac'),
-      t('li-msg', 'front', [16.0, 79.0, 68.0, 11.5], {
-        text: "Happy Teacher's Day!", font: 'playful', size: 44,
-        color: '#4b385e', align: 'center', label: 'Message', maxLen: 120,
-      }),
-      /* back */
-      t('li-bt', 'back', [12, 14, 76, 7], {
-        text: 'Just for you', font: 'elegant', size: 54, color: '#8c63a9', align: 'center', label: 'Title', maxLen: 40,
-      }),
-      t('li-bnote', 'back', [13, 25, 74, 50], {
-        text: '', placeholder: 'Write your personal note here…', font: 'playful', size: 50,
-        color: '#4b3b57', align: 'left', lh: 1.55, label: 'Personal note', maxLen: 600,
-      }),
-      t('li-bsign', 'back', [13, 79, 74, 7], {
-        text: '', placeholder: '— your name', font: 'playful', size: 38, color: '#8c63a9', align: 'right', label: 'Signature', maxLen: 40,
-      }),
+      name('li-name', 'lilac'),
     ],
   },
 ]

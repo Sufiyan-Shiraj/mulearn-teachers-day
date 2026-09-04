@@ -57,8 +57,8 @@ export default function MyCards() {
 
       <main className="shell mc-main">
         <header className="mc-head">
-          <h1 className="mc-title">My Cards <HeartDoodle size={22} className="mc-title-heart" /></h1>
-          <p className="mc-sub">Every card you&rsquo;ve made lives here — reopen it, copy the link, or start a new one.</p>
+          <h1 className="mc-title">My Posts <HeartDoodle size={22} className="mc-title-heart" /></h1>
+          <p className="mc-sub">Every selfie you&rsquo;ve posted lives here — reopen it, copy the link, or go get another.</p>
 
           {!user && (
             <div className="mc-auth-callout">
@@ -123,7 +123,7 @@ export default function MyCards() {
 
         {items.length > 0 && (
           <div className="mc-new">
-            <Button variant="dark" size="lg" icon={<SparkIcon />} onClick={() => nav('/photo')}>Make another card</Button>
+            <Button variant="dark" size="lg" icon={<SparkIcon />} onClick={() => nav('/photo')}>Go get another</Button>
           </div>
         )}
       </main>

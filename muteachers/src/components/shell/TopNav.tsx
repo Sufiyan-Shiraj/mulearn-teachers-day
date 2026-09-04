@@ -13,18 +13,13 @@ interface Props {
   compact?: boolean
 }
 
-const LINKS = [
-  { to: '/how-it-works', label: 'How it works' },
-  { to: '/about', label: 'About' },
-]
+const LINKS: { to: string; label: string }[] = []
 
 const SHEET = [
   { to: '/', label: 'Home' },
-  { to: '/photo', label: 'Make a card' },
-  { to: '/my-cards', label: 'My Cards' },
+  { to: '/photo', label: 'Take a selfie' },
+  { to: '/my-cards', label: 'My Posts' },
   { to: '/leaderboards', label: 'Leaderboards' },
-  { to: '/how-it-works', label: 'How it works' },
-  { to: '/about', label: 'About' },
 ]
 
 export function TopNav({ back }: Props) {
@@ -60,7 +55,7 @@ export function TopNav({ back }: Props) {
             </Link>
 
             <Link to="/my-cards" className="nav-tape">
-              My Cards
+              My Posts
               <svg className="nav-tape-ul" viewBox="0 0 120 8" preserveAspectRatio="none" aria-hidden>
                 <path d="M3 5.4C24 2.6 46 1.7 68 2.3c17 .5 34 1.6 49 3" stroke="var(--red)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
               </svg>
@@ -141,7 +136,7 @@ export function TopNav({ back }: Props) {
                     setOpen(false)
                     openAuthModal({
                       title: 'First — what’s your name?',
-                      subtitle: 'It goes on your card so your teacher knows who it’s from.',
+                      subtitle: 'It goes on your selfies and on the leaderboard.',
                       redirectTo: '/photo',
                       onSuccess: () => {
                         nav('/photo')

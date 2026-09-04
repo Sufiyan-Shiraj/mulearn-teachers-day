@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import confetti from 'canvas-confetti'
-import { CardFlip } from '../components/card/CardFlip'
+import { CardCanvas } from '../components/card/CardCanvas'
 import { HeartDoodle, Sparkle } from '../components/art/Doodles'
 import { Decoration } from '../components/art/Decorations'
 import { Logo } from '../components/shell/Logo'
@@ -19,8 +19,6 @@ export default function Receive() {
   const [likes, setLikes] = useState(0)
   const [hasLiked, setHasLiked] = useState(false)
   const [state, setState] = useState<'loading' | 'ready' | 'bad'>('loading')
-  const [opened, setOpened] = useState(false)
-  const [flipped, setFlipped] = useState(false)
 
   const { id } = useParams()
 
@@ -118,8 +116,8 @@ export default function Receive() {
       <div className="rc rc--wait">
         <div className="rc-empty">
           <HeartDoodle size={40} />
-          <h1>This card link looks incomplete</h1>
-          <p>Ask for the link again — the whole card travels inside it, so it has to be copied in full.</p>
+          <h1>This link looks incomplete</h1>
+          <p>Ask for the link again — the whole selfie travels inside it, so it has to be copied in full.</p>
           <Link className="rc-cta" to="/">Make your own card</Link>
         </div>
       </div>
@@ -152,30 +150,19 @@ export default function Receive() {
         {doc.to && <h1 className="rc-to">{doc.to}</h1>}
       </header>
 
-      <main className="rc-stage" data-opened={opened ? '' : undefined}>
+      <main className="rc-stage" data-opened="">
         <motion.div
           className="rc-card-tilt"
           style={isSupported ? { rotateX: tiltX, rotateY: tiltY } : undefined}
         >
-          <CardFlip
-            doc={doc} template={tpl}
-            flipped={flipped}
-            onFlip={next => { setOpened(true); setFlipped(next) }}
+          <CardCanvas
+            doc={doc} template={tpl} face="front" mode="view"
             className="rc-card"
             style={{ ['--card-ar' as string]: String(tpl.aspect) }}
           />
         </motion.div>
 
         <div className="rc-actions-row">
-          <button className="rc-tap" onClick={() => { setOpened(true); setFlipped(f => !f) }}>
-            {flipped ? 'Tap to close' : opened ? 'Tap to open' : 'Tap to open'}
-            <span className="rc-tap-ico" aria-hidden>
-              <svg viewBox="0 0 22 22" fill="none">
-                <path d="M8 10.4V4.6a1.6 1.6 0 0 1 3.2 0v5M11.2 9.4V3.4a1.6 1.6 0 0 1 3.2 0v6M14.4 9.6V6.4a1.6 1.6 0 0 1 3.2 0v7c0 3.6-2.6 6-6 6-2.8 0-4.3-1.1-5.6-3l-2.4-3.6a1.6 1.6 0 0 1 2.6-1.9L8 13.4"
-                  stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-          </button>
 
           {/* Heart / Like appreciation button */}
           <button

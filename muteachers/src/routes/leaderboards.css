@@ -324,3 +324,16 @@
 .lb-range[data-on] { animation: m-pop .32s var(--e-spring); }
 .lb-row { transition: background .18s; }
 .lb-row:hover { background: rgba(0,0,0,.018); }
+
+/* ---- the board's unit is teachers, not hearts ---- */
+.lb-tally {
+  font-family: var(--f-display); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.15em; line-height: 1; color: var(--ink);
+}
+.lb-unit { font-size: .82em; color: var(--muted); }
+.lb-likes {
+  display: inline-flex; align-items: center; gap: 3px;
+  margin-left: 8px; font-size: .82em; color: var(--muted);
+}
+.lb-hearts .lb-tally { margin-right: 5px; }

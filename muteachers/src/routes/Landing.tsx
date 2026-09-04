@@ -42,20 +42,20 @@ export default function Landing() {
         <div className="shell ld-hero-in">
           <div className="ld-copy">
             <p className="ld-eyebrow">
-              Make a
+              Go get a
               <Burst className="ld-eyebrow-burst" size={28} />
             </p>
             <h1 className="ld-h1">
-              <span className="ld-h1-a">TEACHER&rsquo;S</span>
-              <span className="ld-h1-b">DAY CARD</span>
+              <span className="ld-h1-a">SELFIE WITH</span>
+              <span className="ld-h1-b">YOUR TEACHER</span>
             </h1>
             <p className="ld-script">
-              they&rsquo;ll always remember
-              <Underline className="ld-script-ul" width={230} />
+              the ones who got you here
+              <Underline className="ld-script-ul" width={250} />
               <HeartDoodle className="ld-script-heart" size={21} />
             </p>
             <p className="ld-lede">
-              Create a beautiful card with your photo,<br />your words, and your heart.
+              Catch them between classes. Frame it, name them,<br />and it&rsquo;s on your story in one tap.
             </p>
             <div className="ld-cta">
               <ButtonLink
@@ -68,7 +68,7 @@ export default function Landing() {
                     e.preventDefault()
                     openAuthModal({
                       title: 'First — what’s your name?',
-                      subtitle: 'It goes on your card so your teacher knows who it’s from.',
+                      subtitle: 'It goes on your posts and on the board.',
                       redirectTo: '/photo',
                       onSuccess: () => {
                         startCard(TEMPLATES[0].id)
@@ -80,10 +80,10 @@ export default function Landing() {
                   startCard(TEMPLATES[0].id)
                 }}
               >
-                Create a Card
+                Take a selfie with your teacher
               </ButtonLink>
-              <ButtonLink to="/how-it-works" variant="outline" size="lg" trailing={<ChevronPill />}>
-                See How It Works
+              <ButtonLink to="/leaderboards" variant="outline" size="lg" trailing={<ChevronPill />}>
+                See who&rsquo;s ahead
               </ButtonLink>
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function Landing() {
         <div className="shell">
           <div className="ld-picks-head reveal">
             <h2 className="ld-picks-title">
-              Pick a card that feels you
+              Pick a frame, then go find them
               <Burst className="ld-picks-burst" size={20} />
             </h2>
           </div>
@@ -122,7 +122,7 @@ export default function Landing() {
                     if (!user) {
                       openAuthModal({
                           title: 'First — what’s your name?',
-                        subtitle: 'It goes on your card so your teacher knows who it’s from.',
+                        subtitle: 'It goes on your selfies and on the leaderboard.',
                         redirectTo: '/photo',
                         onSuccess: () => {
                           startCard(t.id)
@@ -178,18 +178,29 @@ function HeroCollage() {
         <Decoration deco="grid-patch" />
       </div>
 
-      {/* Midground Polaroid frame & washi tape */}
-      <div className="ld-cl-frame ld-plane" style={{ ['--d' as string]: '.55', ['--r' as string]: '-1.2deg' }}>
-        <div className="ld-cl-photo">
+      {/* A phone held out at arm's length, mid-selfie — the same chrome the
+          camera screen actually shows, so the hero is a preview of the thing
+          you are about to do rather than a picture of a finished card. */}
+      <div className="ld-cl-phone ld-plane" style={{ ['--d' as string]: '.55', ['--r' as string]: '-4deg' }}>
+        <div className="ld-cl-screen">
           <img src="/demo-photo.jpg" alt="" draggable={false} />
+          <span className="ld-cl-chip">
+            <svg viewBox="0 0 20 18" aria-hidden fill="none">
+              <rect x="1.4" y="4.2" width="17.2" height="12.4" rx="3" stroke="currentColor" strokeWidth="1.5" />
+              <circle cx="10" cy="10.4" r="3.4" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M6.6 4.2 8 1.6h4l1.4 2.6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+            </svg>
+            Front Camera
+          </span>
+          <span className="ld-cl-shutter" aria-hidden><span /></span>
         </div>
-        <div className="ld-cl-tape"><Decoration deco="tape-dots" /></div>
+        <span className="ld-cl-flash" aria-hidden />
       </div>
 
       {/* Foreground handwritten torn note */}
       <div className="ld-cl-note ld-plane" style={{ ['--d' as string]: '.92', ['--r' as string]: '-1.6deg' }}>
-        Thank you for<br />
-        <span>inspiring us every day!</span>
+        got one with<br />
+        <span>Ms. Nair!</span>
         <HeartDoodle className="ld-cl-note-heart" size={16} />
       </div>
 

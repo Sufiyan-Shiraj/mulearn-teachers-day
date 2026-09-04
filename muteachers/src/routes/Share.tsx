@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { TopNav } from '../components/shell/TopNav'
 import { StepBar } from '../components/shell/StepBar'
-import { CardFlip } from '../components/card/CardFlip'
 import { CardCanvas } from '../components/card/CardCanvas'
 import { Button } from '../components/ui/Button'
 import { Burst, HeartDoodle, Sparkle } from '../components/art/Doodles'
@@ -10,7 +9,7 @@ import { getTemplate } from '../lib/templates'
 import { saveToLibrary, useCard } from '../lib/store'
 import { buildCardLink, canNativeShare, copy, nativeShare, whatsappUrl } from '../lib/share'
 import { defaultNote, imageShareText, imageShareTitle, mailto, shareTitle } from '../lib/message'
-import { renderCard, saveBlob, saveCardImages, shotFile, type Shot } from '../lib/exportCard'
+import { FORMATS, canOpenShareSheet, renderCard, reframe, saveBlob, saveCardImages, shareCardImages, shotFile, type FormatKey, type Shot } from '../lib/exportCard'
 import { useReveal } from '../lib/useReveal'
 import { useAuth } from '../context/AuthContext'
 import { saveCardToDb } from '../lib/storage'
@@ -20,7 +19,6 @@ export default function Share() {
   const doc = useCard(s => s.doc)
   const setMeta = useCard(s => s.setMeta)
   const { user, openAuthModal } = useAuth()
-  const [flipped, setFlipped] = useState(false)
   const [link, setLink] = useState('')
   const [linkOk, setLinkOk] = useState(true)
   const [note, setNote] = useState(() => defaultNote(doc))
@@ -30,13 +28,15 @@ export default function Share() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<'' | 'shared' | 'downloaded'>('')
   const [saveErr, setSaveErr] = useState(false)
+  const [format, setFormat] = useState<FormatKey>('story')
+  const [posting, setPosting] = useState(false)
   const nav = useNavigate()
   const tpl = useMemo(() => getTemplate(doc.templateId), [doc.templateId])
   const exportRef = useRef<HTMLDivElement>(null)
   const page = useReveal<HTMLDivElement>([open])
 
-  /* Save the card, then work out the link to hand out. A stored card only
-     needs its slug; if the save failed the whole card has to ride in the
+  /* Save the selfie, then work out the link to hand out. A stored one only
+     needs its slug; if the save failed the whole thing has to ride in the
      fragment, which is usually too long to share — `linkOk` says which. */
   useEffect(() => {
     let live = true
@@ -59,7 +59,7 @@ export default function Share() {
     return () => { live = false }
   }, [doc, user])
 
-  /* render both sides in the background as soon as the card is final, so
+  /* render in the background as soon as the selfie is final, so
      saving is instant when it is asked for */
   useEffect(() => {
     let live = true
@@ -106,12 +106,33 @@ export default function Share() {
     return s
   }
 
+  /* the whole point of the app in one button */
+  const postIt = async () => {
+    setPosting(true)
+    setSaveErr(false)
+    try {
+      const s = await ensureShots()
+      const front = s.find(x => x.face === 'front') ?? s[0]
+      const shaped = await reframe(front, format)
+      const how = await shareCardImages([shaped], {
+        title: imageShareTitle(doc),
+        text: imageShareText(doc, note),
+      })
+      if (how !== 'cancelled') { setSaved(how); setTimeout(() => setSaved(''), 3200) }
+    } catch (e) {
+      console.error('Sharing the selfie failed:', e)
+      setSaveErr(true)
+      setTimeout(() => setSaveErr(false), 4000)
+    } finally { setPosting(false) }
+  }
+
   const saveImages = async () => {
     setSaving(true)
     setSaveErr(false)
     try {
       const s = await ensureShots()
-      const how = await saveCardImages(s, {
+      const front = s.find(x => x.face === 'front') ?? s[0]
+      const how = await saveCardImages([await reframe(front, format)], {
         title: imageShareTitle(doc),
         text: imageShareText(doc, note),
       })
@@ -120,7 +141,7 @@ export default function Share() {
         setTimeout(() => setSaved(''), 3200)
       }
     } catch (e) {
-      console.error('Saving the card image failed:', e)
+      console.error('Saving the selfie failed:', e)
       setSaveErr(true)
       setTimeout(() => setSaveErr(false), 4000)
     } finally { setSaving(false) }
@@ -136,7 +157,7 @@ export default function Share() {
       const f = shotFile(one)
       saveBlob(f, f.name)
     } catch (e) {
-      console.error('Saving the card image failed:', e)
+      console.error('Saving the selfie failed:', e)
       setSaveErr(true)
       setTimeout(() => setSaveErr(false), 4000)
     } finally { setSaving(false) }
@@ -172,7 +193,7 @@ export default function Share() {
             ) : (
               <div className="sh-auth-prompt">
                 <p>
-                  <strong>Add your name</strong> to track this card on your profile and climb the leaderboard!
+                  <strong>Add your name</strong> to put this on your profile and climb the leaderboard!
                 </p>
                 <button type="button" onClick={openAuthModal} className="sh-auth-login-btn">
                   <Sparkle size={14} color="var(--gold)" />
@@ -194,6 +215,29 @@ export default function Share() {
               <span className="sh-opt-t">Share Digitally<em>Send it instantly to your teacher.</em></span>
               <Chev />
             </button>
+            {/* The one thing this app exists for: get the selfie into a story. */}
+            <div className="sh-post">
+              <div className="sh-formats" role="group" aria-label="Shape to post in">
+                {(Object.keys(FORMATS) as FormatKey[]).map(k => (
+                  <button key={k} className="sh-format" data-on={format === k ? '' : undefined}
+                    onClick={() => setFormat(k)} aria-pressed={format === k}>
+                    <span className="sh-format-box" data-shape={k} aria-hidden />
+                    {FORMATS[k].label}
+                  </button>
+                ))}
+              </div>
+              <button className="sh-post-btn" onClick={postIt} disabled={posting || saving}>
+                {posting ? 'Getting it ready…'
+                  : canOpenShareSheet() ? `Post it \u2192 ${FORMATS[format].label}`
+                  : `Download for ${FORMATS[format].label}`}
+              </button>
+              <p className="sh-post-note">
+                {canOpenShareSheet()
+                  ? 'Opens Instagram, WhatsApp, Stories and everything else on your phone, with the picture already attached.'
+                  : 'Saves the picture at the right size — open it on your phone to post it.'}
+              </p>
+            </div>
+
             <button className="sh-opt sh-opt--save" onClick={saveImages} disabled={saving}>
               <span className="sh-opt-ico">
                 {saved ? (
@@ -228,7 +272,7 @@ export default function Share() {
                   <path d="M7 14h10v6.6H7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
                 </svg>
               </span>
-              <span className="sh-opt-t">Print Your Card<em>Send it to a printer at 5×7&Prime;.</em></span>
+              <span className="sh-opt-t">Print it<em>Send it to a printer at 5×7&Prime;.</em></span>
               <Chev />
             </button>
 
@@ -253,10 +297,10 @@ export default function Share() {
                   </span>
                   <textarea
                     className="sh-note-input" rows={3} maxLength={300} value={note}
-                    aria-label="The message that goes with your card"
+                    aria-label="The message that goes with your selfie"
                     onChange={e => { setOwnNote(true); setNote(e.target.value) }}
                   />
-                  <span className="sh-note-hint">This is what your teacher will read, with the card link underneath.</span>
+                  <span className="sh-note-hint">This is what your teacher will read, with the link underneath.</span>
                 </label>
 
                 <div className="sh-link">
@@ -318,23 +362,14 @@ export default function Share() {
 
           <div className="sh-start-new">
             <button className="sh-new-btn" onClick={() => nav('/photo')}>
-              Make another card &rarr;
+              Go get another &rarr;
             </button>
           </div>
         </aside>
 
         <section className="sh-stage">
           <div className="sh-card-box">
-            <CardFlip
-              doc={doc}
-              template={tpl}
-              flipped={flipped}
-              onFlip={setFlipped}
-              style={{ ['--card-ar' as string]: String(tpl.aspect) }}
-            />
-            <button className="sh-flip-hint" onClick={() => setFlipped(f => !f)}>
-              {flipped ? 'See front' : 'See inside'}
-            </button>
+            <CardCanvas doc={doc} template={tpl} face="front" mode="view" className="sh-card" />
           </div>
         </section>
       </main>
@@ -346,9 +381,6 @@ export default function Share() {
       <div className="sh-hidden-render" ref={exportRef} aria-hidden>
         <div className="sh-render-side" data-export="front">
           <CardCanvas doc={doc} template={tpl} face="front" mode="view" />
-        </div>
-        <div className="sh-render-side" data-export="back">
-          <CardCanvas doc={doc} template={tpl} face="back" mode="view" />
         </div>
       </div>
     </div>

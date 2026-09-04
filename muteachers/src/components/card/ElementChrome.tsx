@@ -147,7 +147,7 @@ export function ElementChrome({ el, active, onActivate, onEnter }: Props) {
 
   const label =
     el.kind === 'text' ? `${(el as { label?: string }).label ?? 'Text'} — ${el.text.trim() || 'empty'}`
-    : el.kind === 'photo' ? 'Photo on the card'
+    : el.kind === 'photo' ? 'Your selfie'
     : `Sticker: ${el.deco.replace(/-/g, ' ')}`
 
   /* the whole element is the hit target while editing is off */

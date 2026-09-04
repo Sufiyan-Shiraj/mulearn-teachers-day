@@ -40,7 +40,7 @@ export function AuthModal() {
     e.preventDefault()
     setErrorMsg('')
     if (!name.trim()) {
-      setErrorMsg('Please put in a name so your card can be yours.')
+      setErrorMsg('Please put in a name so your posts are yours.')
       return
     }
     setIsSubmitting(true)
@@ -82,7 +82,7 @@ export function AuthModal() {
             </h2>
             <p className="auth-sub" style={{ marginBottom: '1.2rem' }}>
               {authModalOptions?.subtitle
-                || 'It goes on your card and on the leaderboard — nothing else is needed.'}
+                || 'It goes on your selfies and on the leaderboard — nothing else is needed.'}
               <HeartDoodle size={16} className="auth-sub-heart" />
             </p>
 
@@ -105,8 +105,8 @@ export function AuthModal() {
 
             <p className="auth-handle-note">
               {name.trim()
-                ? <>Your cards will live at <code>/u/{handle}</code></>
-                : <>Your cards will live at <code>/u/your_name</code></>}
+                ? <>Your posts will live at <code>/u/{handle}</code></>
+                : <>Your posts will live at <code>/u/your_name</code></>}
             </p>
 
             {errorMsg && <p className="auth-err">{errorMsg}</p>}
@@ -119,7 +119,7 @@ export function AuthModal() {
             </button>
 
             <p className="auth-footer-note">
-              No account, no password — just a name so your cards find their way back to you.
+              No account, no password — just a name so your selfies find their way back to you.
             </p>
           </form>
       </div>

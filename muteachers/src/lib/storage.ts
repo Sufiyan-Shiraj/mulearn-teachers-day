@@ -19,6 +19,10 @@ export interface LeaderboardUser {
   rank: number
   name: string
   handle: string
+  /** how many different teachers this person has been photographed with */
+  teachers: number
+  /** how many selfies in total */
+  selfies: number
   hearts: number
   avatarUrl?: string
   note?: string
@@ -254,6 +258,7 @@ export async function fetchLeaderboardsFromDb(
         id,
         owner_id,
         like_count,
+        teacher_name,
         created_at,
         users (id, display_name, username, avatar_url)
       `)
@@ -277,6 +282,7 @@ export async function fetchLeaderboardsFromDb(
         avatarUrl?: string
         hearts: number
         cardCount: number
+        teachers: Set<string>
       }>()
 
       for (const row of data) {
@@ -285,11 +291,14 @@ export async function fetchLeaderboardsFromDb(
         if (!uid) continue
 
         const likes = Number(row.like_count) || 0
+        /* one teacher counts once however many selfies you took with them */
+        const teacher = String(row.teacher_name || '').trim().toLowerCase()
         const existing = userMap.get(uid)
 
         if (existing) {
           existing.hearts += likes
           existing.cardCount += 1
+          if (teacher) existing.teachers.add(teacher)
         } else {
           userMap.set(uid, {
             userId: uid,
@@ -298,12 +307,18 @@ export async function fetchLeaderboardsFromDb(
             avatarUrl: u?.avatar_url || undefined,
             hearts: likes,
             cardCount: 1,
+            teachers: new Set(teacher ? [teacher] : []),
           })
         }
       }
 
-      // Rank by hearts descending, then cardCount descending
+      /* Ranked on how many different teachers you got a selfie with.
+         Counting selfies would reward forty shots of the same teacher, and
+         counting likes alone turns it into a popularity contest between
+         friend groups — this one you can only climb by going and finding
+         someone new. Likes break the ties. */
       const sorted = Array.from(userMap.values()).sort((a, b) => {
+        if (b.teachers.size !== a.teachers.size) return b.teachers.size - a.teachers.size
         if (b.hearts !== a.hearts) return b.hearts - a.hearts
         return b.cardCount - a.cardCount
       })
@@ -314,6 +329,8 @@ export async function fetchLeaderboardsFromDb(
         name: entry.name,
         handle: entry.handle,
         hearts: entry.hearts,
+        teachers: entry.teachers.size,
+        selfies: entry.cardCount,
         avatarUrl: entry.avatarUrl,
         isCurrentUser: currentUser?.id === entry.userId,
       }))
@@ -330,9 +347,9 @@ export async function fetchLeaderboardsFromDb(
             name: currentUser.displayName || currentUser.username,
             handle: `@${currentUser.username}`,
             avatarUrl: currentUser.avatarUrl,
-            hearts: 0,
+            hearts: 0, teachers: 0, selfies: 0,
             isCurrentUser: true,
-            note: 'Create a card to join the board!',
+            note: 'Take a selfie with a teacher to join the board!',
             tint: '#d8c8ea',
           }
         }
@@ -352,9 +369,9 @@ export async function fetchLeaderboardsFromDb(
       name: currentUser.displayName || currentUser.username,
       handle: `@${currentUser.username}`,
       avatarUrl: currentUser.avatarUrl,
-      hearts: 0,
+      hearts: 0, teachers: 0, selfies: 0,
       isCurrentUser: true,
-      note: 'Create a card to claim the #1 spot!',
+      note: 'One selfie and the top spot is yours!',
       tint: '#d8c8ea',
     }
   }

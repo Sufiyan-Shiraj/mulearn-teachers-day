@@ -1,6 +1,22 @@
 import { toJpeg, toPng } from 'html-to-image'
 
-export interface Shot { face: 'front' | 'back'; dataUrl: string; blob: Blob }
+export interface Shot { face: string; dataUrl: string; blob: Blob }
+
+/**
+ * The shapes a selfie gets posted in.
+ *
+ * A story is 9:16 and a feed post is square; the card's own 5×7 is neither,
+ * so it gets painted onto a canvas of the right shape with the picture's own
+ * colours carried out to the edges. `card` keeps the untouched frame for
+ * anyone printing it.
+ */
+export const FORMATS = {
+  story: { label: 'Story', w: 1080, h: 1920 },
+  square: { label: 'Post', w: 1080, h: 1080 },
+  card: { label: 'Full frame', w: 0, h: 0 },
+} as const
+
+export type FormatKey = keyof typeof FORMATS
 
 /* 2× a 1000-unit design gives 2000px across — about 400dpi at 5×7in */
 const EXPORT_SCALE = 2
@@ -50,6 +66,47 @@ export async function renderCard(root: HTMLElement): Promise<Shot[]> {
   return out
 }
 
+/**
+ * Lay the rendered selfie onto a canvas of the shape a platform wants.
+ *
+ * The picture is centred and scaled to fit, and the background is taken from
+ * its own top-left pixel and darkened slightly — a blurred bleed would be
+ * prettier, but this reads as deliberate at story size and costs nothing.
+ */
+export async function reframe(shot: Shot, format: FormatKey): Promise<Shot> {
+  const f = FORMATS[format]
+  if (!f.w || !f.h) return shot
+
+  const img = await new Promise<HTMLImageElement>((res, rej) => {
+    const i = new Image()
+    i.onload = () => res(i)
+    i.onerror = () => rej(new Error('could not read the rendered card'))
+    i.src = shot.dataUrl
+  })
+
+  const c = document.createElement('canvas')
+  c.width = f.w; c.height = f.h
+  const ctx = c.getContext('2d')!
+
+  /* a ground taken from the picture itself, so the padding never looks like
+     a mistake whatever frame was chosen */
+  const probe = document.createElement('canvas')
+  probe.width = probe.height = 1
+  probe.getContext('2d')!.drawImage(img, 4, 4, 1, 1, 0, 0, 1, 1)
+  const [r, g, b] = probe.getContext('2d')!.getImageData(0, 0, 1, 1).data
+  ctx.fillStyle = `rgb(${Math.round(r * 0.82)}, ${Math.round(g * 0.82)}, ${Math.round(b * 0.82)})`
+  ctx.fillRect(0, 0, f.w, f.h)
+
+  const pad = format === 'story' ? 0.88 : 0.94
+  const k = Math.min((f.w * pad) / img.width, (f.h * pad) / img.height)
+  const w = img.width * k, h = img.height * k
+  ctx.drawImage(img, (f.w - w) / 2, (f.h - h) / 2, w, h)
+
+  const dataUrl = c.toDataURL(MIME, FORMAT === 'png' ? undefined : JPEG_QUALITY)
+  const blob = await (await fetch(dataUrl)).blob()
+  return { face: `${shot.face}-${format}`, dataUrl, blob }
+}
+
 export function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -86,12 +143,39 @@ function prefersShareSheet() {
   return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
 }
 
+/** true where "post it" will hand the picture to Instagram, WhatsApp and the
+ *  rest — false on a desktop, where it saves the file instead */
+export function canOpenShareSheet() {
+  return prefersShareSheet() && typeof navigator !== 'undefined' && !!navigator.share
+}
+
 /**
  * Put the card in the person's files.
  * On phones that support it this opens the share sheet with the real PNGs
  * attached, so "Save to Photos" is one tap. Everywhere else the files land
  * in Downloads straight away.
  */
+/**
+ * Hand the picture to whatever the person wants to post it with.
+ *
+ * On a phone this is the share sheet, which is where Instagram, WhatsApp and
+ * Stories actually live — one tap and the image is already attached. A desktop
+ * has no such sheet worth opening, so it gets the file.
+ */
+export async function shareCardImages(shots: Shot[], opts: { title?: string; text?: string } = {}) {
+  const files = shots.map(s => shotFile(s))
+  if (files.length && prefersShareSheet() && canShareFiles(files)) {
+    try {
+      await navigator.share({ files, title: opts.title, text: opts.text })
+      return 'shared' as const
+    } catch (e) {
+      if ((e as DOMException)?.name === 'AbortError') return 'cancelled' as const
+    }
+  }
+  files.forEach((f, i) => setTimeout(() => saveBlob(f, f.name), i * 350))
+  return 'downloaded' as const
+}
+
 export async function saveCardImages(shots: Shot[], opts: { title?: string; text?: string } = {}) {
   const files = shots.map(s => shotFile(s))
   if (files.length && prefersShareSheet() && canShareFiles(files)) {

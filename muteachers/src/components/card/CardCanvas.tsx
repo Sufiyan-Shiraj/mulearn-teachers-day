@@ -223,7 +223,7 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
       data-mode={mode}
     >
       <div className="c-design">
-        <TemplateArt art={template.art} face={face} />
+        <TemplateArt art={template.art} />
 
         {items.map(el => {
           const isSel = edit && selectedId === el.id
@@ -304,7 +304,7 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
           )
         })}
 
-        <TemplateArt art={template.art} face={face} layer="front" />
+        <TemplateArt art={template.art} layer="front" />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { AuthModal } from './components/auth/AuthModal'
 
 import Landing from './routes/Landing'
@@ -12,14 +12,11 @@ const Preloader = lazy(() => import('./components/shell/Preloader').then(m => ({
 
 const AddPhoto = lazy(() => import('./routes/AddPhoto'))
 const Editor = lazy(() => import('./routes/Editor'))
-const Preview = lazy(() => import('./routes/Preview'))
 const Share = lazy(() => import('./routes/Share'))
 const Receive = lazy(() => import('./routes/Receive'))
 const MyCards = lazy(() => import('./routes/MyCards'))
 const Leaderboards = lazy(() => import('./routes/Leaderboards'))
 const UserProfile = lazy(() => import('./routes/UserProfile'))
-const HowItWorks = lazy(() => import('./routes/HowItWorks'))
-const About = lazy(() => import('./routes/About'))
 /* internal QA surfaces — dev only */
 const Gallery = lazy(() => import('./routes/_Gallery'))
 const CardDebug = lazy(() => import('./routes/_Card'))
@@ -36,7 +33,6 @@ function usePrefetchFlow() {
     const pull = () => {
       import('./routes/AddPhoto')
       import('./routes/Editor')
-      import('./routes/Preview')
       import('./routes/Share')
     }
     const idle = (window as unknown as {
@@ -46,6 +42,34 @@ function usePrefetchFlow() {
     const t = setTimeout(pull, 1200)
     return () => clearTimeout(t)
   }, [])
+}
+
+/**
+ * Ask for a name on the way in.
+ *
+ * The name is what puts a selfie on the board, so it is asked for once as the
+ * intro clears rather than being sprung on someone the moment they reach for
+ * the camera. Skipped for anyone opening someone else's post, and it does not
+ * ask twice in a session if they close it.
+ */
+function AskForName({ ready }: { ready: boolean }) {
+  const { user, loading, openAuthModal } = useAuth()
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    if (!ready || loading || user) return
+    if (pathname.startsWith('/c/') || pathname === '/c') return
+    try {
+      if (sessionStorage.getItem('mulearn_name_asked')) return
+      sessionStorage.setItem('mulearn_name_asked', 'true')
+    } catch { /* private mode — ask anyway */ }
+    openAuthModal({
+      title: 'What should we call you?',
+      subtitle: 'It goes on the selfies you post and on the leaderboard.',
+    })
+  }, [ready, loading, user, pathname, openAuthModal])
+
+  return null
 }
 
 function ScrollTop() {
@@ -88,6 +112,7 @@ export function App() {
             }}
           /></Suspense>
         )}
+        <AskForName ready={!showPreloader} />
         <AuthModal />
         <Suspense fallback={<div className="boot" aria-hidden />}>
           <Transition>
@@ -98,15 +123,12 @@ export function App() {
               <Route path="/pick" element={<Navigate to="/photo" replace />} />
               <Route path="/photo" element={<AddPhoto />} />
               <Route path="/create" element={<Editor />} />
-              <Route path="/preview" element={<Preview />} />
               <Route path="/share" element={<Share />} />
               <Route path="/c" element={<Receive />} />
               <Route path="/c/:id" element={<Receive />} />
               <Route path="/my-cards" element={<MyCards />} />
               <Route path="/leaderboards" element={<Leaderboards />} />
               <Route path="/u/:username" element={<UserProfile />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/about" element={<About />} />
               {import.meta.env.DEV && <Route path="/_gallery" element={<Gallery />} />}
               {import.meta.env.DEV && <Route path="/_card" element={<CardDebug />} />}
               <Route path="*" element={<Landing />} />
