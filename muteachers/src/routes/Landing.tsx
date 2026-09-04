@@ -204,7 +204,7 @@ function HeroCollage() {
       {/* Foreground handwritten torn note */}
       <div className="ld-cl-note ld-plane" style={{ ['--d' as string]: '.92', ['--r' as string]: '-1.6deg' }}>
         got one with<br />
-        <span>Ms Sharika!</span>
+        <span>Sharika Miss!</span>
         <HeartDoodle className="ld-cl-note-heart" size={16} />
       </div>
 

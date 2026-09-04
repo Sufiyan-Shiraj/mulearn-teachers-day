@@ -244,3 +244,20 @@
   animation: m-fade .18s var(--e-out) both;
   pointer-events: none;
 }
+
+/* ---------------- mulearn branding logo ---------------- */
+.c-card-logo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 4;
+  line-height: 0;
+}
+.c-card-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+

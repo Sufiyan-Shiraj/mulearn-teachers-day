@@ -21,6 +21,19 @@ import type { ArtKey } from './types'
 
 export type Rect = [x: number, y: number, w: number, h: number]
 
+export interface LogoConfig {
+  /** percentage from left */
+  x: number
+  /** percentage from top */
+  y: number
+  /** width percentage of the card */
+  w: number
+  /** whether to use white vector logo on dark backgrounds */
+  invert?: boolean
+  /** subtle opacity to blend naturally into card textures */
+  opacity?: number
+}
+
 export interface Slot {
   box: Rect
   rot: number
@@ -40,6 +53,11 @@ export interface Slot {
   nameRot?: number
   /** horizontal stretch factor to sit flat on the perspective/tilt */
   scaleX?: number
+  /**
+   * Brand mark placement: balanced unobtrusive spot outside card photo & name zones.
+   * Optional if the template artwork already contains the brand mark.
+   */
+  logo?: LogoConfig
 }
 
 export const SLOTS: Record<ArtKey, Slot> = {
@@ -52,6 +70,8 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: -7.9,
     scaleX: 1.08,
     nameSize: 40,
+    /* centered directly under the 'Happy TEACHERS DAY' gold heart flourish */
+    logo: { x: 50.0, y: 30.3, w: 13.0, invert: true, opacity: 0.9 },
   },
   scrapbook: {
     box: [16.6, 24.34, 69.5, 49.51],
@@ -62,6 +82,7 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: -4.1,
     scaleX: 1.06,
     nameSize: 32,
+    /* already contains μLearn ASI in artwork header */
   },
   velvet: {
     box: [48.3, 18.41, 41.73, 31.62],
@@ -72,6 +93,8 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: 0.8,
     scaleX: 1.05,
     nameSize: 46,
+    /* top-left on red velvet above greeting, balances tilted polaroid */
+    logo: { x: 23.0, y: 3.5, w: 13.5, invert: true, opacity: 0.9 },
   },
   thankyou: {
     box: [26.35, 28.56, 46.42, 32.0],
@@ -82,6 +105,8 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: -4.3,
     scaleX: 1.08,
     nameSize: 46,
+    /* upper right beneath 'THANK YOU', balancing the cursive flourish */
+    logo: { x: 85.0, y: 15.2, w: 13.5, invert: true, opacity: 0.9 },
   },
   pressed: {
     box: [29.18, 30.06, 42.18, 30.25],
@@ -92,6 +117,8 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: 0.0,
     scaleX: 1.04,
     nameSize: 26,
+    /* top-center on cream textured paper, clear of flowers and frame */
+    logo: { x: 50.0, y: 3.0, w: 13.5, invert: false, opacity: 0.82 },
   },
   grateful: {
     box: [16.82, 25.44, 47.91, 43.56],
@@ -102,6 +129,8 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: 0.0,
     scaleX: 1.05,
     nameSize: 42,
+    /* top-left on black linen, balances daisy emblem on upper right */
+    logo: { x: 23.0, y: 3.4, w: 13.5, invert: true, opacity: 0.9 },
   },
   lilac: {
     box: [33.31, 32.48, 40.23, 28.94],
@@ -112,6 +141,8 @@ export const SLOTS: Record<ArtKey, Slot> = {
     nameRot: -1.6,
     scaleX: 1.06,
     nameSize: 40,
+    /* top-right on lavender wash, balances title lettering on left */
+    logo: { x: 84.5, y: 4.5, w: 13.5, invert: false, opacity: 0.78 },
   },
 }
 

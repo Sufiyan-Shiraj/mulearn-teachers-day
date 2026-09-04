@@ -10,6 +10,7 @@ import { useCard } from '../../lib/store'
 import { PhotoFrame } from './PhotoFrame'
 import { TextPlate } from './TextPlate'
 import { ElementChrome } from './ElementChrome'
+import { SLOTS } from '../../lib/slots'
 import './card.css'
 
 export type CanvasMode = 'view' | 'edit' | 'thumb'
@@ -308,6 +309,25 @@ export function CardCanvas({ doc, template, mode = 'view', className, style }: P
         })}
 
         <TemplateArt art={template.art} layer="over" />
+
+        {SLOTS[template.art]?.logo && (
+          <div
+            className="c-card-logo"
+            style={{
+              left: `${SLOTS[template.art].logo!.x}%`,
+              top: `${SLOTS[template.art].logo!.y}%`,
+              width: `${SLOTS[template.art].logo!.w}%`,
+              opacity: SLOTS[template.art].logo!.opacity ?? 1,
+            }}
+            aria-hidden="true"
+          >
+            <img
+              src={SLOTS[template.art].logo!.invert ? '/logo-white.svg' : '/logo.svg'}
+              alt="μLearn"
+              draggable={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

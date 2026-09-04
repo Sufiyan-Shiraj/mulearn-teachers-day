@@ -108,10 +108,10 @@ function freeze(img: HTMLImageElement): string | null {
   if (!ctx) return null
   ctx.drawImage(img, 0, 0, c.width, c.height)
 
-  /* the punched overlay is transparent where the photo shows through, so it
-     has to stay PNG; the artwork and the photo are photographs, and JPEG
+  /* the punched overlay and vector logos are transparent, so they
+     have to stay PNG; the artwork and the photo are photographs, and JPEG
      keeps the payload small enough to survive a phone */
-  const alpha = /\.(png|webp)(\?|$)/i.test(src) || src.startsWith('data:image/png')
+  const alpha = /\.(png|webp|svg)(\?|$)/i.test(src) || src.startsWith('data:image/png') || src.startsWith('data:image/svg')
   let out: string
   try {
     out = alpha ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.92)

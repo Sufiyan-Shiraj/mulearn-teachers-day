@@ -29,9 +29,13 @@ export default function Share() {
   const [saved, setSaved] = useState<'' | 'shared' | 'downloaded'>('')
   const [saveErr, setSaveErr] = useState(false)
   const [format, setFormat] = useState<FormatKey>('story')
-  const [sharingStatus, setSharingStatus] = useState(false)
+  const [waModalOpen, setWaModalOpen] = useState(false)
+  const [instaModalOpen, setInstaModalOpen] = useState(false)
+  const [waNote, setWaNote] = useState(() => defaultNote(doc))
+  const [instaFormat, setInstaFormat] = useState<FormatKey>('story')
+  const [sharingWa, setSharingWa] = useState(false)
   const [sharingInsta, setSharingInsta] = useState(false)
-  const [sharingSnap, setSharingSnap] = useState(false)
+  const [instaCopied, setInstaCopied] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
   const nav = useNavigate()
   const tpl = useMemo(() => getTemplate(doc.templateId), [doc.templateId])
@@ -82,13 +86,23 @@ export default function Share() {
      overwritten by a later keystroke in the "to" field. */
   const [ownNote, setOwnNote] = useState(false)
   useEffect(() => {
-    if (!ownNote) setNote(defaultNote(doc))
+    if (!ownNote) {
+      const d = defaultNote(doc)
+      setNote(d)
+      setWaNote(d)
+    }
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [doc.id, doc.to, doc.from, ownNote])
 
   const resetNote = useCallback(() => {
     setOwnNote(false)
-    setNote(defaultNote(doc))
+    const d = defaultNote(doc)
+    setNote(d)
+    setWaNote(d)
+  }, [doc])
+
+  const resetWaNote = useCallback(() => {
+    setWaNote(defaultNote(doc))
   }, [doc])
 
   /* the link exists at all / the link is short enough to send somewhere */
@@ -154,60 +168,73 @@ export default function Share() {
     }, 3800)
   }
 
-  const shareWhatsAppStatus = async () => {
-    setSharingStatus(true)
+  const shareToWhatsApp = async () => {
+    setSharingWa(true)
     setSaveErr(false)
     try {
       const storyShot = await reframe(await ensureShot(), 'story')
       const targetName = (doc.to || 'teacher').trim().replace(/[^a-z0-9]+/gi, '-').toLowerCase()
-      const file = shotFile(storyShot, `teachers-day-${targetName}-status`)
+      const file = shotFile(storyShot, `teachers-day-${targetName}`)
+      const messageText = (waNote || note).trim()
+      const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
 
       if (prefersShareSheet() && canShareFiles([file])) {
         await navigator.share({
           files: [file],
           title: imageShareTitle(doc),
-          text: note || imageShareText(doc, note),
+          text: fullText,
         })
-        showToast('Choose WhatsApp → My Status!')
+        setWaModalOpen(false)
+        showToast('Shared to WhatsApp!')
       } else {
         saveBlob(file, file.name)
-        window.open('https://web.whatsapp.com/', '_blank', 'noreferrer')
-        showToast('Status card saved! Upload to WhatsApp Status')
+        window.open(whatsappUrl(activeLink, messageText), '_blank', 'noreferrer')
+        setWaModalOpen(false)
+        showToast('Card saved & WhatsApp opened!')
       }
     } catch (e) {
       if ((e as DOMException)?.name !== 'AbortError') {
-        console.error('WhatsApp status share failed:', e)
+        console.error('WhatsApp share failed:', e)
         setSaveErr(true)
         setTimeout(() => setSaveErr(false), 4000)
       }
     } finally {
-      setSharingStatus(false)
+      setSharingWa(false)
     }
   }
 
-  const shareInstaStory = async () => {
+  const shareToInstagram = async () => {
     setSharingInsta(true)
     setSaveErr(false)
     try {
-      const storyShot = await reframe(await ensureShot(), 'story')
+      const storyShot = await reframe(await ensureShot(), instaFormat)
       const targetName = (doc.to || 'teacher').trim().replace(/[^a-z0-9]+/gi, '-').toLowerCase()
-      const file = shotFile(storyShot, `teachers-day-${targetName}-insta-story`)
+      const file = shotFile(storyShot, `teachers-day-${targetName}-instagram`)
+      const messageText = (waNote || note).trim()
+      const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
+
+      if (activeLink) {
+        await copy(fullText)
+      } else {
+        await copy(messageText)
+      }
 
       if (prefersShareSheet() && canShareFiles([file])) {
         await navigator.share({
           files: [file],
           title: imageShareTitle(doc),
         })
-        showToast('Choose Instagram Stories!')
+        setInstaModalOpen(false)
+        showToast('Caption copied! Choose Stories or Chats in Instagram')
       } else {
         saveBlob(file, file.name)
-        if (activeLink) copy(activeLink)
         window.open('https://www.instagram.com/', '_blank', 'noreferrer')
-        showToast('Story image saved! Card link copied')
+        setInstaModalOpen(false)
+        showToast('Card saved & caption copied! Open Instagram')
       }
     } catch (e) {
       if ((e as DOMException)?.name !== 'AbortError') {
-        console.error('Instagram story share failed:', e)
+        console.error('Instagram share failed:', e)
         setSaveErr(true)
         setTimeout(() => setSaveErr(false), 4000)
       }
@@ -216,33 +243,12 @@ export default function Share() {
     }
   }
 
-  const shareSnapchat = async () => {
-    setSharingSnap(true)
-    setSaveErr(false)
-    try {
-      const storyShot = await reframe(await ensureShot(), 'story')
-      const targetName = (doc.to || 'teacher').trim().replace(/[^a-z0-9]+/gi, '-').toLowerCase()
-      const file = shotFile(storyShot, `teachers-day-${targetName}-snap`)
-
-      if (prefersShareSheet() && canShareFiles([file])) {
-        await navigator.share({
-          files: [file],
-          title: imageShareTitle(doc),
-        })
-        showToast('Choose Snapchat!')
-      } else {
-        saveBlob(file, file.name)
-        window.open('https://web.snapchat.com/', '_blank', 'noreferrer')
-        showToast('Snap card saved! Open Snapchat to send')
-      }
-    } catch (e) {
-      if ((e as DOMException)?.name !== 'AbortError') {
-        console.error('Snapchat share failed:', e)
-        setSaveErr(true)
-        setTimeout(() => setSaveErr(false), 4000)
-      }
-    } finally {
-      setSharingSnap(false)
+  const copyInstaText = async () => {
+    const messageText = (waNote || note).trim()
+    const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
+    if (await copy(fullText)) {
+      setInstaCopied(true)
+      setTimeout(() => setInstaCopied(false), 2200)
     }
   }
 
@@ -291,16 +297,13 @@ export default function Share() {
 
             {/* Direct Instant Native Social Hub */}
             <div className="sh-native-share-hub">
-              <div className="sh-native-grid">
-                {/* 1. WhatsApp Message */}
-                <a
-                  className="sh-native-btn sh-native-btn--wa-msg"
-                  href={sendable ? whatsappUrl(activeLink, note) : undefined}
-                  data-off={sendable ? undefined : ''}
-                  aria-disabled={sendable ? undefined : true}
-                  target="_blank"
-                  rel="noreferrer"
-                  title="Send card and note to WhatsApp chat"
+              <div className="sh-native-grid sh-native-grid--duo">
+                {/* 1. WhatsApp Button */}
+                <button
+                  type="button"
+                  className="sh-native-btn sh-native-btn--wa"
+                  onClick={() => setWaModalOpen(true)}
+                  title="Customize message and share to WhatsApp"
                 >
                   <span className="sh-native-btn-icon">
                     <svg viewBox="0 0 24 24" fill="currentColor">
@@ -308,78 +311,28 @@ export default function Share() {
                     </svg>
                   </span>
                   <span className="sh-native-btn-text">
-                    <strong>WhatsApp Msg</strong>
-                    <small>Chat &amp; Link</small>
-                  </span>
-                </a>
-
-                {/* 2. WhatsApp Status */}
-                <button
-                  type="button"
-                  className="sh-native-btn sh-native-btn--wa-status"
-                  onClick={shareWhatsAppStatus}
-                  disabled={sharingStatus || saving}
-                  title="Share 9:16 portrait card to WhatsApp Status"
-                >
-                  <span className="sh-native-btn-icon">
-                    {sharingStatus ? (
-                      <span className="sh-spin sh-spin--light" aria-hidden />
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="6 3.5" />
-                        <path d="M12 6.5c-3 0-5.5 2.5-5.5 5.5 0 1 .3 1.9.8 2.7L6.5 17.5l2.9-.8c.8.5 1.7.8 2.6.8 3 0 5.5-2.5 5.5-5.5S15 6.5 12 6.5Zm2.7 7.7c-.1.3-.6.6-.9.6-.3 0-.6.1-1.8-.4-1.5-.7-2.5-2.2-2.6-2.3-.1-.1-.6-.8-.6-1.5 0-.7.4-1 .6-1.2.1-.1.3-.2.4-.2h.3c.1 0 .2 0 .4.3.1.3.5 1.1.5 1.2 0 .1 0 .2 0 .3l-.2.3-.2.2c-.1.1-.1.2 0 .3.1.2.5.7 1 1.1.7.6 1.1.8 1.3.9.2.1.3 0 .4-.1l.6-.6c.1-.2.2-.1.4-.1l1 .5c.2.1.3.1.3.2 0 .1 0 .3-.1.6Z" fill="currentColor" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="sh-native-btn-text">
-                    <strong>WhatsApp Status</strong>
-                    <small>{sharingStatus ? 'Preparing…' : '9:16 Story'}</small>
+                    <strong>WhatsApp</strong>
+                    <small>Chats &amp; Status</small>
                   </span>
                 </button>
 
-                {/* 3. Instagram Story */}
+                {/* 2. Instagram Button */}
                 <button
                   type="button"
                   className="sh-native-btn sh-native-btn--insta"
-                  onClick={shareInstaStory}
-                  disabled={sharingInsta || saving}
-                  title="Share full 9:16 card to Instagram Stories"
+                  onClick={() => setInstaModalOpen(true)}
+                  title="Share card to Instagram Stories or Direct"
                 >
                   <span className="sh-native-btn-icon">
-                    {sharingInsta ? (
-                      <span className="sh-spin sh-spin--light" aria-hidden />
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069ZM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0Zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324ZM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881Z" />
-                      </svg>
-                    )}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
                   </span>
                   <span className="sh-native-btn-text">
-                    <strong>Insta Story</strong>
-                    <small>{sharingInsta ? 'Preparing…' : '9:16 Story'}</small>
-                  </span>
-                </button>
-
-                {/* 4. Snapchat */}
-                <button
-                  type="button"
-                  className="sh-native-btn sh-native-btn--snap"
-                  onClick={shareSnapchat}
-                  disabled={sharingSnap || saving}
-                  title="Share 9:16 card to Snapchat Snap or Story"
-                >
-                  <span className="sh-native-btn-icon">
-                    {sharingSnap ? (
-                      <span className="sh-spin sh-spin--dark" aria-hidden />
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12.002 2c-3.8 0-6.2 2.7-6.2 6.5 0 .9.2 2.1.6 2.9.1.2.1.3 0 .4-.1.1-.3.2-.6.3-.7.3-1.6.7-1.7 1.6-.1.6.3 1.1 1.1 1.4.8.4 1.9.5 2.4.2.2-.1.4-.1.6 0 .3.2.8.6 1.7.7.8.1 1.4-.2 2-.5.6.3 1.2.6 2 .5.9-.1 1.4-.5 1.7-.7.2-.1.4-.1.6 0 .5.3 1.6.2 2.4-.2.8-.3 1.2-.8 1.1-1.4-.1-.9-1-1.3-1.7-1.6-.3-.1-.5-.2-.6-.3-.1-.1-.1-.2 0-.4.4-.8.6-2 .6-2.9 0-3.8-2.4-6.5-6.2-6.5Z" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="sh-native-btn-text">
-                    <strong>Snapchat</strong>
-                    <small>{sharingSnap ? 'Preparing…' : 'Snap &amp; Story'}</small>
+                    <strong>Instagram</strong>
+                    <small>Stories &amp; DMs</small>
                   </span>
                 </button>
               </div>
@@ -411,7 +364,7 @@ export default function Share() {
                   disabled={!ready}
                   onClick={() => {
                     if (canNativeShare()) {
-                      nativeShare(activeLink, note, shareTitle(doc))
+                      nativeShare(activeLink, waNote || note, shareTitle(doc))
                     } else {
                       doCopy()
                     }
@@ -619,6 +572,194 @@ export default function Share() {
           <CardCanvas doc={doc} template={tpl} mode="view" />
         </div>
       </div>
+
+      {/* ---------------- WhatsApp Customization Modal ---------------- */}
+      {waModalOpen && (
+        <div className="sh-modal-portal" role="dialog" aria-modal="true" aria-labelledby="wa-modal-title">
+          <div className="sh-modal-backdrop" onClick={() => !sharingWa && setWaModalOpen(false)} />
+          <div className="sh-bottom-sheet">
+            <div className="sh-sheet-handle" aria-hidden />
+            <div className="sh-sheet-head">
+              <div className="sh-sheet-head-info">
+                <span className="sh-sheet-badge sh-sheet-badge--wa">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Zm0 3.67c2.2 0 4.26.86 5.82 2.42 1.55 1.56 2.41 3.63 2.41 5.83 0 4.54-3.69 8.23-8.23 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31C4.24 16.9 3.8 15.38 3.8 11.91c.01-4.54 3.7-8.24 8.24-8.24Z" />
+                  </svg>
+                  WhatsApp
+                </span>
+                <h3 id="wa-modal-title" className="sh-sheet-title">Share with your teacher</h3>
+              </div>
+              <button
+                type="button"
+                className="sh-sheet-close"
+                onClick={() => setWaModalOpen(false)}
+                disabled={sharingWa}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="sh-sheet-body">
+              {/* Card recipient info banner */}
+              <div className="sh-sheet-card-tag">
+                <div className="sh-sheet-card-mini">
+                  <CardCanvas doc={doc} template={tpl} mode="thumb" />
+                </div>
+                <div className="sh-sheet-card-info">
+                  <strong>{doc.to ? `Card for ${doc.to}` : 'Teacher’s Day Card'}</strong>
+                  <span>High-res card image included</span>
+                </div>
+                <span className="sh-sheet-attach-check">✓ Image Attached</span>
+              </div>
+
+              {/* Message customization */}
+              <div className="sh-sheet-field">
+                <div className="sh-sheet-field-head">
+                  <label htmlFor="wa-custom-note">Personalize message caption</label>
+                  <button type="button" className="sh-sheet-reset-btn" onClick={resetWaNote}>
+                    Reset to default
+                  </button>
+                </div>
+                <textarea
+                  id="wa-custom-note"
+                  className="sh-sheet-textarea"
+                  rows={4}
+                  value={waNote}
+                  onChange={e => setWaNote(e.target.value)}
+                  placeholder="Write a sweet note..."
+                />
+                <p className="sh-sheet-hint">
+                  This note will travel with the card image as its caption in chats or on your Status.
+                </p>
+              </div>
+            </div>
+
+            <div className="sh-sheet-foot">
+              <button
+                type="button"
+                className="sh-sheet-action-btn sh-sheet-action-btn--wa"
+                onClick={shareToWhatsApp}
+                disabled={sharingWa}
+              >
+                {sharingWa ? (
+                  <>
+                    <span className="sh-spin sh-spin--light" aria-hidden />
+                    <span>Preparing card…</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Z" />
+                    </svg>
+                    <span>Send to WhatsApp</span>
+                  </>
+                )}
+              </button>
+              <p className="sh-sheet-subtip">You can select <strong>My Status</strong> or any <strong>Chat</strong> in WhatsApp</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------- Instagram Share Modal ---------------- */}
+      {instaModalOpen && (
+        <div className="sh-modal-portal" role="dialog" aria-modal="true" aria-labelledby="insta-modal-title">
+          <div className="sh-modal-backdrop" onClick={() => !sharingInsta && setInstaModalOpen(false)} />
+          <div className="sh-bottom-sheet">
+            <div className="sh-sheet-handle" aria-hidden />
+            <div className="sh-sheet-head">
+              <div className="sh-sheet-head-info">
+                <span className="sh-sheet-badge sh-sheet-badge--insta">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                  </svg>
+                  Instagram
+                </span>
+                <h3 id="insta-modal-title" className="sh-sheet-title">Post to Instagram</h3>
+              </div>
+              <button
+                type="button"
+                className="sh-sheet-close"
+                onClick={() => setInstaModalOpen(false)}
+                disabled={sharingInsta}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="sh-sheet-body">
+              {/* Format selection */}
+              <div className="sh-format-picker">
+                <button
+                  type="button"
+                  className={`sh-format-pill ${instaFormat === 'story' ? 'is-active' : ''}`}
+                  onClick={() => setInstaFormat('story')}
+                >
+                  <span className="sh-format-pill-ratio">9:16</span>
+                  <span className="sh-format-pill-label">Story / Status</span>
+                </button>
+                <button
+                  type="button"
+                  className={`sh-format-pill ${instaFormat === 'square' ? 'is-active' : ''}`}
+                  onClick={() => setInstaFormat('square')}
+                >
+                  <span className="sh-format-pill-ratio">1:1</span>
+                  <span className="sh-format-pill-label">Feed Post / DM</span>
+                </button>
+              </div>
+
+              {/* Caption preview & copy box */}
+              <div className="sh-caption-box">
+                <div className="sh-caption-box-head">
+                  <span>Card Link &amp; Caption</span>
+                  <button type="button" className="sh-caption-copy-btn" onClick={copyInstaText}>
+                    {instaCopied ? '✓ Copied!' : 'Copy'}
+                  </button>
+                </div>
+                <p className="sh-caption-snippet">{waNote || note}</p>
+                {activeLink && <span className="sh-caption-link">{activeLink}</span>}
+              </div>
+
+              <div className="sh-sheet-tip-box">
+                <Sparkle size={15} color="#e1306c" />
+                <span>
+                  When Instagram opens, choose <strong>Stories</strong> or <strong>Chats</strong>. Your link is already copied to paste in the story link sticker or DM!
+                </span>
+              </div>
+            </div>
+
+            <div className="sh-sheet-foot">
+              <button
+                type="button"
+                className="sh-sheet-action-btn sh-sheet-action-btn--insta"
+                onClick={shareToInstagram}
+                disabled={sharingInsta}
+              >
+                {sharingInsta ? (
+                  <>
+                    <span className="sh-spin sh-spin--light" aria-hidden />
+                    <span>Preparing image…</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                    </svg>
+                    <span>Open in Instagram</span>
+                  </>
+                )}
+              </button>
+              <p className="sh-sheet-subtip">Card image will be loaded directly into Instagram</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
