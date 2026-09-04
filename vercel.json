@@ -6,6 +6,18 @@
   "outputDirectory": "muteachers/dist",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/c/:slug",
+      "destination": "/api/card-preview?slug=:slug"
+    },
+    {
+      "source": "/card/:slug",
+      "destination": "/api/card-preview?slug=:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

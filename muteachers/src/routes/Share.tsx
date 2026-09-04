@@ -12,7 +12,7 @@ import { defaultNote, imageShareText, imageShareTitle, mailto, shareTitle } from
 import { FORMATS, renderCard, reframe, saveBlob, saveCardImages, shotFile, type FormatKey, type Shot } from '../lib/exportCard'
 import { useReveal } from '../lib/useReveal'
 import { useAuth } from '../context/AuthContext'
-import { saveCardToDb } from '../lib/storage'
+import { createThumbnail, saveCardThumbnailToDb, saveCardToDb } from '../lib/storage'
 import './share.css'
 
 async function copyCardToClipboard(file: File | Blob, text: string): Promise<{ copiedImage: boolean; copiedText: boolean }> {
@@ -113,7 +113,14 @@ export default function Share() {
       if (!root) return
       try {
         const s = await renderCard(root)
-        if (live) setShot(s)
+        if (live) {
+          setShot(s)
+          if (doc.id && s.dataUrl) {
+            createThumbnail(s.dataUrl, 800)
+              .then(thumb => saveCardThumbnailToDb(doc.id, thumb))
+              .catch(() => {})
+          }
+        }
       } catch { /* saving falls back to rendering on demand */ }
     }, 400)
     return () => { live = false; clearTimeout(id) }

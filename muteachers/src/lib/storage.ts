@@ -99,6 +99,58 @@ export async function saveCardToDb(doc: CardDoc, user?: UserProfile | null): Pro
 }
 
 /**
+ * Downscales an image data URL to a lightweight JPEG thumbnail (~50-80KB)
+ */
+export async function createThumbnail(dataUrl: string, maxDim = 800): Promise<string> {
+  if (typeof window === 'undefined' || !dataUrl) return dataUrl
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(dataUrl)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.84))
+      } catch {
+        resolve(dataUrl)
+      }
+    }
+    img.onerror = () => resolve(dataUrl)
+    img.src = dataUrl
+  })
+}
+
+/**
+ * Save a lightweight rendered card thumbnail to Supabase for instant WhatsApp/OG rich previews
+ */
+export async function saveCardThumbnailToDb(slug: string, thumbDataUrl: string): Promise<void> {
+  if (!isSupabaseConfigured || !slug || !thumbDataUrl) return
+  try {
+    const { data } = await supabase
+      .from('cards')
+      .select('custom_config')
+      .eq('share_slug', slug)
+      .single()
+
+    const existingConfig = (data?.custom_config as any) || {}
+    await supabase
+      .from('cards')
+      .update({
+        custom_config: { ...existingConfig, preview: thumbDataUrl },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('share_slug', slug)
+  } catch (e) {
+    console.warn('Supabase thumbnail update notice:', e)
+  }
+}
+
+/**
  * Fetch a card by ID / slug from Supabase (fallback to hash token or local storage)
  */
 export async function fetchCardFromDb(idOrSlug: string): Promise<CardRecord | null> {
