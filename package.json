@@ -1,12 +1,14 @@
 {
   "name": "temp-next",
   "version": "0.1.0",
-  "private": true,
+  "workspaces": [
+    "muteachers"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "npm --prefix muteachers run dev",
+    "build": "npm --prefix muteachers run build",
+    "start": "npm --prefix muteachers run start",
+    "lint": "npm --prefix muteachers run lint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",

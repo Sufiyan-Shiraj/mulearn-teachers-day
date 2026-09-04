@@ -1,0 +1,32 @@
+import { chromium } from 'playwright-core'
+import { existsSync } from 'node:fs'; import { homedir } from 'node:os'; import path from 'node:path'
+const root = path.join(homedir(), 'Library/Caches/ms-playwright')
+const exe = ['chromium-1234/chrome-mac-arm64/Chromium.app/Contents/MacOS/Chromium'].map(c => path.join(root, c)).find(p => existsSync(p))
+const b = await chromium.launch({ executablePath: exe })
+const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 })
+const p = await ctx.newPage()
+p.on('pageerror', e => console.log('  pageerror', String(e).slice(0,160)))
+await p.goto('http://localhost:5273/pick', { waitUntil: 'networkidle' })
+await p.locator('.pk-card').nth(2).click(); await p.waitForTimeout(800)   // velvet
+const buf = await (await fetch('http://localhost:5273/demo-photo.jpg')).arrayBuffer()
+await p.goto('http://localhost:5273/photo', { waitUntil: 'networkidle' })
+await p.setInputFiles('input[type=file]', { name: 'd.jpg', mimeType: 'image/jpeg', buffer: Buffer.from(buf) })
+await p.waitForURL('**/create'); await p.waitForTimeout(1200)
+await p.screenshot({ path: 'shots/nx-1-before.png' })
+console.log('Next visible before edit:', await p.locator('.ed-next').evaluate(n => getComputedStyle(n).opacity))
+
+const msg = p.locator('.c-el--text').filter({ hasText: 'Thank you for' }).first()
+await msg.click(); await p.waitForTimeout(250); await msg.click(); await p.waitForTimeout(400)
+await p.keyboard.type(' truly')
+await p.waitForTimeout(300)
+await p.screenshot({ path: 'shots/nx-2-editing.png' })
+// finish editing
+await p.locator('.ed-card-wrap').click({ position: { x: 6, y: 6 } }).catch(()=>{})
+await p.keyboard.press('Escape')
+await p.waitForTimeout(900)
+await p.screenshot({ path: 'shots/nx-3-after.png' })
+const st = await p.locator('.ed-next').evaluate(n => ({ op: getComputedStyle(n).opacity, ready: n.hasAttribute('data-ready'), box: n.getBoundingClientRect().toJSON() }))
+console.log('Next after edit:', JSON.stringify(st))
+const tb = await p.locator('.ed-toolbar').evaluate(n => n.getBoundingClientRect().toJSON())
+console.log('toolbar top', Math.round(tb.top), 'next bottom', Math.round(st.box.bottom), 'overlap:', st.box.bottom > tb.top)
+await b.close()

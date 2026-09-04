@@ -1,0 +1,36 @@
+{
+  "name": "muteachers",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:full": "node scripts/dev.mjs",
+    "build": "tsc -b && vite build",
+    "start": "npm run build && node server/index.mjs",
+    "serve": "node server/index.mjs",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.115.0",
+    "canvas-confetti": "^1.9.4",
+    "framer-motion": "^13.2.0",
+    "html-to-image": "^1.11.13",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.3",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "playwright-core": "^1.62.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}

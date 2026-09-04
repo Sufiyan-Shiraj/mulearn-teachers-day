@@ -1,0 +1,102 @@
+/* ============================================================
+   Motion vocabulary.
+   Three easings do almost all the work: `--e-out` for things
+   arriving, `--e-spring` for anything the finger touches, and
+   `--e-soft` for slow ambient drift.
+   ============================================================ */
+:root {
+  --e-out:    cubic-bezier(.22, .9, .28, 1);
+  --e-spring: cubic-bezier(.2, .9, .3, 1.3);
+  --e-soft:   cubic-bezier(.4, 0, .2, 1);
+  --t-fast: .16s;
+  --t-mid:  .28s;
+  --t-slow: .52s;
+}
+
+/* ---------------- keyframes ---------------- */
+@keyframes m-fade      { from { opacity: 0 } to { opacity: 1 } }
+@keyframes m-fade-up   { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+@keyframes m-fade-down { from { opacity: 0; transform: translateY(-10px) } to { opacity: 1; transform: none } }
+@keyframes m-fade-left { from { opacity: 0; transform: translateX(20px) } to { opacity: 1; transform: none } }
+@keyframes m-pop       { 0% { opacity: 0; transform: scale(.9) } 60% { opacity: 1 } 100% { opacity: 1; transform: none } }
+@keyframes m-rise      { from { opacity: 0; transform: translateY(26px) scale(.985) } to { opacity: 1; transform: none } }
+@keyframes m-float     { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
+@keyframes m-drift     { 0%, 100% { transform: translate(0,0) rotate(var(--r, 0deg)) } 50% { transform: translate(2px,-6px) rotate(calc(var(--r, 0deg) + 1.5deg)) } }
+@keyframes m-twinkle   { 0%, 100% { opacity: .35; transform: scale(.9) } 50% { opacity: 1; transform: scale(1.1) } }
+@keyframes m-shimmer   { from { background-position: -160% 0 } to { background-position: 260% 0 } }
+@keyframes m-nudge-y   { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
+@keyframes m-attention {
+  0%, 62%, 100% { transform: none; box-shadow: 0 2px 6px rgba(20,14,10,.2), 0 10px 24px rgba(20,14,10,.14) }
+  72%           { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(20,14,10,.24), 0 18px 40px rgba(20,14,10,.2), 0 0 0 6px rgba(210,55,47,.1) }
+  84%           { transform: translateY(-1px) }
+}
+@keyframes m-draw { from { stroke-dashoffset: var(--len, 240) } to { stroke-dashoffset: 0 } }
+@keyframes m-check { from { stroke-dashoffset: 22 } to { stroke-dashoffset: 0 } }
+@keyframes m-spark {
+  0%   { opacity: 0; transform: scale(.3) rotate(0deg) }
+  40%  { opacity: 1; transform: scale(1.15) rotate(20deg) }
+  100% { opacity: 0; transform: scale(1.5) rotate(40deg) }
+}
+
+/* ---------------- route transition ----------------
+   Opacity only, deliberately: a filled transform animation leaves an
+   identity matrix behind, and that makes the element a containing block
+   for every `position: fixed` descendant. Sections animate their own
+   rise; the route itself just cross-fades. */
+.route {
+  animation: m-fade .3s var(--e-out) both;
+}
+
+/* ---------------- scroll reveal ---------------- */
+.reveal { opacity: 0; transform: translateY(22px); }
+.reveal.is-in {
+  opacity: 1; transform: none;
+  transition: opacity .62s var(--e-out), transform .62s var(--e-out);
+  transition-delay: var(--d, 0ms);
+}
+
+/* staggered children */
+.stagger > * { opacity: 0; animation: m-rise .58s var(--e-out) both; }
+.stagger > *:nth-child(1) { animation-delay: .02s }
+.stagger > *:nth-child(2) { animation-delay: .07s }
+.stagger > *:nth-child(3) { animation-delay: .12s }
+.stagger > *:nth-child(4) { animation-delay: .17s }
+.stagger > *:nth-child(5) { animation-delay: .22s }
+.stagger > *:nth-child(6) { animation-delay: .27s }
+.stagger > *:nth-child(7) { animation-delay: .32s }
+.stagger > *:nth-child(8) { animation-delay: .37s }
+.stagger > *:nth-child(n+9) { animation-delay: .42s }
+
+/* ---------------- ambient life ---------------- */
+.m-float  { animation: m-float 6.5s var(--e-soft) infinite; }
+.m-drift  { animation: m-drift 9s var(--e-soft) infinite; }
+.m-twinkle{ animation: m-twinkle 3.4s var(--e-soft) infinite; }
+
+/* an element that wants to be noticed once the work is done */
+.m-attention { animation: m-attention 2.6s var(--e-out) 2; }
+
+/* ---------------- press feedback & micro-interactions ---------------- */
+.m-press { transition: transform var(--t-fast) var(--e-spring); }
+.m-press:active { transform: scale(.955); }
+
+.m-tilt {
+  transition: transform var(--t-mid) var(--e-spring), box-shadow var(--t-mid) var(--e-out);
+}
+.m-tilt:hover {
+  transform: translateY(-6px) rotate(1deg) scale(1.02);
+}
+
+.m-pulse-soft {
+  animation: m-pulse 3s ease-in-out infinite;
+}
+@keyframes m-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; }
+  .stagger > * { opacity: 1; animation: none; }
+  .m-float, .m-drift, .m-twinkle, .m-pulse-soft { animation: none; }
+}
+

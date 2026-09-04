@@ -1,9 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm --prefix muteachers install",
-  "buildCommand": "npm --prefix muteachers run build",
-  "outputDirectory": "muteachers/dist",
   "rewrites": [
     {
       "source": "/(.*)",

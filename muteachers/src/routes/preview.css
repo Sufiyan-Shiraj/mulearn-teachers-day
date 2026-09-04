@@ -1,0 +1,151 @@
+.pv { overflow-x: clip; }
+.pv-steps { padding: 4px 28px 8px; }
+
+.pv-main {
+  display: grid;
+  grid-template-columns: minmax(220px, 268px) minmax(0, 1fr) 74px;
+  gap: 26px; align-items: start;
+  max-width: var(--shell-max); margin: 0 auto; width: 100%;
+  padding: 10px 28px 40px;
+}
+
+/* ---------------- side ---------------- */
+.pv-side { position: relative; padding-top: 6px; }
+.pv-title {
+  position: relative; display: block; width: fit-content; max-width: 100%;
+  font-family: var(--f-display); font-weight: 600;
+  font-size: clamp(24px, 2.5vw, 31px); letter-spacing: -.01em;
+}
+.pv-title-burst { position: absolute; right: -26px; top: 2px; }
+.pv-sub { margin-top: 10px; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
+
+.pv-faces { margin-top: 26px; display: flex; flex-direction: column; gap: 2px; }
+.pv-face {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 16px; border-radius: 12px;
+  font-size: 14.5px; color: var(--ink-soft);
+  transition: background .16s, color .16s;
+  position: relative;
+}
+.pv-face-ico { width: 21px; height: 21px; color: var(--muted); }
+.pv-face-ico svg { width: 100%; height: 100%; }
+.pv-face:hover { background: rgba(0,0,0,.035); }
+.pv-face[data-on] { background: var(--tint-red); color: var(--crimson); font-weight: 600; }
+.pv-face[data-on] .pv-face-ico { color: var(--crimson); }
+.pv-face[data-on]::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 3px; background: var(--crimson);
+}
+
+.pv-tools { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 12px; }
+.pv-tool, .pv-zoom { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ink-soft); }
+.pv-tool svg, .pv-tool-ico svg { width: 21px; height: 21px; }
+.pv-tool:hover { color: var(--ink); }
+.pv-zoom-label { flex: 1; }
+.pv-zoom-val { font-size: 13px; color: var(--muted); }
+.pv-zoom button {
+  width: 28px; height: 28px; border-radius: 999px; font-size: 15px; line-height: 1;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink-soft); transition: background .16s;
+}
+.pv-zoom button:hover { background: #fff; }
+
+.pv-nudge {
+  position: relative; text-align: left;
+  margin-top: 24px; width: 100%;
+  display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: 'h t a' 'h s a';
+  column-gap: 12px;
+  padding: 18px 18px 20px; border-radius: 16px;
+  background: var(--surface-2);
+  transition: transform .18s, background .18s;
+}
+.pv-nudge:hover { transform: translateY(-2px); background: #f0e5dc; }
+.pv-nudge-heart { grid-area: h; align-self: start; margin-top: 2px; }
+.pv-nudge-t { grid-area: t; font-family: var(--f-script); font-size: 20px; color: var(--ink); }
+.pv-nudge-s { grid-area: s; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); margin-top: 2px; }
+.pv-nudge > svg:last-child { grid-area: a; align-self: end; color: var(--ink-soft); }
+
+.pv-scrap { margin-top: 34px; margin-left: 22px; width: 190px; }
+.pv-scrap .scrap-in { font-size: 20px; line-height: 1.45; }
+.pv-scrap-heart { display: inline-block; vertical-align: -2px; }
+.pv-daisy { position: absolute; left: -30px; bottom: 52px; width: 54px; aspect-ratio: 1; transform: rotate(-12deg); }
+
+/* ---------------- stage ---------------- */
+.pv-stage { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.pv-card-hold { display: flex; justify-content: center; transition: width .2s ease; max-width: 100%; }
+.pv-card { width: 100%; max-width: min(430px, 100%, calc(60dvh * var(--card-ar, .714))); }
+.pv-card .c-card { transition: box-shadow .3s; }
+
+.pv-pager { display: flex; align-items: center; gap: 16px; }
+.pv-pager span { font-size: 14px; color: var(--ink-soft); min-width: 34px; text-align: center; }
+.pv-pager button {
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line), var(--sh-sm);
+  transition: transform .18s cubic-bezier(.2,.9,.3,1.2);
+}
+.pv-pager button svg { width: 13px; height: 13px; }
+.pv-pager button:hover:not(:disabled) { transform: scale(1.08); }
+.pv-pager button:disabled { opacity: .4; }
+
+/* ---------------- quick tools ---------------- */
+.pv-quick {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 4px; border-radius: 22px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft), var(--sh-sm);
+  position: sticky; top: 14px;
+}
+.pv-quick button {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 12px 4px; border-radius: 14px; color: var(--ink-soft); font-size: 10.5px;
+  transition: background .16s, color .16s;
+}
+.pv-quick button span { width: 21px; height: 21px; }
+.pv-quick button span svg { width: 100%; height: 100%; }
+.pv-quick button:hover { background: rgba(0,0,0,.04); color: var(--ink); }
+
+.pv-next { grid-column: 2; justify-self: end; margin-top: -66px; }
+
+/* ---------------- responsive ---------------- */
+@media (max-width: 900px) {
+  .pv-steps { padding: 4px 18px 4px; }
+  .pv-main {
+    grid-template-columns: 1fr; gap: 0;
+    padding: 4px 18px calc(24px + var(--safe-b));
+  }
+  .pv-side { text-align: center; padding-top: 0; }
+  .pv-title { font-family: var(--f-elegant); font-weight: 700; font-size: 30px; }
+  .pv-sub { margin-top: 6px; font-size: 14px; }
+  .pv-faces, .pv-tools, .pv-nudge, .pv-scrap, .pv-daisy { display: none; }
+
+  .pv-stage { margin-top: 16px; gap: 14px; }
+  .pv-card { max-width: min(330px, 82vw, calc(52dvh * var(--card-ar, .714))); }
+  .pv-card-hold { width: 100% !important; }
+
+  .pv-quick {
+    flex-direction: row; justify-content: space-around;
+    position: static; margin-top: 16px; border-radius: 20px; padding: 6px 4px;
+  }
+  .pv-quick button { flex: 1; }
+
+  .pv-next { grid-column: 1; justify-self: stretch; margin-top: 14px; }
+  .pv-next .btn { width: 100%; }
+}
+
+
+/* ---------------- preview motion ---------------- */
+.pv-side    { animation: m-fade-left .55s var(--e-out) .04s both; }
+.pv-stage   { animation: m-rise .8s var(--e-out) .02s both; }
+.pv-quick   { animation: m-fade-left .55s var(--e-out) .18s both; }
+.pv-next    { animation: m-fade-up .5s var(--e-out) .3s both; }
+.pv-face    { transition: background .2s, color .2s, transform .2s var(--e-spring); }
+.pv-face:active { transform: scale(.98); }
+.pv-face[data-on] .pv-face-ico { animation: m-pop .3s var(--e-spring); }
+.pv-quick button { transition: background .16s, color .16s, transform .2s var(--e-spring); }
+.pv-quick button:active { transform: scale(.92); }
+.pv-quick button span { transition: transform .22s var(--e-spring); }
+.pv-quick button:hover span { transform: translateY(-2px); }
+.pv-pager span { transition: opacity .2s; }
+.pv-nudge > svg:last-child { transition: transform .24s var(--e-spring); }
+.pv-nudge:hover > svg:last-child { transform: translateX(4px); }
+.pv-daisy { animation: m-drift 11s var(--e-soft) infinite; }

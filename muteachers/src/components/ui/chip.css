@@ -1,0 +1,25 @@
+.chip-row {
+  display: flex; gap: 10px; align-items: center; justify-content: safe center;
+  overflow-x: auto; scrollbar-width: none;
+  padding: 2px 0 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex: none;
+  height: 36px; padding: 0 20px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-size: 14px; font-weight: 500; color: var(--ink-soft);
+  transition: background .2s var(--e-out), color .2s, box-shadow .2s, transform .2s var(--e-spring);
+  white-space: nowrap;
+}
+.chip:hover { transform: translateY(-1px); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.chip:active { transform: scale(.94); }
+.chip[data-active] {
+  background: var(--ink); color: #fff; box-shadow: 0 3px 10px rgba(20,14,10,.2);
+  animation: m-pop .3s var(--e-spring);
+}
+@media (pointer: coarse) { .chip { height: 40px; } }

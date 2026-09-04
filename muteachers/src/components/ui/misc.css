@@ -1,0 +1,15 @@
+.torn { display: block; width: 100%; }
+
+.scrap {
+  position: relative;
+  background: linear-gradient(168deg, #fbf6ea, #f2e9d8);
+  padding: 16px 22px;
+  box-shadow: 0 2px 5px rgba(90,60,30,.1), 0 10px 26px rgba(90,60,30,.1);
+  --torn-path: polygon(0% 4%, 6% 0%, 18% 3%, 31% 0%, 44% 3%, 57% 0%, 70% 3%, 83% 0%, 94% 3%, 100% 1%,
+                       100% 96%, 93% 100%, 81% 97%, 68% 100%, 55% 97%, 42% 100%, 29% 97%, 16% 100%, 5% 97%, 0% 99%);
+  clip-path: var(--torn-path);
+}
+.scrap-in {
+  font-family: var(--f-script); font-size: 19px; line-height: 1.4; color: var(--ink-soft);
+}
+.scrap-clip { position: absolute; top: -16px; right: 26px; width: 20px; height: 38px; z-index: 2; }

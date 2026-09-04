@@ -1,0 +1,93 @@
+.ft { position: relative; margin-top: auto; }
+
+.ft-note-row { display: flex; justify-content: center; padding: 26px 28px 34px; }
+.ft-scrap {
+  position: relative; text-align: center;
+  background: linear-gradient(168deg, #fbf6ea, #f2e9d8);
+  padding: 16px 46px 20px;
+  transform: rotate(-1deg);
+  box-shadow: 0 2px 6px rgba(90,60,30,.1), 0 12px 26px rgba(90,60,30,.1);
+  clip-path: polygon(0% 8%, 8% 0%, 24% 5%, 40% 0%, 56% 5%, 72% 0%, 88% 5%, 100% 0%,
+                     100% 92%, 90% 100%, 74% 95%, 58% 100%, 42% 95%, 26% 100%, 10% 95%, 0% 100%);
+}
+.ft-scrap p { font-family: var(--f-script); font-size: 21px; color: var(--ink-soft); }
+.ft-scrap-sub { font-size: 19px !important; color: var(--muted) !important; }
+.ft-scrap-heart { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); animation: m-float 4.5s var(--e-soft) infinite; }
+.ft-smiley { font-size: 17px; }
+
+.ft-dark { position: relative; background: #1f1f1f; color: #f4efe7; padding: 58px 0 44px; }
+.ft-tear { position: absolute; left: 0; right: 0; top: -1px; transform: scaleY(-1); }
+.ft-dark-in { display: grid; grid-template-columns: 220px 1fr; gap: 30px; align-items: center; padding-top: 16px; }
+
+.ft-made {
+  font-family: var(--f-script); font-size: 25px; line-height: 1.34; color: #fdf7ec;
+  position: relative;
+}
+.ft-made-heart { display: inline-block; vertical-align: -2px; margin-left: 4px; animation: m-float 3.6s var(--e-soft) infinite; }
+
+.ft-replay-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  color: #e5dac7;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.ft-replay-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.ft-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ft-points li {
+  transition: transform .24s var(--e-spring);
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  padding: 0 12px;
+  border-left: 1px dashed rgba(220,190,140,.3);
+}
+.ft-points li:first-child { border-left: 0; }
+.ft-points li:hover { transform: translateY(-3px); }
+.ft-point-icon { width: 26px; height: 26px; color: #e8dcc6; transition: transform .26s var(--e-spring), color .2s; }
+.ft-points li:hover .ft-point-icon { transform: scale(1.12) rotate(-6deg); color: #fff; }
+.ft-point-icon svg { width: 100%; height: 100%; }
+.ft-point-text { font-size: 13px; line-height: 1.5; color: #cfc6b7; }
+
+.ft-card-scrap {
+  display: block;
+  position: absolute; right: max(28px, 6%); bottom: 26px;
+  width: 190px; padding: 22px 20px 24px;
+  background: linear-gradient(168deg, #fbf6ea, #efe6d4);
+  color: var(--ink-soft);
+  font-family: var(--f-script); font-size: 22px; line-height: 1.4;
+  transform: rotate(1.4deg);
+  box-shadow: 0 4px 12px rgba(0,0,0,.3), 0 20px 46px rgba(0,0,0,.34);
+  clip-path: polygon(0% 4%, 10% 0%, 26% 3%, 44% 0%, 62% 3%, 80% 0%, 100% 3%,
+                     100% 96%, 84% 100%, 66% 97%, 48% 100%, 30% 97%, 14% 100%, 0% 97%);
+  transition: transform .22s cubic-bezier(.2,.9,.3,1.15);
+}
+.ft-card-scrap:hover { transform: rotate(1.4deg) translateY(-4px); }
+.ft-card-clip { position: absolute; top: -14px; right: 30px; }
+
+@media (max-width: 900px) {
+  .ft-dark { padding: 44px 0 34px; }
+  .ft-dark-in { grid-template-columns: 1fr; gap: 26px; text-align: center; }
+  .ft-made { font-size: 23px; }
+  .ft-points { grid-template-columns: 1fr; gap: 18px; }
+  .ft-points li { border-left: 0; border-top: 1px dashed rgba(220,190,140,.25); padding-top: 16px; }
+  .ft-points li:first-child { border-top: 0; padding-top: 0; }
+  .ft-card-scrap { position: static; margin: 30px auto 0; width: 200px; }
+  .ft-scrap { padding: 16px 28px 20px; }
+  .ft-scrap p { font-size: 18px; }
+  .ft-scrap-sub { font-size: 17px !important; }
+  .ft-scrap-heart { left: 10px; }
+}

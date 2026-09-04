@@ -1,0 +1,76 @@
+/* ============================================================
+   μlearn ASI · Teacher's Day Cards — design tokens
+   Sampled directly from the UI reference screenshots.
+   ============================================================ */
+:root {
+  /* --- paper / surfaces --- */
+  --paper:        #faf5f1;   /* page background            */
+  --paper-warm:   #f7f0e8;   /* second band (below tear)   */
+  --surface:      #fbf8f3;   /* panels, cards, pills       */
+  --surface-2:    #f3eae3;   /* inset sub-panels           */
+  --tint:         #f5ebe2;   /* selected chip / soft fill  */
+  --tint-red:     #fbeeec;   /* selected red-tinted fill   */
+
+  /* --- ink --- */
+  --ink:          #1a1a1a;
+  --ink-2:        #262523;
+  --ink-soft:     #3d3733;
+  --muted:        #7a6f65;
+  --muted-2:      #9a8d81;
+
+  /* --- lines --- */
+  --line:         #e6dcd0;
+  --line-soft:    #efe7dc;
+  --line-strong:  #d9cec0;
+
+  /* --- brand --- */
+  --crimson:      #7b0e11;
+  --crimson-2:    #96181c;
+  --crimson-ink:  #6e1012;
+  --red:          #d2372f;   /* doodles, hearts           */
+  --red-bright:   #e23b32;
+  --gold:         #dda74f;
+  --gold-deep:    #c07a1f;
+  --gold-soft:    #e8c88a;
+
+  /* --- card art --- */
+  --velvet-1:     #7b1113;
+  --velvet-2:     #4a0807;
+
+  /* --- type --- */
+  --f-display: "Playfair Display", "Times New Roman", serif;
+  --f-sans:    "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --f-script:  "Caveat", "Segoe Script", cursive;
+  --f-elegant: "Dancing Script", "Snell Roundhand", cursive;
+  --f-hand:    "Kalam", "Bradley Hand", cursive;
+  --f-type:    "Special Elite", "Courier New", monospace;
+  --f-serif-2: "Cormorant Garamond", Georgia, serif;
+
+  /* --- radii --- */
+  --r-pill: 999px;
+  --r-lg:   22px;
+  --r-md:   16px;
+  --r-sm:   12px;
+
+  /* --- elevation --- */
+  --sh-sm: 0 1px 2px rgba(60,42,30,.05), 0 2px 8px rgba(60,42,30,.04);
+  --sh-md: 0 2px 6px rgba(60,42,30,.06), 0 10px 26px rgba(60,42,30,.07);
+  --sh-lg: 0 6px 14px rgba(60,42,30,.08), 0 26px 60px rgba(60,42,30,.12);
+  --sh-card: 0 10px 22px rgba(60,32,20,.13), 0 34px 70px rgba(60,32,20,.16);
+
+  /* --- textures --- */
+  --grain-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+
+  /* --- layout --- */
+  --shell-max: 1180px;
+  --nav-h: 74px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+  --tabbar-h:        68px;
+
+  /* --- scrollbars --- */
+  --sb-track:        transparent;
+  --sb-thumb:        #cbbaa8;
+  --sb-thumb-hover:  #a6927d;
+  --sb-thumb-active: #7b0e11;
+}

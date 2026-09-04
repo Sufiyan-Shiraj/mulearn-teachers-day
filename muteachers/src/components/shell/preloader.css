@@ -1,0 +1,289 @@
+/* ============================================================
+   Awwwards-Worthy Handcrafted Scrapbook Desk Preloader
+   ============================================================ */
+
+.preloader-root {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: all;
+  user-select: none;
+}
+
+/* ---------------- Split Curtains ---------------- */
+.preloader-curtain {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--paper-warm, #f5efe4);
+  background-image:
+    radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.7) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.035'/%3E%3C/svg%3E");
+  z-index: 1;
+}
+
+.preloader-curtain--top {
+  top: 0;
+  height: 50.5%;
+  border-bottom: 2px dashed rgba(190, 175, 155, 0.4);
+}
+
+.preloader-curtain--bottom {
+  bottom: 0;
+  height: 50.5%;
+  border-top: 2px dashed rgba(190, 175, 155, 0.4);
+}
+
+.preloader-tear-top {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  transform: rotate(180deg);
+  pointer-events: none;
+}
+
+.preloader-tear-bottom {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+/* ---------------- Desk Surface Stage ---------------- */
+.preloader-stage {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  max-width: 540px;
+  width: 90%;
+  text-align: center;
+}
+
+/* ---------------- Scrapbook Card Canvas ---------------- */
+.preloader-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--card, #fffdf8);
+  border: 1px solid var(--border-strong, #dfd5c4);
+  border-radius: 24px;
+  padding: 2.8rem 2.2rem 2.2rem;
+  box-shadow:
+    0 4px 12px rgba(44, 25, 20, 0.05),
+    0 24px 60px rgba(44, 25, 20, 0.16),
+    0 2px 4px rgba(44, 25, 20, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Washi tape accents */
+.preloader-tape-left {
+  position: absolute;
+  top: -14px;
+  left: -18px;
+  width: 90px;
+  transform: rotate(-22deg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.preloader-tape-right {
+  position: absolute;
+  top: -12px;
+  right: -16px;
+  width: 86px;
+  transform: rotate(26deg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Logo mark */
+.preloader-logo-wrap {
+  margin-bottom: 1.2rem;
+}
+
+/* Inking Heart SVG */
+.preloader-heart-wrap {
+  position: relative;
+  margin: 0.6rem 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preloader-heart-svg {
+  width: 72px;
+  height: 64px;
+}
+
+.preloader-heart-path {
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
+/* Handwritten Script text */
+.preloader-script {
+  font-family: var(--f-script, 'Caveat', cursive);
+  font-size: 1.85rem;
+  color: var(--ink, #1f1b18);
+  line-height: 1.25;
+  margin: 0 0 0.6rem;
+  letter-spacing: 0.02em;
+}
+
+.preloader-script em {
+  font-style: normal;
+  color: var(--red, #861f21);
+  font-weight: 700;
+}
+
+/* ---------------- Postal Stamp & Counter ---------------- */
+.preloader-stamp-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.preloader-stamp-ring {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px dashed var(--red, #861f21);
+  box-shadow: inset 0 0 0 4px var(--card, #fffdf8), inset 0 0 0 5.5px var(--border, #e5dccf);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: rgba(134, 31, 33, 0.03);
+  transform: rotate(-4deg);
+}
+
+.preloader-stamp-counter {
+  font-family: var(--f-display, 'Playfair Display', serif);
+  font-size: 2rem;
+  font-weight: 800;
+  font-style: italic;
+  color: var(--red, #861f21);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.preloader-stamp-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.preloader-stamp-logo {
+  height: 11px;
+  width: auto;
+  opacity: 0.8;
+  filter: sepia(0.2) contrast(1.1);
+}
+
+.preloader-stamp-year {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--muted, #7c7267);
+  line-height: 1;
+}
+
+/* Status caption */
+.preloader-caption {
+  font-family: var(--f-sans, system-ui, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted, #6d645a);
+  margin-top: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Skip button */
+.preloader-skip-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 20;
+  background: var(--card, #ffffff);
+  border: 1.5px solid var(--border, #dfd7cc);
+  border-radius: 999px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted, #6d645a);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(44, 25, 20, 0.08);
+  transition: all 0.16s ease;
+}
+
+.preloader-skip-btn:hover {
+  background: #fbf8f2;
+  color: var(--fg, #1f1b18);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(44, 25, 20, 0.12);
+}
+
+/* Doodles floating around desk */
+.preloader-doodle-1 {
+  position: absolute;
+  top: 12%;
+  left: 8%;
+  pointer-events: none;
+}
+
+.preloader-doodle-2 {
+  position: absolute;
+  bottom: 15%;
+  right: 10%;
+  pointer-events: none;
+}
+
+.preloader-doodle-3 {
+  position: absolute;
+  top: 20%;
+  right: 12%;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .preloader-stage {
+    padding: 1.2rem;
+  }
+  .preloader-card {
+    padding: 2.2rem 1.6rem 1.8rem;
+  }
+  .preloader-script {
+    font-size: 1.55rem;
+  }
+  .preloader-stamp-ring {
+    width: 104px;
+    height: 104px;
+  }
+  .preloader-stamp-counter {
+    font-size: 1.75rem;
+  }
+  .preloader-skip-btn {
+    bottom: 1.2rem;
+    right: 1.2rem;
+  }
+}

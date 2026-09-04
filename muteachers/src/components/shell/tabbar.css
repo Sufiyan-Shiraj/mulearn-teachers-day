@@ -1,0 +1,103 @@
+/* ============================================================
+   The dock.
+   A floating slab of frosted paper rather than a browser chrome
+   bar: hairline warm border, deep soft shadow, and one indicator
+   that slides between destinations.
+   ============================================================ */
+.tb, .tb-spacer { display: none; }
+
+@media (max-width: 860px) {
+  .tb-spacer { display: block; height: calc(84px + var(--safe-b)); flex: none; }
+
+  .tb {
+    display: block;
+    position: fixed; left: 0; right: 0; z-index: 40;
+    bottom: calc(10px + var(--safe-b));
+    padding-inline: 12px;
+    pointer-events: none;
+    animation: tb-in .5s var(--e-out) .1s both;
+  }
+  @keyframes tb-in { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: none } }
+
+  .tb-dock {
+    position: relative;
+    pointer-events: auto;
+    border-radius: 24px;
+    padding: 6px;
+    background:
+      linear-gradient(180deg, rgba(255,253,249,.9), rgba(247,240,232,.86));
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    backdrop-filter: blur(22px) saturate(1.35);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      0 0 0 1px rgba(160,132,96,.2),
+      0 6px 16px rgba(74,48,24,.1),
+      0 20px 44px rgba(74,48,24,.16);
+    overflow: hidden;
+  }
+  /* the paper grain carries through, so it belongs to the same world */
+  .tb-dock::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image: var(--grain-url);
+    background-size: 200px 200px;
+    opacity: .35; mix-blend-mode: multiply;
+  }
+
+  /* sliding selection */
+  .tb-pill {
+    position: absolute; z-index: 0;
+    top: 6px; bottom: 6px;
+    left: 6px;
+    width: calc((100% - 12px) / var(--n));
+    transform: translateX(calc(var(--i) * 100%));
+    border-radius: 19px;
+    background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(250,242,235,.9));
+    box-shadow: 0 1px 2px rgba(90,60,30,.1), 0 4px 12px rgba(90,60,30,.1);
+    transition: transform .42s var(--e-spring);
+  }
+
+  .tb-list { position: relative; z-index: 1; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+
+  .tb-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    height: 58px; color: var(--muted);
+    border-radius: 19px;
+    transition: color .22s var(--e-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tb-icon {
+    width: 22px; height: 22px;
+    transition: transform .34s var(--e-spring);
+  }
+  .tb-icon svg { width: 100%; height: 100%; }
+  .tb-label {
+    font-size: 10px; letter-spacing: .012em; font-weight: 500;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: opacity .22s, transform .3s var(--e-out);
+  }
+
+  .tb-item:active .tb-icon { transform: scale(.86); }
+  .tb-item[data-on] { color: var(--crimson); }
+  .tb-item[data-on] .tb-icon { transform: translateY(-1px) scale(1.06); }
+  .tb-item[data-on] .tb-label { font-weight: 700; }
+
+  /* the one that starts something new wears the brand colour */
+  .tb-item[data-accent] .tb-icon {
+    width: 30px; height: 30px; border-radius: 999px;
+    display: grid; place-items: center;
+    background: var(--crimson); color: #fff;
+    box-shadow: 0 2px 6px rgba(123,14,17,.34);
+  }
+  .tb-item[data-accent] .tb-icon svg { width: 17px; height: 17px; }
+  .tb-item[data-accent] { color: var(--crimson-ink); }
+  .tb-item[data-accent][data-on] .tb-icon { transform: translateY(-1px) scale(1.08); }
+  .tb-item[data-accent]:active .tb-icon { transform: scale(.88); }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .tb-dock { background: linear-gradient(180deg, #fffdf9, #f6efe6); }
+  }
+}
+
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .tb-pill { transition: none; }
+}

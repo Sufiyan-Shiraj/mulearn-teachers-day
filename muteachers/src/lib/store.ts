@@ -1,0 +1,229 @@
+import { create } from 'zustand'
+import type { CardDoc, CardElement, DecoKey, Face, FontKey, TextElement } from './types'
+import { getTemplate, TEMPLATES } from './templates'
+import { nid } from './id'
+
+const LS_CURRENT = 'mut.card.current'
+const LS_LIBRARY = 'mut.card.library'
+
+function clone<T>(v: T): T { return JSON.parse(JSON.stringify(v)) }
+
+export function newDoc(templateId: string): CardDoc {
+  const tpl = getTemplate(templateId)
+  return {
+    id: nid(12),
+    templateId: tpl.id,
+    elements: clone(tpl.elements),
+    from: '', to: '',
+    createdAt: Date.now(), updatedAt: Date.now(),
+  }
+}
+
+interface State {
+  doc: CardDoc
+  face: Face
+  selectedId: string | null
+  editingId: string | null
+  past: CardDoc[]
+  future: CardDoc[]
+  /** transient: the last photo dropped in, used for the fly-in animation */
+  photoJustAdded: boolean
+  /** transient: the element added most recently, so it can animate in */
+  freshId: string | null
+
+  /* actions */
+  startCard: (templateId: string) => void
+  loadDoc: (d: CardDoc) => void
+  setTemplate: (templateId: string) => void
+  setFace: (f: Face) => void
+  select: (id: string | null) => void
+  setEditing: (id: string | null) => void
+  update: (id: string, patch: Partial<CardElement>, opts?: { history?: boolean }) => void
+  commit: () => void
+  addDeco: (deco: DecoKey, face: Face, color?: string) => string
+  addText: (face: Face) => string
+  remove: (id: string) => void
+  bringForward: (id: string) => void
+  setPhoto: (dataUrl: string | undefined) => void
+  setMeta: (patch: Partial<Pick<CardDoc, 'from' | 'to'>>) => void
+  undo: () => void
+  redo: () => void
+  reset: () => void
+  clearJustAdded: () => void
+  clearFresh: () => void
+}
+
+function persist(doc: CardDoc) {
+  try { localStorage.setItem(LS_CURRENT, JSON.stringify(doc)) } catch { /* quota */ }
+}
+
+function restore(): CardDoc | null {
+  try {
+    const raw = localStorage.getItem(LS_CURRENT)
+    if (!raw) return null
+    const d = JSON.parse(raw) as CardDoc
+    if (!d?.templateId || !Array.isArray(d.elements)) return null
+    return d
+  } catch { return null }
+}
+
+export const useCard = create<State>((set, get) => ({
+  doc: restore() ?? newDoc(TEMPLATES[0].id),
+  face: 'front',
+  selectedId: null,
+  editingId: null,
+  past: [],
+  future: [],
+  photoJustAdded: false,
+  freshId: null,
+
+  startCard: (templateId) => {
+    const cur = get().doc
+    const doc = newDoc(templateId)
+    // carry the photo across if the user already picked one
+    if (cur.photo) doc.photo = cur.photo
+    persist(doc)
+    set({ doc, past: [], future: [], selectedId: null, editingId: null, face: 'front' })
+  },
+
+  loadDoc: (d) => { persist(d); set({ doc: d, past: [], future: [], selectedId: null, editingId: null, face: 'front' }) },
+
+  setTemplate: (templateId) => {
+    const cur = get().doc
+    if (cur.templateId === templateId) return
+    const doc = newDoc(templateId)
+    doc.photo = cur.photo
+    doc.from = cur.from; doc.to = cur.to
+    persist(doc)
+    set({ doc, past: [...get().past, clone(cur)].slice(-40), future: [], selectedId: null, editingId: null })
+  },
+
+  setFace: (f) => set({ face: f, selectedId: null, editingId: null }),
+  select: (id) => set({ selectedId: id, editingId: id === null ? null : get().editingId }),
+  setEditing: (id) => set({ editingId: id, selectedId: id ?? get().selectedId }),
+
+  update: (id, patch, opts) => {
+    const s = get()
+    const past = opts?.history === false ? s.past : [...s.past, clone(s.doc)].slice(-40)
+    const doc: CardDoc = {
+      ...s.doc,
+      updatedAt: Date.now(),
+      elements: s.doc.elements.map(e => (e.id === id ? { ...e, ...patch } as CardElement : e)),
+    }
+    persist(doc)
+    set({ doc, past, future: opts?.history === false ? s.future : [] })
+  },
+
+  commit: () => {
+    const s = get()
+    set({ past: [...s.past, clone(s.doc)].slice(-40), future: [] })
+  },
+
+  addDeco: (deco, face, color) => {
+    const s = get()
+    const id = `deco-${nid(6)}`
+    const el: CardElement = {
+      kind: 'deco', id, face, deco, color,
+      box: { x: 50, y: 46, w: deco.startsWith('tape') || deco.startsWith('sticker') ? 34 : 16, h: 0 },
+      rot: (Math.random() * 16 - 8),
+    }
+    const doc = { ...s.doc, updatedAt: Date.now(), elements: [...s.doc.elements, el] }
+    persist(doc)
+    set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [], selectedId: id, freshId: id })
+    return id
+  },
+
+  addText: (face) => {
+    const s = get()
+    const id = `text-${nid(6)}`
+    const el: TextElement = {
+      kind: 'text', id, face, box: { x: 12, y: 44, w: 76, h: 10 }, rot: 0,
+      text: '', placeholder: 'Type here…', font: 'playful', size: 44,
+      color: getTemplate(s.doc.templateId).dark ? '#fdf7ec' : '#2b2320',
+      align: 'center', lh: 1.3, plate: 'none', label: 'Your text', maxLen: 220,
+    }
+    const doc = { ...s.doc, updatedAt: Date.now(), elements: [...s.doc.elements, el] }
+    persist(doc)
+    set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [], selectedId: id, editingId: id, freshId: id })
+    return id
+  },
+
+  remove: (id) => {
+    const s = get()
+    const doc = { ...s.doc, updatedAt: Date.now(), elements: s.doc.elements.filter(e => e.id !== id) }
+    persist(doc)
+    set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [], selectedId: null, editingId: null })
+  },
+
+  bringForward: (id) => {
+    const s = get()
+    const el = s.doc.elements.find(e => e.id === id)
+    if (!el) return
+    const doc = { ...s.doc, elements: [...s.doc.elements.filter(e => e.id !== id), el] }
+    persist(doc)
+    set({ doc, past: [...s.past, clone(s.doc)].slice(-40), future: [] })
+  },
+
+  setPhoto: (dataUrl) => {
+    const s = get()
+    const doc = { ...s.doc, photo: dataUrl, updatedAt: Date.now() }
+    persist(doc)
+    set({ doc, photoJustAdded: !!dataUrl, past: [...s.past, clone(s.doc)].slice(-40), future: [] })
+  },
+
+  setMeta: (patch) => {
+    const s = get()
+    const doc = { ...s.doc, ...patch, updatedAt: Date.now() }
+    persist(doc)
+    set({ doc })
+  },
+
+  undo: () => {
+    const s = get()
+    if (!s.past.length) return
+    const prev = s.past[s.past.length - 1]
+    persist(prev)
+    set({ doc: prev, past: s.past.slice(0, -1), future: [clone(s.doc), ...s.future].slice(0, 40), selectedId: null, editingId: null })
+  },
+
+  redo: () => {
+    const s = get()
+    if (!s.future.length) return
+    const nxt = s.future[0]
+    persist(nxt)
+    set({ doc: nxt, future: s.future.slice(1), past: [...s.past, clone(s.doc)].slice(-40), selectedId: null, editingId: null })
+  },
+
+  reset: () => {
+    const doc = newDoc(get().doc.templateId)
+    persist(doc)
+    set({ doc, past: [], future: [], selectedId: null, editingId: null })
+  },
+
+  clearJustAdded: () => set({ photoJustAdded: false }),
+
+  clearFresh: () => set({ freshId: null }),
+}))
+
+/* ---------------- selectors ---------------- */
+export const useElement = (id: string | null) =>
+  useCard(s => (id ? s.doc.elements.find(e => e.id === id) ?? null : null))
+
+export function applyFontToSelection(id: string, font: FontKey) {
+  useCard.getState().update(id, { font } as Partial<CardElement>)
+}
+
+/* ---------------- my cards library ---------------- */
+export interface SavedCard { id: string; templateId: string; link: string; thumb?: string; to: string; createdAt: number }
+
+export function library(): SavedCard[] {
+  try { return JSON.parse(localStorage.getItem(LS_LIBRARY) || '[]') } catch { return [] }
+}
+export function saveToLibrary(entry: SavedCard) {
+  const all = library().filter(c => c.id !== entry.id)
+  all.unshift(entry)
+  try { localStorage.setItem(LS_LIBRARY, JSON.stringify(all.slice(0, 30))) } catch { /* quota */ }
+}
+export function removeFromLibrary(id: string) {
+  try { localStorage.setItem(LS_LIBRARY, JSON.stringify(library().filter(c => c.id !== id))) } catch { /* quota */ }
+}
