@@ -57,44 +57,10 @@ module.exports = async function handler(req, res) {
   const safeTitle = `A Teacher's Day card for ${safeTeacher} 🌼`;
   const safeDesc = escapeHtml(message);
 
-  const ua = (req.headers['user-agent'] || '').toLowerCase();
-  const isBot = /facebookexternalhit|whatsapp|twitterbot|telegrambot|discordbot|slackbot|linkedinbot|embedly|quora link preview|pinterest|bitlybot|vkshare|w3c_validator/i.test(ua);
-
-  // If request is from WhatsApp, Facebook, or other crawlers, return rich Open Graph metadata
-  if (isBot) {
-    const botHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>${safeTitle} · μlearn ASI</title>
-  <meta name="description" content="${safeDesc}">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="μlearn Teacher's Day">
-  <meta property="og:title" content="${safeTitle}">
-  <meta property="og:description" content="${safeDesc}">
-  <meta property="og:url" content="${cardPageUrl}">
-  <meta property="og:image" content="${imageUrl}">
-  <meta property="og:image:secure_url" content="${imageUrl}">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${safeTitle}">
-  <meta name="twitter:description" content="${safeDesc}">
-  <meta name="twitter:image" content="${imageUrl}">
-</head>
-<body>
-  <p>${safeTitle}. <a href="${cardPageUrl}">Open your card</a></p>
-</body>
-</html>`;
-
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-    res.statusCode = 200;
-    return res.end(botHtml);
-  }
-
-  // If request is from a human browser, inject dynamic OG tags into the Vite SPA index.html
+  // Inject dynamic Open Graph tags into the Vite SPA index.html
+  // Both bots (WhatsApp, Telegram, etc.) and human browsers receive this:
+  // - Bots read the Open Graph meta tags and og:image
+  // - Humans get instant React hydration and see the card immediately
   try {
     const now = Date.now();
     if (!cachedSpaHtml || now - lastSpaFetch > 60000) {
@@ -137,21 +103,32 @@ module.exports = async function handler(req, res) {
     console.error('Error hydrating SPA index.html:', err);
   }
 
-  // Fallback if SPA fetch fails: redirect to the interactive card route
+  // Fallback if SPA fetch fails: return clean HTML with OG tags and client redirect
   const fallbackHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>${safeTitle} · μlearn ASI</title>
+  <meta name="description" content="${safeDesc}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="μlearn Teacher's Day">
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
+  <meta property="og:url" content="${cardPageUrl}">
   <meta property="og:image" content="${imageUrl}">
+  <meta property="og:image:secure_url" content="${imageUrl}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${safeTitle}">
+  <meta name="twitter:description" content="${safeDesc}">
+  <meta name="twitter:image" content="${imageUrl}">
   <meta http-equiv="refresh" content="0;url=/c/${encodeURIComponent(cleanSlug)}">
   <script>window.location.replace('/c/${encodeURIComponent(cleanSlug)}');</script>
 </head>
 <body>
-  <p>Loading your card... <a href="/c/${encodeURIComponent(cleanSlug)}">Click here to open</a></p>
+  <p>${safeTitle}. <a href="${cardPageUrl}">Click here to open</a></p>
 </body>
 </html>`;
 
