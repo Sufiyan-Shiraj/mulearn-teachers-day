@@ -736,6 +736,63 @@
   flex: none;
 }
 
+.sh-sheet-copy-img-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid #25D366;
+  background: #f0fdf4;
+  color: #128C7E;
+  font-family: var(--f-sans);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: none;
+  transition: transform 0.16s var(--e-spring), background 0.16s, color 0.16s;
+}
+
+.sh-sheet-copy-img-btn:active {
+  transform: scale(0.96);
+}
+
+.sh-sheet-copy-img-btn.is-copied {
+  background: #25D366;
+  color: #ffffff;
+  border-color: #25D366;
+  animation: m-pop 0.3s var(--e-spring);
+}
+
+.sh-sheet-sub-btn {
+  width: 100%;
+  height: 46px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.16s var(--e-spring), background 0.16s, border-color 0.16s;
+}
+
+.sh-sheet-sub-btn:hover {
+  background: var(--paper);
+  border-color: var(--ink);
+}
+
+.sh-sheet-sub-btn:active {
+  transform: scale(0.98);
+}
+
 .sh-sheet-field {
   display: flex;
   flex-direction: column;

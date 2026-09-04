@@ -15,6 +15,44 @@ import { useAuth } from '../context/AuthContext'
 import { saveCardToDb } from '../lib/storage'
 import './share.css'
 
+async function copyCardToClipboard(file: File | Blob, text: string): Promise<{ copiedImage: boolean; copiedText: boolean }> {
+  let copiedImage = false
+  let copiedText = false
+
+  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+    try {
+      const textBlob = new Blob([text], { type: 'text/plain' })
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': file,
+          'text/plain': textBlob,
+        })
+      ])
+      return { copiedImage: true, copiedText: true }
+    } catch {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'image/png': file,
+          })
+        ])
+        copiedImage = true
+      } catch (e2) {
+        console.warn('Clipboard image write failed:', e2)
+      }
+    }
+  }
+
+  if (!copiedText) {
+    try {
+      await copy(text)
+      copiedText = true
+    } catch {}
+  }
+
+  return { copiedImage, copiedText }
+}
+
 export default function Share() {
   const doc = useCard(s => s.doc)
   const setMeta = useCard(s => s.setMeta)
@@ -168,6 +206,30 @@ export default function Share() {
     }, 3800)
   }
 
+  const [waImageCopied, setWaImageCopied] = useState(false)
+
+  const copyCardImageOnly = async () => {
+    try {
+      const storyShot = await reframe(await ensureShot(), 'story')
+      const targetName = (doc.to || 'teacher').trim().replace(/[^a-z0-9]+/gi, '-').toLowerCase()
+      const file = shotFile(storyShot, `teachers-day-${targetName}`)
+      const messageText = (waNote || note).trim()
+      const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
+      const { copiedImage } = await copyCardToClipboard(file, fullText)
+      setWaImageCopied(true)
+      setTimeout(() => setWaImageCopied(false), 3000)
+      if (copiedImage) {
+        showToast('✓ Card image copied! Paste it in WhatsApp')
+      } else {
+        showToast('✓ Note & link copied to clipboard')
+      }
+      return true
+    } catch (e) {
+      console.error('Failed to copy image:', e)
+      return false
+    }
+  }
+
   const shareToWhatsApp = async () => {
     setSharingWa(true)
     setSaveErr(false)
@@ -178,7 +240,11 @@ export default function Share() {
       const messageText = (waNote || note).trim()
       const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
 
-      // Check if Web Share API with files is available
+      // 1. Copy the card image & caption to clipboard first
+      const { copiedImage } = await copyCardToClipboard(file, fullText)
+
+      // 2. If Web Share with files is available, pass ONLY the image file
+      // (Passing text with files causes a TypeError on Android Chrome)
       const canShareWithFiles = typeof navigator !== 'undefined'
         && typeof navigator.share === 'function'
         && (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] }))
@@ -187,53 +253,27 @@ export default function Share() {
         try {
           await navigator.share({
             files: [file],
-            title: imageShareTitle(doc),
-            text: fullText,
           })
           setWaModalOpen(false)
-          showToast('Shared to WhatsApp!')
+          showToast('Card shared! Select WhatsApp')
           return
         } catch (shareErr) {
           if ((shareErr as DOMException)?.name === 'AbortError') {
-            // User dismissed the share dialog — do not trigger download fallback
+            // User dismissed the share dialog — do not trigger any error or download
             return
           }
-          // Some mobile browsers reject sharing text and files together; retry with files only
-          try {
-            await copy(fullText)
-            await navigator.share({
-              files: [file],
-              title: imageShareTitle(doc),
-            })
-            setWaModalOpen(false)
-            showToast('Card shared & caption copied!')
-            return
-          } catch (err2) {
-            if ((err2 as DOMException)?.name === 'AbortError') return
-            console.warn('navigator.share retry failed:', err2)
-          }
+          console.warn('navigator.share with files failed, opening WhatsApp URL:', shareErr)
         }
       }
 
-      // Fallback for environments where the browser cannot dispatch files directly (e.g. desktop web)
-      let copiedImage = false
-      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ [file.type]: file })
-          ])
-          copiedImage = true
-        } catch {}
-      }
-
+      // 3. Fallback: Open WhatsApp with the pre-filled note & link (NEVER call saveBlob!)
       window.open(whatsappUrl(activeLink, messageText), '_blank', 'noreferrer')
       setWaModalOpen(false)
 
       if (copiedImage) {
-        showToast('Card image copied! Just paste (Ctrl+V) in WhatsApp')
+        showToast('Card image copied! Just tap Paste in WhatsApp')
       } else {
-        saveBlob(file, file.name)
-        showToast('Card saved! Attach it in WhatsApp')
+        showToast('WhatsApp opened! Paste your card message')
       }
     } catch (e) {
       if ((e as DOMException)?.name !== 'AbortError') {
@@ -256,12 +296,8 @@ export default function Share() {
       const messageText = (waNote || note).trim()
       const fullText = activeLink ? `${messageText}\n\n${activeLink}` : messageText
 
-      // Always copy the caption & link so the student can paste into Stories/DMs
-      if (activeLink) {
-        await copy(fullText)
-      } else {
-        await copy(messageText)
-      }
+      // 1. Copy image & caption to clipboard
+      const { copiedImage } = await copyCardToClipboard(file, fullText)
 
       const canShareWithFiles = typeof navigator !== 'undefined'
         && typeof navigator.share === 'function'
@@ -269,9 +305,9 @@ export default function Share() {
 
       if (canShareWithFiles) {
         try {
+          // Pass ONLY the image file so mobile browsers don't reject mixed data
           await navigator.share({
             files: [file],
-            title: imageShareTitle(doc),
           })
           setInstaModalOpen(false)
           showToast('Caption copied! Choose Stories or Chats in Instagram')
@@ -282,25 +318,14 @@ export default function Share() {
         }
       }
 
-      // Fallback
-      let copiedImage = false
-      if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ [file.type]: file })
-          ])
-          copiedImage = true
-        } catch {}
-      }
-
+      // 3. Fallback: Open Instagram with caption copied (NEVER call saveBlob!)
       window.open('https://www.instagram.com/', '_blank', 'noreferrer')
       setInstaModalOpen(false)
 
       if (copiedImage) {
         showToast('Card & caption copied! Paste into Instagram')
       } else {
-        saveBlob(file, file.name)
-        showToast('Card saved & caption copied! Open Instagram')
+        showToast('Caption copied! Open Instagram')
       }
     } catch (e) {
       if ((e as DOMException)?.name !== 'AbortError') {
@@ -312,6 +337,7 @@ export default function Share() {
       setSharingInsta(false)
     }
   }
+
 
   const copyInstaText = async () => {
     const messageText = (waNote || note).trim()
@@ -678,9 +704,16 @@ export default function Share() {
                 </div>
                 <div className="sh-sheet-card-info">
                   <strong>{doc.to ? `Card for ${doc.to}` : 'Teacher’s Day Card'}</strong>
-                  <span>High-res card image included</span>
+                  <span>High-res card image ready</span>
                 </div>
-                <span className="sh-sheet-attach-check">✓ Image Attached</span>
+                <button
+                  type="button"
+                  className={`sh-sheet-copy-img-btn ${waImageCopied ? 'is-copied' : ''}`}
+                  onClick={copyCardImageOnly}
+                  title="Copy card image to clipboard"
+                >
+                  {waImageCopied ? '✓ Copied!' : '📋 Copy Image'}
+                </button>
               </div>
 
               {/* Message customization */}
@@ -726,7 +759,20 @@ export default function Share() {
                   </>
                 )}
               </button>
-              <p className="sh-sheet-subtip">You can select <strong>My Status</strong> or any <strong>Chat</strong> in WhatsApp</p>
+
+              <button
+                type="button"
+                className="sh-sheet-sub-btn"
+                onClick={async () => {
+                  await copyCardImageOnly()
+                  window.open(whatsappUrl(activeLink, waNote || note), '_blank', 'noreferrer')
+                  setWaModalOpen(false)
+                }}
+              >
+                📋 Copy Image &amp; Open WhatsApp
+              </button>
+
+              <p className="sh-sheet-subtip">Card image is copied to clipboard so you can paste in WhatsApp</p>
             </div>
           </div>
         </div>
