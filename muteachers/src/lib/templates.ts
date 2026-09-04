@@ -94,14 +94,14 @@ export const TEMPLATES: Template[] = [
     name: 'Red Velvet',
     blurb: 'Deep red velvet, gold foil, polaroid photo frame.',
     tags: ['bold', 'vintage'],
-    aspect: 896 / 1200,
+    aspect: 1100 / 1573,
     art: 'velvet',
     accent: '#7b1113',
     dark: true,
     isNew: true,
     elements: [
-      p('v-photo', 'front', [47.5, 23.0, 34.0, 27.5], { rot: 7.8, frame: 'slot' }),
-      t('v-msg', 'front', [19, 69, 62, 14], {
+      p('v-photo', 'front', [47.5, 20.5, 41.5, 33.5], { rot: 7.8, frame: 'slot' }),
+      t('v-msg', 'front', [13, 71, 74, 16], {
         text: 'Thank you for inspiring me every day!', font: 'playful', size: 40,
         color: '#3a2b20', align: 'center', lh: 1.35, label: 'Message', maxLen: 140,
       }),
@@ -127,14 +127,14 @@ export const TEMPLATES: Template[] = [
     name: 'Thank You',
     blurb: 'Big editorial serif on deep crimson with disco sparkles.',
     tags: ['bold', 'minimal'],
-    aspect: 896 / 1200,
+    aspect: 1100 / 1667,
     art: 'thankyou',
     accent: '#74100f',
     dark: true,
     isNew: true,
     elements: [
-      p('ty-photo', 'front', [31.5, 31.0, 36.5, 28.5], { rot: -10.3, frame: 'slot' }),
-      t('ty-msg', 'front', [18.5, 74.0, 63, 8], {
+      p('ty-photo', 'front', [26.5, 29.5, 45.0, 33.5], { rot: -10.3, frame: 'slot' }),
+      t('ty-msg', 'front', [8.5, 76.0, 83.0, 11.0], {
         text: "Happy Teacher's Day!", font: 'playful', size: 44, color: '#3a231c',
         align: 'center', label: 'Message', maxLen: 90,
       }),
@@ -158,12 +158,12 @@ export const TEMPLATES: Template[] = [
     name: 'Pressed Petals',
     blurb: 'Handmade deckle paper with real dried pressed flowers.',
     tags: ['floral', 'soft'],
-    aspect: 896 / 1200,
+    aspect: 1100 / 1570,
     art: 'pressed',
     accent: '#c98f8a',
     elements: [
-      p('pr-photo', 'front', [35.2, 36.5, 31.0, 24.0], { rot: 0, frame: 'slot' }),
-      t('pr-msg', 'front', [33, 76.5, 34, 8], {
+      p('pr-photo', 'front', [28.2, 30.5, 43.6, 30.5], { rot: 0, frame: 'slot' }),
+      t('pr-msg', 'front', [26.0, 80.5, 48.0, 11.5], {
         text: '', placeholder: 'To: / From: note…', font: 'playful', size: 38,
         color: '#5b4a43', align: 'center', label: 'Note', maxLen: 80,
       }),
@@ -187,13 +187,13 @@ export const TEMPLATES: Template[] = [
     name: 'Grateful',
     blurb: 'Minimalist charcoal fine art paper with botanical bloom.',
     tags: ['minimal', 'floral'],
-    aspect: 896 / 1200,
+    aspect: 1100 / 1584,
     art: 'grateful',
     accent: '#1a1a1a',
     dark: true,
     elements: [
-      p('gr-photo', 'front', [26.5, 31.8, 34.0, 33.0], { rot: 0, frame: 'arch-slot' }),
-      t('gr-msg', 'front', [24.5, 70.0, 51, 8.5], {
+      p('gr-photo', 'front', [14.8, 24.8, 48.4, 43.2], { rot: 0, frame: 'arch-slot' }),
+      t('gr-msg', 'front', [13.5, 77.0, 73.0, 12.0], {
         text: "Happy Teacher's Day!", font: 'playful', size: 42, color: '#2e2a26',
         align: 'center', label: 'Message', maxLen: 90,
       }),
@@ -217,12 +217,12 @@ export const TEMPLATES: Template[] = [
     name: 'Lilac Note',
     blurb: 'Dreamy pastel lavender watercolor with cosmos flowers.',
     tags: ['playful', 'soft', 'floral'],
-    aspect: 896 / 1200,
+    aspect: 1100 / 1593,
     art: 'lilac',
     accent: '#8c63a9',
     elements: [
-      p('li-photo', 'front', [35.8, 33.8, 34.5, 26.8], { rot: 0, frame: 'slot' }),
-      t('li-msg', 'front', [22, 76.0, 56, 9], {
+      p('li-photo', 'front', [31.5, 31.5, 43.0, 31.5], { rot: 3.5, frame: 'slot' }),
+      t('li-msg', 'front', [16.0, 79.0, 68.0, 11.5], {
         text: "Happy Teacher's Day!", font: 'playful', size: 44,
         color: '#4b385e', align: 'center', label: 'Message', maxLen: 120,
       }),
