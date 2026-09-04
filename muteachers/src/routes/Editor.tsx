@@ -215,8 +215,18 @@ export default function Editor() {
             <ToolbarBtn label="Color" icon={<span className="ed-tb-dot" style={{ background: (selected && 'color' in selected && selected.color) || '#1a1a1a' }} />}
               onClick={() => openPanel('color')} />
             <ToolbarBtn label="Align" icon={<AlignIcon v={(selectedText?.align ?? 'center') as 'left'} />} onClick={() => openPanel('align')} />
-            <ToolbarBtn label="Move" className="ed-tb-desk" icon={<MoveIcon />}
-              onClick={() => selected && update(selected.id, { box: { ...selected.box, x: 50 - selected.box.w / 2 } } as Partial<CardElement>)} />
+            {/* a way back that does not depend on grabbing anything: brings
+                the selection into the middle, shrunk to fit if it had grown
+                past the card */}
+            <ToolbarBtn label="Center" className="ed-tb-desk" icon={<MoveIcon />}
+              onClick={() => {
+                if (!selected) return
+                const w = Math.min(selected.box.w, 88)
+                const h = Math.min(selected.box.h, 88)
+                update(selected.id, {
+                  box: { x: 50 - w / 2, y: 50 - h / 2, w, h },
+                } as Partial<CardElement>)
+              }} />
             <ToolbarBtn label="Delete" className="ed-tb-desk" icon={<TrashIcon />} onClick={() => selectedId && remove(selectedId)} />
             <ToolbarBtn label="More" className="ed-tb-mob" icon={<DotsIcon />} onClick={() => openPanel('more')} />
           </div>

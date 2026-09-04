@@ -24,6 +24,9 @@ interface Drag {
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v))
 
+/** an element may overflow the card, but not so far that it is unmanageable */
+const MAX_SIZE = 140
+
 export function ElementChrome({ el, active, onActivate, onEnter }: Props) {
   const update = useCard(s => s.update)
   const beginChange = useCard(s => s.beginChange)
@@ -75,7 +78,7 @@ export function ElementChrome({ el, active, onActivate, onEnter }: Props) {
           const p = pinchStart.current
           const k = clamp(dist / (p.dist || 1), 0.25, 5)
           const patch: Record<string, unknown> = {
-            box: clampBox({ ...el.box, w: clamp(p.w * k, 4, 180), h: el.kind === 'text' ? el.box.h : clamp(el.box.h * k, 2, 180) }),
+            box: clampBox({ ...el.box, w: clamp(p.w * k, 4, MAX_SIZE), h: el.kind === 'text' ? el.box.h : clamp(el.box.h * k, 2, MAX_SIZE) }),
             rot: p.rot + (ang - p.angle),
           }
           if (el.kind === 'text') patch.size = clamp(p.size * k, 8, 220)
@@ -119,8 +122,8 @@ export function ElementChrome({ el, active, onActivate, onEnter }: Props) {
       box: clampBox({
         x: d.ox - (d.ow * (k - 1)) / 2,
         y: el.kind === 'text' ? d.oy : d.oy - (d.oh * (k - 1)) / 2,
-        w: clamp(d.ow * k, 4, 190),
-        h: el.kind === 'text' ? d.oh : clamp(d.oh * k, 2, 190),
+        w: clamp(d.ow * k, 4, MAX_SIZE),
+        h: el.kind === 'text' ? d.oh : clamp(d.oh * k, 2, MAX_SIZE),
       }),
     }
     if (el.kind === 'text') patch.size = clamp(d.osize * k, 8, 220)

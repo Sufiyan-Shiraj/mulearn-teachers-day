@@ -112,16 +112,32 @@
   transition: transform .14s ease, background .14s ease;
 }
 .c-handle svg { width: 15px; height: 15px; }
-.c-handle:hover { transform: scale(1.08); }
-.c-handle:active { transform: scale(.94); }
-.c-handle--del  { left: calc(var(--u) * -10); top: calc(var(--u) * -10); transform: translate(-50%,-50%); }
-.c-handle--move { right: calc(var(--u) * -10); top: calc(var(--u) * -10); transform: translate(50%,-50%); cursor: move; }
-.c-handle--rot  { left: calc(var(--u) * -10); bottom: calc(var(--u) * -10); transform: translate(-50%,50%); cursor: grab; }
-.c-handle--size { right: calc(var(--u) * -10); bottom: calc(var(--u) * -10); transform: translate(50%,50%); cursor: nwse-resize; }
-.c-handle--del:hover  { transform: translate(-50%,-50%) scale(1.1); background: #fff1ef; color: var(--crimson); }
-.c-handle--move:hover { transform: translate(50%,-50%) scale(1.1); }
-.c-handle--rot:hover  { transform: translate(-50%,50%) scale(1.1); }
-.c-handle--size:hover { transform: translate(50%,50%) scale(1.1); }
+.c-handle:active { transform: translate(-50%,-50%) scale(.94); }
+/* Where the four handles sit on the element.
+   They default to just outside its corners, which is where you want them —
+   but the card clips its contents, so an element grown or dragged past the
+   edge took its handles out of the picture with it and could not be resized
+   back. <CardCanvas/> overrides these with the point where the element still
+   meets the card, so there is always something to grab. */
+.c-el {
+  /* one percent of the card, across and down — the design unit is a share of
+     the width, so height needs the aspect ratio to get back to square */
+  --cw: calc(var(--u) * 10);
+  --ch: calc(var(--u) * 10 / var(--card-ar, .714));
+
+  --h-l: calc(var(--u) * -10);
+  --h-r: calc(100% + var(--u) * 10);
+  --h-t: calc(var(--u) * -10);
+  --h-b: calc(100% + var(--u) * 10);
+}
+.c-handle--del  { left: var(--h-l); top: var(--h-t); }
+.c-handle--move { left: var(--h-r); top: var(--h-t); cursor: move; }
+.c-handle--rot  { left: var(--h-l); top: var(--h-b); cursor: grab; }
+.c-handle--size { left: var(--h-r); top: var(--h-b); cursor: nwse-resize; }
+.c-handle--del, .c-handle--move, .c-handle--rot, .c-handle--size { transform: translate(-50%, -50%); }
+.c-handle--del:hover  { background: #fff1ef; color: var(--crimson); }
+.c-handle--del:hover, .c-handle--move:hover,
+.c-handle--rot:hover, .c-handle--size:hover { transform: translate(-50%,-50%) scale(1.1); }
 
 @media (pointer: coarse) {
   .c-handle { width: 34px; height: 34px; }

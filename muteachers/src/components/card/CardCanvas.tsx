@@ -25,6 +25,43 @@ interface Props {
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * Pull the selection handles back onto the card.
+ *
+ * They hang off the element's corners, and the card clips whatever leaves it,
+ * so an element resized past the edge lost every handle at once and could only
+ * be recovered with undo. These put each handle where the element still meets
+ * the card instead. Applied to every selected element rather than only the
+ * ones that look like they need it: a sticker or a line of text has no fixed
+ * height in its box, so there is no reliable way to tell in advance.
+ */
+const HANDLE_MARGIN = 4
+
+function handleVars(el: CardElement): CSSProperties {
+  const b = clampBox(el.box)
+  const lo = HANDLE_MARGIN
+  const hi = 100 - HANDLE_MARGIN
+
+  /* Rotation swings the corners out past the box, so the window is pulled in
+     by roughly how far — approximate, but it errs towards keeping a handle on
+     the card rather than losing one. */
+  const t = Math.abs(Math.sin((el.rot * Math.PI) / 180))
+  const padX = Math.min(20, (b.h || b.w) * t * 0.5)
+  const padY = Math.min(20, b.w * t * 0.5)
+
+  const loX = lo + padX, hiX = hi - padX
+  const loY = lo + padY, hiY = hi - padY
+
+  /* `min(100%, …)` is what makes this work for text and stickers, whose real
+     height the box never knows — 100% is whatever was actually laid out. */
+  return {
+    ['--h-l' as string]: `calc(var(--cw) * ${Math.max(0, loX - b.x).toFixed(2)})`,
+    ['--h-r' as string]: `min(100%, calc(var(--cw) * ${Math.max(1, hiX - b.x).toFixed(2)}))`,
+    ['--h-t' as string]: `calc(var(--ch) * ${Math.max(0, loY - b.y).toFixed(2)})`,
+    ['--h-b' as string]: `min(100%, calc(var(--ch) * ${Math.max(1, hiY - b.y).toFixed(2)}))`,
+  }
+}
+
 function elStyle(el: CardElement): CSSProperties {
   /* a safety net as well as a rule: a card saved before the bounds existed
      can hold an element that is entirely off the paper, and clamping here
@@ -193,7 +230,7 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
           const isEditing = edit && editingId === el.id
           const common = {
             className: `c-el c-el--${el.kind}${isSel ? ' is-selected' : ''}${isEditing ? ' is-editing' : ''}`,
-            style: elStyle(el),
+            style: { ...elStyle(el), ...(isSel ? handleVars(el) : null) },
             'data-id': el.id,
             'data-fresh': freshId === el.id ? '' : undefined,
           }
@@ -249,6 +286,7 @@ export function CardCanvas({ doc, template, face, mode = 'view', className, styl
               {...common}
               style={{
                 ...elStyle(el),
+                ...(isSel ? handleVars(el) : null),
                 height: 'auto',
                 aspectRatio: String(aspect),
               }}
