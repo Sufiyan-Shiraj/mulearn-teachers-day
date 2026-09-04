@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { TopNav } from '../components/shell/TopNav'
 import { StepBar } from '../components/shell/StepBar'
@@ -9,13 +9,12 @@ import { Burst, HeartDoodle, Sparkle } from '../components/art/Doodles'
 import { getTemplate } from '../lib/templates'
 import { saveToLibrary, useCard } from '../lib/store'
 import { buildCardLink, canNativeShare, copy, nativeShare, whatsappUrl } from '../lib/share'
+import { defaultNote, imageShareText, imageShareTitle, mailto, shareTitle } from '../lib/message'
 import { renderCard, saveBlob, saveCardImages, shotFile, type Shot } from '../lib/exportCard'
 import { useReveal } from '../lib/useReveal'
 import { useAuth } from '../context/AuthContext'
 import { saveCardToDb } from '../lib/storage'
 import './share.css'
-
-const BLURB = 'Someone made a Teacher’s Day card for you 💐'
 
 export default function Share() {
   const doc = useCard(s => s.doc)
@@ -24,6 +23,7 @@ export default function Share() {
   const [flipped, setFlipped] = useState(false)
   const [link, setLink] = useState('')
   const [linkOk, setLinkOk] = useState(true)
+  const [note, setNote] = useState(() => defaultNote(doc))
   const [open, setOpen] = useState<null | 'share' | 'print'>(null)
   const [copied, setCopied] = useState(false)
   const [shots, setShots] = useState<Shot[] | null>(null)
@@ -74,6 +74,20 @@ export default function Share() {
     return () => { live = false; clearTimeout(id) }
   }, [doc])
 
+  /* The suggested message follows the names as they are typed, and stops the
+     moment the student makes it their own — nothing they wrote is ever
+     overwritten by a later keystroke in the "to" field. */
+  const [ownNote, setOwnNote] = useState(false)
+  useEffect(() => {
+    if (!ownNote) setNote(defaultNote(doc))
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [doc.id, doc.to, doc.from, ownNote])
+
+  const resetNote = useCallback(() => {
+    setOwnNote(false)
+    setNote(defaultNote(doc))
+  }, [doc])
+
   /* the link exists at all / the link is short enough to send somewhere */
   const ready = !!link
   const sendable = ready && linkOk
@@ -98,8 +112,8 @@ export default function Share() {
     try {
       const s = await ensureShots()
       const how = await saveCardImages(s, {
-        title: "A Teacher's Day card",
-        text: doc.to ? `A card for ${doc.to}` : BLURB,
+        title: imageShareTitle(doc),
+        text: imageShareText(doc, note),
       })
       if (how !== 'cancelled') {
         setSaved(how)
@@ -230,6 +244,23 @@ export default function Share() {
                   <span>From</span>
                   <input value={doc.from} placeholder="Ananya" onChange={e => setMeta({ from: e.target.value })} />
                 </label>
+                <label className="sh-field">
+                  <span className="sh-note-label">
+                    Your message
+                    {ownNote && (
+                      <button type="button" className="sh-note-reset" onClick={resetNote}>
+                        Use the suggested one
+                      </button>
+                    )}
+                  </span>
+                  <textarea
+                    className="sh-note-input" rows={3} maxLength={300} value={note}
+                    aria-label="The message that goes with your card"
+                    onChange={e => { setOwnNote(true); setNote(e.target.value) }}
+                  />
+                  <span className="sh-note-hint">This is what your teacher will read, with the card link underneath.</span>
+                </label>
+
                 <div className="sh-link">
                   <input readOnly value={link} aria-label="Card link"
                     placeholder="Preparing your link…"
@@ -245,14 +276,14 @@ export default function Share() {
                 )}
                 <div className="sh-share-row" data-waiting={ready ? undefined : ''}>
                   <a className="sh-chan sh-chan--wa" data-off={sendable ? undefined : ''}
-                    href={sendable ? whatsappUrl(link, BLURB) : undefined}
+                    href={sendable ? whatsappUrl(link, note) : undefined}
                     aria-disabled={sendable ? undefined : true}
                     target="_blank" rel="noreferrer">
                     <svg viewBox="0 0 24 24" aria-hidden><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.4-1.1-2.7s.7-1.9 1-2.2c.2-.2.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.9 2.1c.1.2.1.4 0 .6l-.4.5-.3.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.7-.1l1-1.1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.6.3.1.2.1.7-.1 1.3Z" fill="currentColor" /></svg>
                     WhatsApp
                   </a>
                   {canNativeShare() && (
-                    <button className="sh-chan" disabled={!ready} onClick={() => nativeShare(link, BLURB)}>
+                    <button className="sh-chan" disabled={!ready} onClick={() => nativeShare(link, note, shareTitle(doc))}>
                       <svg viewBox="0 0 24 24" fill="none" aria-hidden>
                         <path d="M12 15.4V3.6M8.2 7.2 12 3.4l3.8 3.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M5.6 11.4v8a1.4 1.4 0 0 0 1.4 1.4h10a1.4 1.4 0 0 0 1.4-1.4v-8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -262,9 +293,7 @@ export default function Share() {
                   )}
                   <a className="sh-chan" data-off={sendable ? undefined : ''}
                     aria-disabled={sendable ? undefined : true}
-                    href={sendable
-                      ? `mailto:?subject=${encodeURIComponent('A Teacher’s Day card for you')}&body=${encodeURIComponent(BLURB + '\n\n' + link)}`
-                      : undefined}>
+                    href={sendable ? mailto(doc, note, link) : undefined}>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
                       <rect x="2.8" y="5" width="18.4" height="14" rx="2.6" stroke="currentColor" strokeWidth="1.6" />
                       <path d="m3.6 7 8.4 6 8.4-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

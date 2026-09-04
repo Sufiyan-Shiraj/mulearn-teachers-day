@@ -135,10 +135,10 @@ export function canNativeShare() {
   return typeof navigator !== 'undefined' && !!navigator.share
 }
 
-export async function nativeShare(url: string, text: string) {
+export async function nativeShare(url: string, text: string, title = 'A Teacher’s Day card for you') {
   if (!navigator.share) return false
   try {
-    await navigator.share({ title: "A Teacher's Day card for you", text, url })
+    await navigator.share({ title, text, url })
     return true
   } catch { return false }
 }
@@ -158,6 +158,8 @@ export async function copy(text: string) {
   }
 }
 
+/* the link goes on its own line so the message reads as a note with a card
+   attached, rather than a sentence that trails off into a URL */
 export function whatsappUrl(url: string, text: string) {
-  return `https://wa.me/?text=${encodeURIComponent(`${text} ${url}`)}`
+  return `https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`
 }

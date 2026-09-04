@@ -70,6 +70,22 @@
 }
 .sh-field input:focus, .sh-link input:focus { border-color: var(--muted-2); }
 
+/* ---------------- the message that travels with the card ---------------- */
+.sh-note-label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.sh-note-reset {
+  background: none; padding: 0; flex: none;
+  font-size: 11.5px; color: var(--crimson); text-decoration: underline;
+  text-underline-offset: 2px; cursor: pointer;
+}
+.sh-note-input {
+  width: 100%; padding: 10px 13px; border-radius: 10px;
+  background: var(--paper); border: 1px solid var(--line);
+  font-family: inherit; font-size: 14px; line-height: 1.5; color: var(--ink);
+  outline: none; resize: vertical; min-height: 74px;
+}
+.sh-note-input:focus { border-color: var(--muted-2); }
+.sh-note-hint { margin: 5px 0 0; font-size: 11.5px; color: var(--muted); }
+
 .sh-link { display: flex; gap: 8px; margin-top: 12px; }
 .sh-link input { flex: 1; min-width: 0; font-size: 12.5px; color: var(--muted); }
 .sh-link button {
