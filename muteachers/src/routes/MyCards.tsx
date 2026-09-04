@@ -64,10 +64,10 @@ export default function MyCards() {
             <div className="mc-auth-callout">
               <Sparkle size={18} color="var(--gold)" />
               <p>
-                <strong>Want to save these to your account?</strong> Sign in with Google to keep your cards across any device and show them on your public profile!
+                <strong>Want these on your profile?</strong> Add your name and your cards show up on your public profile and the leaderboard.
               </p>
               <button type="button" onClick={openAuthModal} className="mc-auth-btn">
-                Sign In
+                Add your name
               </button>
             </div>
           )}
@@ -80,7 +80,7 @@ export default function MyCards() {
             </div>
             <h2>No cards yet</h2>
             <p>Pick a design, add a photo of you and your teacher, and write something true.</p>
-            <ButtonLink to="/pick" variant="dark" size="lg" icon={<SparkIcon />}>Create a Card</ButtonLink>
+            <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>Create a Card</ButtonLink>
           </div>
         ) : (
           <ul className="mc-grid stagger">
@@ -123,7 +123,7 @@ export default function MyCards() {
 
         {items.length > 0 && (
           <div className="mc-new">
-            <Button variant="dark" size="lg" icon={<SparkIcon />} onClick={() => nav('/pick')}>Make another card</Button>
+            <Button variant="dark" size="lg" icon={<SparkIcon />} onClick={() => nav('/photo')}>Make another card</Button>
           </div>
         )}
       </main>

@@ -5,8 +5,10 @@
 .ta-abs { position: absolute; pointer-events: none; }
 .ta-full { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ta-noise {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  opacity: .16; mix-blend-mode: overlay; pointer-events: none;
+  position: absolute; inset: 0; pointer-events: none;
+  opacity: .16; mix-blend-mode: overlay;
+  background-image: var(--grain-url);
+  background-size: 300px 300px;
 }
 
 /* ---------------- velvet ---------------- */

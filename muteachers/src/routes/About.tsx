@@ -56,7 +56,7 @@ export default function About() {
         </motion.div>
 
         <div className="st-cta">
-          <ButtonLink to="/pick" variant="dark" size="lg" icon={<SparkIcon />}>Make a card</ButtonLink>
+          <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>Make a card</ButtonLink>
         </div>
 
         <motion.span style={{ y: deco1Scroll }} className="st-deco st-deco--1"><Decoration deco="star-silver" /></motion.span>

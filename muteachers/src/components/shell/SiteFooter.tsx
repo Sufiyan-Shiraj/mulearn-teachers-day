@@ -49,7 +49,7 @@ export function SiteFooter() {
             ))}
           </ul>
         </div>
-        <Link to="/pick" className="ft-card-scrap">
+        <Link to="/photo" className="ft-card-scrap">
           <Paperclip size={18} className="ft-card-clip" />
           <span>One card.<br />A thousand<br />memories. <HeartSolid size={16} color="var(--red)" /></span>
         </Link>

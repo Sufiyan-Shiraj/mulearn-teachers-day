@@ -159,9 +159,7 @@ export default function Share() {
             <HeartDoodle className="sh-title-heart" size={20} />
           </h1>
           <p className="sh-sub">
-            Your card is all set.<br />
-            Share it digitally or print it out<br />
-            for a more personal touch. <HeartDoodle size={15} className="sh-sub-heart" />
+            Send it, or print it. <HeartDoodle size={15} className="sh-sub-heart" />
           </p>
 
           {/* User Sign-in / Attribution Banner */}
@@ -174,11 +172,11 @@ export default function Share() {
             ) : (
               <div className="sh-auth-prompt">
                 <p>
-                  <strong>Sign in with Google</strong> to track this card on your profile and climb the leaderboard!
+                  <strong>Add your name</strong> to track this card on your profile and climb the leaderboard!
                 </p>
                 <button type="button" onClick={openAuthModal} className="sh-auth-login-btn">
                   <Sparkle size={14} color="var(--gold)" />
-                  <span>Sign In</span>
+                  <span>Add your name</span>
                 </button>
               </div>
             )}
@@ -238,11 +236,11 @@ export default function Share() {
               <div className="sh-drawer">
                 <label className="sh-field">
                   <span>Who is it for?</span>
-                  <input value={doc.to} placeholder="Ms. Nair" onChange={e => setMeta({ to: e.target.value })} />
+                  <input value={doc.to} placeholder="Your teacher’s name" onChange={e => setMeta({ to: e.target.value })} />
                 </label>
                 <label className="sh-field">
                   <span>From</span>
-                  <input value={doc.from} placeholder="Ananya" onChange={e => setMeta({ from: e.target.value })} />
+                  <input value={doc.from} placeholder="Your name" onChange={e => setMeta({ from: e.target.value })} />
                 </label>
                 <label className="sh-field">
                   <span className="sh-note-label">
@@ -319,7 +317,7 @@ export default function Share() {
           </div>
 
           <div className="sh-start-new">
-            <button className="sh-new-btn" onClick={() => nav('/pick')}>
+            <button className="sh-new-btn" onClick={() => nav('/photo')}>
               Make another card &rarr;
             </button>
           </div>

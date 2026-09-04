@@ -1,12 +1,15 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { AuthModal } from './components/auth/AuthModal'
-import { Preloader } from './components/shell/Preloader'
 
 import Landing from './routes/Landing'
 
-const PickCard = lazy(() => import('./routes/PickCard'))
+/* The intro plays once a session and is the heaviest thing in the app — it is
+   the only reason framer-motion was in the first chunk. Splitting it out means
+   every navigation after the intro never touches that code again. */
+const Preloader = lazy(() => import('./components/shell/Preloader').then(m => ({ default: m.Preloader })))
+
 const AddPhoto = lazy(() => import('./routes/AddPhoto'))
 const Editor = lazy(() => import('./routes/Editor'))
 const Preview = lazy(() => import('./routes/Preview'))
@@ -21,6 +24,30 @@ const About = lazy(() => import('./routes/About'))
 const Gallery = lazy(() => import('./routes/_Gallery'))
 const CardDebug = lazy(() => import('./routes/_Card'))
 
+/**
+ * Pull the rest of the flow in while the browser is idle.
+ *
+ * Every step is a separate chunk, so without this the first tap on "Next"
+ * waits on a network round trip — which is exactly where the app felt slow.
+ * By the time anyone has framed a photo, the editor is already parsed.
+ */
+function usePrefetchFlow() {
+  useEffect(() => {
+    const pull = () => {
+      import('./routes/AddPhoto')
+      import('./routes/Editor')
+      import('./routes/Preview')
+      import('./routes/Share')
+    }
+    const idle = (window as unknown as {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number
+    }).requestIdleCallback
+    if (idle) { const id = idle(pull, { timeout: 2500 }); return () => cancelIdleCallback?.(id) }
+    const t = setTimeout(pull, 1200)
+    return () => clearTimeout(t)
+  }, [])
+}
+
 function ScrollTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
@@ -34,6 +61,7 @@ function Transition({ children }: { children: React.ReactNode }) {
 }
 
 export function App() {
+  usePrefetchFlow()
   const [showPreloader, setShowPreloader] = useState(() => {
     if (typeof window !== 'undefined') {
       return !sessionStorage.getItem('mulearn_intro_seen')
@@ -53,19 +81,21 @@ export function App() {
         <div className="paper-grain" aria-hidden />
         <ScrollTop />
         {showPreloader && (
-          <Preloader
+          <Suspense fallback={null}><Preloader
             onComplete={() => {
               try { sessionStorage.setItem('mulearn_intro_seen', 'true') } catch {}
               setShowPreloader(false)
             }}
-          />
+          /></Suspense>
         )}
         <AuthModal />
         <Suspense fallback={<div className="boot" aria-hidden />}>
           <Transition>
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route path="/pick" element={<PickCard />} />
+              {/* picking a card is no longer a step — every template can be
+                  swapped inside the editor, so old links land on the camera */}
+              <Route path="/pick" element={<Navigate to="/photo" replace />} />
               <Route path="/photo" element={<AddPhoto />} />
               <Route path="/create" element={<Editor />} />
               <Route path="/preview" element={<Preview />} />

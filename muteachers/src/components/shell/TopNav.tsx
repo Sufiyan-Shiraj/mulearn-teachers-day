@@ -20,7 +20,7 @@ const LINKS = [
 
 const SHEET = [
   { to: '/', label: 'Home' },
-  { to: '/pick', label: 'Make a card' },
+  { to: '/photo', label: 'Make a card' },
   { to: '/my-cards', label: 'My Cards' },
   { to: '/leaderboards', label: 'Leaderboards' },
   { to: '/how-it-works', label: 'How it works' },
@@ -81,8 +81,8 @@ export function TopNav({ back }: Props) {
                   type="button"
                   onClick={() => signOut()}
                   className="nav-signout-btn"
-                  title="Sign out"
-                  aria-label="Sign out"
+                  title="Change your name"
+                  aria-label="Change your name"
                 >
                   <svg viewBox="0 0 20 20" width="16" height="16" fill="none">
                     <path d="M7.5 3.5H4a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 4 16.5h3.5M13 13.5l3.5-3.5L13 6.5M7 10h9.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -91,7 +91,7 @@ export function TopNav({ back }: Props) {
               </div>
             ) : (
               <button type="button" onClick={openAuthModal} className="nav-signin-btn">
-                <span>Sign In</span>
+                <span>Add your name</span>
               </button>
             )}
 
@@ -136,16 +136,15 @@ export function TopNav({ back }: Props) {
                 data-active={loc.pathname === l.to ? '' : undefined}
                 style={{ ['--i' as string]: String(i) }}
                 onClick={(e) => {
-                  if (l.to === '/pick' && !user) {
+                  if (l.to === '/photo' && !user) {
                     e.preventDefault()
                     setOpen(false)
                     openAuthModal({
-                      mode: 'signup',
-                      title: 'Sign In to Create a Card',
-                      subtitle: 'Sign in or sign up to personalize, save, and share your card ✨',
-                      redirectTo: '/pick',
+                      title: 'First — what’s your name?',
+                      subtitle: 'It goes on your card so your teacher knows who it’s from.',
+                      redirectTo: '/photo',
                       onSuccess: () => {
-                        nav('/pick')
+                        nav('/photo')
                       },
                     })
                   }
@@ -196,7 +195,7 @@ export function TopNav({ back }: Props) {
                   </div>
                 </div>
                 <button type="button" onClick={() => { signOut(); setOpen(false) }} className="nav-sheet-signout">
-                  Sign Out
+                  Change name
                 </button>
               </div>
             ) : (
@@ -205,7 +204,7 @@ export function TopNav({ back }: Props) {
                 onClick={() => { setOpen(false); openAuthModal() }}
                 className="nav-sheet-signin-btn"
               >
-                Sign In with Google
+                Add your name
               </button>
             )}
           </div>

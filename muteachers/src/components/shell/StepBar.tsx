@@ -2,8 +2,7 @@ import { Link } from 'react-router-dom'
 import './stepbar.css'
 
 export const STEPS = [
-  { key: 'pick', label: 'Pick Card', to: '/pick' },
-  { key: 'photo', label: 'Add Photo', to: '/photo' },
+  { key: 'photo', label: 'Photo', to: '/photo' },
   { key: 'create', label: 'Create', to: '/create' },
   { key: 'preview', label: 'Preview', to: '/preview' },
   { key: 'share', label: 'Share', to: '/share' },

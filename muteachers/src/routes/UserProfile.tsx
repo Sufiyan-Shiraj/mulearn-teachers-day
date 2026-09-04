@@ -104,7 +104,7 @@ export default function UserProfile() {
               </div>
               <h3>No cards published yet</h3>
               <p>@{username} hasn&rsquo;t published any cards yet, or they might be private.</p>
-              <ButtonLink to="/pick" variant="dark" size="lg" icon={<SparkIcon />}>
+              <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>
                 Make a Card
               </ButtonLink>
             </div>

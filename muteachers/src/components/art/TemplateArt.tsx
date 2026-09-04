@@ -13,15 +13,17 @@ import './template-art.css'
 type Layer = 'back' | 'front'
 type Props = { art: ArtKey; face: Face; layer?: Layer }
 
-const noise = (
-  <svg className="ta-noise" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-    <filter id="ta-n">
-      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="4" stitchTiles="stitch" />
-      <feColorMatrix type="saturate" values="0" />
-    </filter>
-    <rect width="100%" height="100%" filter="url(#ta-n)" />
-  </svg>
-)
+/**
+ * Paper grain.
+ *
+ * This was an inline <svg> with a live feTurbulence filter, one per card face.
+ * A filter in the document has to be re-evaluated by the compositor, and with
+ * `mix-blend-mode` on top of it that is a full offscreen pass per card — on a
+ * phone showing both faces it was the most expensive thing on the page. The
+ * same noise as a background image is rasterised once by the browser, cached,
+ * and tiled, which costs nothing after the first paint.
+ */
+const noise = <div className="ta-noise" aria-hidden />
 
 const rules = <div className="ta-rules" aria-hidden />
 

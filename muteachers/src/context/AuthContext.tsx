@@ -1,17 +1,25 @@
+/* ============================================================
+   Who is making this card.
+
+   There is no sign-in. Someone types a display name, the browser
+   mints an id for them and keeps both in local storage, and that
+   id owns their cards, their profile page and their place on the
+   leaderboard. Nothing is verified and nothing can be locked out
+   of — for a one-day event board that is the whole point.
+
+   The names here still say "auth" because every screen calls
+   `useAuth()` and `openAuthModal()`; what they now open is a box
+   asking for a name.
+   ============================================================ */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  isSupabaseConfigured,
-  signInWithGoogle as doSignInWithGoogle,
-  signOut as doSignOut,
-  supabase,
-  type UserProfile,
-} from '../lib/supabase'
+import { type UserProfile } from '../lib/supabase'
+import { pushProfile } from '../lib/profile'
 
 export interface AuthModalOptions {
-  mode?: 'signin' | 'signup'
   title?: string
   subtitle?: string
+  /** where to go once a name has been given */
   redirectTo?: string
   onSuccess?: () => void
 }
@@ -23,14 +31,54 @@ interface AuthContextType {
   authModalOptions: AuthModalOptions | null
   openAuthModal: (options?: AuthModalOptions | unknown) => void
   closeAuthModal: () => void
-  signInWithGoogle: () => Promise<void>
+  /** create or rename the person at the keyboard; false if the name was unusable */
+  saveName: (name: string) => Promise<boolean>
+  /** forget the name on this device, so the next card asks again */
   signOut: () => Promise<void>
-  updateUsername: (newUsername: string) => Promise<boolean>
-  showUsernamePrompt: boolean
-  setShowUsernamePrompt: (show: boolean) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+const LS_PROFILE = 'mulearn_profile'
+
+/* ---------------- names and handles ---------------- */
+
+export function cleanName(raw: string) {
+  return raw.trim().replace(/\s+/g, ' ').slice(0, 40)
+}
+
+/** a display name turned into something that can live in a URL */
+export function handleFrom(name: string) {
+  const base = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 20)
+  return base || 'student'
+}
+
+const suffix = () => Math.random().toString(36).slice(2, 6)
+
+function readProfile(): UserProfile | null {
+  try {
+    const raw = localStorage.getItem(LS_PROFILE)
+    if (!raw) return null
+    const p = JSON.parse(raw) as UserProfile
+    return p?.id && p?.displayName ? p : null
+  } catch { return null }
+}
+
+function writeProfile(p: UserProfile | null) {
+  try {
+    if (p) localStorage.setItem(LS_PROFILE, JSON.stringify(p))
+    else localStorage.removeItem(LS_PROFILE)
+  } catch { /* private mode */ }
+}
+
+function newId() {
+  try { return crypto.randomUUID() } catch { /* older browsers */ }
+  return `${Date.now().toString(16)}-${suffix()}${suffix()}-${suffix()}${suffix()}`
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
@@ -38,140 +86,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authModalOptions, setAuthModalOptions] = useState<AuthModalOptions | null>(null)
-  const [showUsernamePrompt, setShowUsernamePrompt] = useState(false)
 
-  const checkSession = async () => {
-    setLoading(true)
-
-    // Check Supabase session
-    if (isSupabaseConfigured) {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single()
-
-          if (profile) {
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              displayName: profile.display_name || session.user.user_metadata?.full_name || 'Student',
-              avatarUrl: profile.avatar_url || session.user.user_metadata?.avatar_url || '',
-              username: profile.username || '',
-              createdAt: profile.created_at,
-            })
-            if (!profile.username) {
-              setShowUsernamePrompt(true)
-            }
-          } else {
-            // Upsert new user profile
-            const defaultUsername = (session.user.email?.split('@')[0] || 'student')
-              .replace(/[^a-z0-9_]/gi, '')
-              .toLowerCase()
-
-            const newUser: UserProfile = {
-              id: session.user.id,
-              email: session.user.email || '',
-              displayName: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Student',
-              avatarUrl: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || '',
-              username: defaultUsername,
-              createdAt: new Date().toISOString(),
-            }
-
-            try {
-              await supabase.from('users').upsert({
-                id: newUser.id,
-                email: newUser.email,
-                display_name: newUser.displayName,
-                avatar_url: newUser.avatarUrl,
-                username: newUser.username,
-              })
-            } catch (err) {
-              console.warn('Profile upsert warning:', err)
-            }
-
-            setUser(newUser)
-            setShowUsernamePrompt(true)
-          }
-
-          try {
-            const target = sessionStorage.getItem('mulearn_post_auth_redirect')
-            if (target) {
-              sessionStorage.removeItem('mulearn_post_auth_redirect')
-              navigate(target)
-            }
-          } catch {
-            // ignore
-          }
-        } else {
-          setUser(null)
-        }
-      } catch (e) {
-        console.error('Session check error:', e)
-      }
-    }
-
-    setLoading(false)
-  }
-
+  /* the name lives on the device, so there is nothing to wait for */
   useEffect(() => {
-    checkSession()
-
-    const handleCustomAuthChange = () => {
-      checkSession()
-    }
-
-    window.addEventListener('mulearn_auth_change', handleCustomAuthChange)
-
-    let authListener: { subscription: { unsubscribe: () => void } } | null = null
-    if (isSupabaseConfigured) {
-      const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (session?.user) {
-          checkSession()
-        } else {
-          setUser(null)
-        }
-      })
-      authListener = data
-    }
-
-    return () => {
-      window.removeEventListener('mulearn_auth_change', handleCustomAuthChange)
-      if (authListener) authListener.subscription.unsubscribe()
-    }
+    setUser(readProfile())
+    setLoading(false)
   }, [])
 
-  const triggerPostAuth = () => {
-    if (authModalOptions?.onSuccess) {
-      const cb = authModalOptions.onSuccess
-      setAuthModalOptions(null)
-      cb()
-    } else {
-      try {
-        const target = sessionStorage.getItem('mulearn_post_auth_redirect')
-        if (target) {
-          sessionStorage.removeItem('mulearn_post_auth_redirect')
-          navigate(target)
-        }
-      } catch {
-        // storage error
-      }
-    }
-  }
-
   const openAuthModal = (options?: AuthModalOptions | unknown) => {
+    /* several screens pass this straight to onClick, so a click event can
+       arrive here instead of options — ignore it rather than storing it */
     if (options && typeof options === 'object' && !('nativeEvent' in options) && !('_reactName' in options)) {
       const opts = options as AuthModalOptions
       setAuthModalOptions(opts)
       if (opts.redirectTo) {
-        try {
-          sessionStorage.setItem('mulearn_post_auth_redirect', opts.redirectTo)
-        } catch {
-          // ignore
-        }
+        try { sessionStorage.setItem('mulearn_post_auth_redirect', opts.redirectTo) } catch { /* ignore */ }
       }
     } else {
       setAuthModalOptions(null)
@@ -184,47 +113,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthModalOptions(null)
   }
 
-  const signInWithGoogle = async () => {
-    try {
-      await doSignInWithGoogle()
-      setIsAuthModalOpen(false)
-    } catch (e) {
-      console.error('Sign in failed:', e)
+  const saveName = async (raw: string): Promise<boolean> => {
+    const displayName = cleanName(raw)
+    if (!displayName) return false
+
+    const existing = readProfile()
+    const draft: UserProfile = existing
+      ? { ...existing, displayName, username: existing.username || handleFrom(displayName) }
+      : {
+          id: newId(),
+          displayName,
+          username: handleFrom(displayName),
+          createdAt: new Date().toISOString(),
+        }
+
+    const saved = await pushProfile(draft)
+    writeProfile(saved)
+    setUser(saved)
+
+    setIsAuthModalOpen(false)
+    const opts = authModalOptions
+    setAuthModalOptions(null)
+
+    if (opts?.onSuccess) {
+      opts.onSuccess()
+    } else {
+      try {
+        const target = sessionStorage.getItem('mulearn_post_auth_redirect')
+        if (target) {
+          sessionStorage.removeItem('mulearn_post_auth_redirect')
+          navigate(target)
+        }
+      } catch { /* ignore */ }
     }
+    return true
   }
 
   const signOut = async () => {
-    await doSignOut()
+    writeProfile(null)
     setUser(null)
-  }
-
-  const updateUsername = async (newUsername: string): Promise<boolean> => {
-    const clean = newUsername.trim().toLowerCase().replace(/[^a-z0-9_]/g, '')
-    if (!clean || !user) return false
-
-    const updatedUser = { ...user, username: clean }
-    setUser(updatedUser)
-
-    if (isSupabaseConfigured) {
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ username: clean })
-          .eq('id', user.id)
-
-        if (error) {
-          console.warn('Username update failed in Supabase:', error)
-          return false
-        }
-      } catch (e) {
-        console.warn('Username update error:', e)
-        return false
-      }
-    }
-
-    setShowUsernamePrompt(false)
-    triggerPostAuth()
-    return true
   }
 
   return (
@@ -236,11 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authModalOptions,
         openAuthModal,
         closeAuthModal,
-        signInWithGoogle,
+        saveName,
         signOut,
-        updateUsername,
-        showUsernamePrompt,
-        setShowUsernamePrompt,
       }}
     >
       {children}

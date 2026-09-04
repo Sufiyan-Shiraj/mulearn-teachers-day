@@ -1,98 +1,12 @@
 .ph { overflow-x: clip; }
 .ph-steps { padding: 4px 28px 10px; }
-.ph-main { position: relative; padding: 26px 28px 120px; text-align: center; }
-
-.ph-head { position: relative; z-index: 2; }
-.ph-eyebrow {
-  position: relative; display: block; width: fit-content; max-width: 100%; margin-inline: auto;
-  font-family: var(--f-script); font-weight: 500;
-  font-size: clamp(26px, 3.2vw, 38px); color: var(--ink); letter-spacing: .012em;
-}
-.ph-eyebrow-burst { position: absolute; right: -30px; top: 4px; }
-.ph-title {
-  position: relative; display: block; width: fit-content; max-width: 100%; margin-inline: auto;
-  font-family: var(--f-display); font-weight: 500;
-  font-size: clamp(28px, 4.2vw, 49px); line-height: 1.14; letter-spacing: -.006em;
-  margin-top: 4px;
-}
-.ph-title em { font-style: normal; color: var(--crimson); }
-.ph-title-heart { display: inline-block; vertical-align: 2px; margin-left: 4px; }
-.ph-sub { position: relative; display: block; width: fit-content; max-width: 100%; margin-inline: auto; margin-top: 12px; font-size: 14.5px; color: var(--ink-soft); }
-.ph-sub-heart { display: inline-block; vertical-align: -2px; margin-left: 6px; }
 
 /* ---------------- option cards ---------------- */
-.ph-options {
-  position: relative; z-index: 2;
-  display: flex; align-items: center; justify-content: center; gap: 26px;
-  margin-top: 46px;
-}
-.ph-card {
-  position: relative;
-  width: 288px; padding: 34px 26px 30px;
-  border-radius: 20px;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  transition: transform .24s cubic-bezier(.2,.9,.3,1.15), box-shadow .24s;
-}
-.ph-card:hover { transform: translateY(-4px); }
-.ph-card h2 { font-size: 19px; font-weight: 700; letter-spacing: -.005em; margin-top: 14px; }
-.ph-card p { font-size: 14px; line-height: 1.55; margin-top: 4px; }
-.ph-card .btn { margin-top: 18px; min-width: 194px; }
-
-.ph-card--light {
-  background: #f3ece4;
-  box-shadow: inset 0 0 0 1px rgba(160,132,96,.14), 0 4px 12px rgba(90,60,30,.06), 0 18px 40px rgba(90,60,30,.08);
-}
-.ph-card--light p { color: var(--ink-soft); }
-.ph-card--dark {
-  background: #1c1c1c; color: #f4efe7;
-  padding-bottom: 34px;
-  box-shadow: 0 6px 16px rgba(20,14,10,.22), 0 26px 56px rgba(20,14,10,.24);
-}
-.ph-card--dark p { color: #c7bfb4; }
-
-.ph-ico {
-  width: 66px; height: 66px; border-radius: 999px;
-  display: grid; place-items: center;
-}
-.ph-ico svg { width: 32px; height: 30px; }
-.ph-ico--light { background: #e9e0d4; color: #4a4239; }
-.ph-ico--dark { border: 1.6px solid var(--gold); color: var(--gold); }
-
-.ph-meta { font-size: 12.5px !important; color: var(--muted) !important; margin-top: 12px !important; }
-.ph-spark { width: 20px; height: 16px; margin-right: -4px; }
-.ph-spark svg { width: 100%; height: 100%; }
-
-.ph-tape { position: absolute; width: 92px; aspect-ratio: 200/56; }
-.ph-tape--kraft { left: -34px; top: 22px; transform: rotate(-16deg); }
-.ph-tape--red { right: -22px; top: -14px; transform: rotate(22deg); }
-
-.ph-or { position: relative; display: flex; flex-direction: column; align-items: center; }
-.ph-or span { font-family: var(--f-script); font-size: 26px; color: var(--crimson); }
-.ph-or-arrow { margin-bottom: 2px; }
 
 .ph-err {
   margin-top: 20px; font-size: 14px; color: var(--crimson); font-weight: 500;
   position: relative; z-index: 2;
 }
-
-.ph-tip {
-  position: relative; z-index: 2;
-  margin-top: 42px;
-  font-family: var(--f-script); font-size: 21px; line-height: 1.45; color: var(--ink-soft);
-}
-.ph-tip em { font-style: normal; color: var(--crimson); }
-.ph-tip-smiley { display: inline-block; vertical-align: -2px; }
-
-.ph-scrap {
-  position: absolute; right: 4%; bottom: 26px; width: 190px; z-index: 3; text-align: left;
-}
-.ph-scrap .scrap-in { font-size: 23px; line-height: 1.42; }
-.ph-scrap-heart { display: inline-block; vertical-align: -2px; }
-
-.ph-cap { position: absolute; left: -30px; bottom: 96px; width: 150px; aspect-ratio: 140/110; transform: rotate(-8deg); opacity: .95; }
-.ph-daisy { position: absolute; left: 30px; bottom: 46px; width: 74px; aspect-ratio: 1; transform: rotate(12deg); }
-.ph-star { position: absolute; left: 7%; top: 120px; width: 52px; aspect-ratio: 124/120; transform: rotate(-14deg); }
-.ph-heart-doodle { position: absolute; right: 10%; top: 108px; opacity: .5; transform: rotate(6deg); }
 
 .ph-keep {
   position: relative; z-index: 3;
@@ -134,6 +48,21 @@
 .ph-cam-washi { position: absolute; left: 40px; bottom: -46px; width: 96px; aspect-ratio: 200/56; transform: rotate(-12deg); }
 
 .ph-cam-stage { position: relative; }
+
+/* ---- the quieter way in ----
+   Uploading is still one tap away, but it reads as the alternative to the
+   camera above it rather than an equal choice beside it. */
+.ph-upload { margin-top: 14px; text-align: center; }
+.ph-upload-link {
+  background: none; padding: 6px 4px;
+  font-family: var(--f-sans); font-size: 13.5px;
+  color: var(--ink-soft); text-decoration: underline;
+  text-underline-offset: 3px; text-decoration-thickness: 1px;
+  cursor: pointer;
+  transition: color .16s var(--e-out);
+}
+.ph-upload-link:hover { color: var(--crimson); }
+.ph-upload-link:disabled { opacity: .6; pointer-events: none; }
 .ph-cam-note {
   position: absolute; right: -36px; bottom: -30px; width: 176px; z-index: 3;
 }
@@ -143,68 +72,20 @@
 /* ---------------- responsive ---------------- */
 @media (max-width: 900px) {
   .ph-steps { padding: 2px 18px 2px; }
-  .ph-main { padding: 16px 18px 40px; }
-  .ph-options { flex-direction: column; gap: 16px; margin-top: 28px; }
-  .ph-card { width: 100%; max-width: 420px; padding: 20px; align-items: flex-start; text-align: left; }
-  .ph-card h2 { margin-top: 0; font-size: 17px; }
-  .ph-card .btn { width: 100%; margin-top: 14px; }
-  .ph-card--light, .ph-card--dark {
-    display: grid; grid-template-columns: 58px 1fr; grid-template-areas: 'i t' 'i p' 'b b' 'm m';
-    column-gap: 16px; row-gap: 2px; align-items: center;
-  }
-  .ph-ico { grid-area: i; width: 54px; height: 54px; align-self: start; }
-  .ph-card h2 { grid-area: t; align-self: end; }
-  .ph-card p:not(.ph-meta) { grid-area: p; align-self: start; }
-  .ph-card .btn { grid-area: b; }
-  .ph-meta { grid-area: m; text-align: center; width: 100%; }
-  .ph-or { flex-direction: row; gap: 10px; }
-  .ph-or-arrow { display: none; }
-  .ph-or::before, .ph-or::after {
-    content: ''; width: 22px; height: 2px; background: var(--muted-2); border-radius: 2px; opacity: .5;
-  }
-  .ph-tape--kraft { left: -20px; top: -14px; width: 74px; }
-  .ph-tape--red { right: -14px; top: -16px; width: 74px; }
-  .ph-cap, .ph-daisy, .ph-star, .ph-heart-doodle { display: none; }
-  .ph-scrap { position: static; margin: 26px auto 0; width: 100%; max-width: 420px; text-align: center; transform: rotate(-1deg); }
-  .ph-scrap .scrap-in { font-size: 20px; }
-  .ph-tip { margin-top: 26px; font-size: 19px; }
 
   .ph-cam-main { grid-template-columns: 1fr; gap: 9px; padding: 2px 18px 20px; text-align: center; }
   .ph-cam-copy { display: contents; }
   .ph-cam-title { order: 1; font-size: clamp(22px, 6.6vw, 29px); line-height: 1.22; }
   .ph-cam-sub { order: 2; max-width: none; margin-top: 6px; font-size: 13.5px; }
   .ph-cam-stage { order: 3; }
+  .ph-upload { margin-top: 10px; }
   .ph-cam-tips { order: 4; width: 100%; margin: 8px auto 0; }
   .ph-cam-tips .scrap-in { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 4px 16px; font-size: 16px; }
   .ph-cam-washi { display: none; }
   .ph-cam-note { display: none; }
 }
 
-
 /* ---------------- photo step motion ---------------- */
-.ph-eyebrow { animation: m-fade-up .55s var(--e-out) .04s both; }
-.ph-title   { animation: m-fade-up .58s var(--e-out) .11s both; }
-.ph-sub     { animation: m-fade-up .55s var(--e-out) .18s both; }
-.ph-options > * { animation: m-rise .6s var(--e-out) both; }
-.ph-options > *:nth-child(1) { animation-delay: .22s }
-.ph-options > *:nth-child(2) { animation-delay: .3s }
-.ph-options > *:nth-child(3) { animation-delay: .36s }
-.ph-tip     { animation: m-fade .6s var(--e-out) .5s both; }
-.ph-scrap   { animation: m-rise .7s var(--e-out) .55s both; }
-
-.ph-card { transition: transform .28s var(--e-spring), box-shadow .28s var(--e-out); }
-.ph-card:hover { transform: translateY(-6px) rotate(-.4deg); }
-.ph-card--light:hover { box-shadow: inset 0 0 0 1px rgba(160,132,96,.22), 0 10px 22px rgba(90,60,30,.1), 0 28px 60px rgba(90,60,30,.12); }
-.ph-card--dark:hover  { box-shadow: 0 12px 28px rgba(20,14,10,.3), 0 34px 70px rgba(20,14,10,.3); }
-.ph-ico { transition: transform .3s var(--e-spring); }
-.ph-card:hover .ph-ico { transform: scale(1.08) rotate(-6deg); }
-.ph-tape { transition: transform .3s var(--e-spring); }
-.ph-card:hover .ph-tape--kraft { transform: rotate(-20deg) translate(-2px, -3px); }
-.ph-card:hover .ph-tape--red   { transform: rotate(26deg) translate(2px, -3px); }
-
-.ph-cap   { animation: m-drift 12s var(--e-soft) infinite; --r: -8deg; }
-.ph-daisy { animation: m-drift 10s var(--e-soft) .8s infinite; --r: 12deg; }
-.ph-star  { animation: m-float 8s var(--e-soft) .4s infinite; }
 
 .ph-cam-title { animation: m-fade-up .55s var(--e-out) .04s both; }
 .ph-cam-sub   { animation: m-fade-up .55s var(--e-out) .12s both; }

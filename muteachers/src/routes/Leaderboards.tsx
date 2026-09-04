@@ -103,7 +103,7 @@ export default function Leaderboards() {
             <p className="lb-empty-desc">
               Be the first to create and share a Teacher&rsquo;s Day tribute card to claim the #1 spot on the leaderboard!
             </p>
-            <ButtonLink to="/pick" variant="dark" size="lg" icon={<SparkIcon />}>
+            <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>
               Create a Card
             </ButtonLink>
           </div>
@@ -176,9 +176,9 @@ export default function Leaderboards() {
               <button
                 type="button"
                 className="lb-you-signin-btn"
-                onClick={() => openAuthModal({ mode: 'signin' })}
+                onClick={() => openAuthModal()}
               >
-                Sign In to View Rank
+                Add your name to join
               </button>
             </div>
           </div>

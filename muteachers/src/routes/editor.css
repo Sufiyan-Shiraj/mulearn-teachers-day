@@ -20,7 +20,7 @@
   background: var(--surface);
   border-radius: 22px;
   box-shadow: inset 0 0 0 1px var(--line-soft), var(--sh-sm);
-  position: sticky; top: 14px;
+  position: sticky; top: calc(var(--nav-h) + 10px);
 }
 .ed-rail-btn {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -212,7 +212,21 @@
 .ed-hist-btn:hover > svg { background: #fff; }
 
 /* ---------------- stage ---------------- */
-.ed-stage { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 2px; }
+/* The right-hand column is the thing you are working on, so it holds still
+   while the panel beside it scrolls — the tool rail already did this. */
+.ed-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding-top: 2px;
+  position: sticky; top: calc(var(--nav-h) + 10px);
+}
+
+/* the card's controls, sitting together as one dock rather than being
+   dragged on top of each other with a negative margin */
+.ed-dock {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap;
+  margin-top: 4px;
+}
 
 .ed-face-switch {
   display: inline-flex; padding: 3px; border-radius: 999px;
@@ -228,7 +242,7 @@
   width: 100%; display: flex; justify-content: center;
   padding: 6px 0 2px;
 }
-.ed-card { width: 100%; max-width: min(430px, 100%, calc(58dvh * var(--card-ar, .714))); }
+.ed-card { width: 100%; max-width: min(430px, 100%, calc((92dvh - var(--nav-h) - 150px) * var(--card-ar, .714))); }
 
 .ed-hint {
   display: inline-flex; align-items: center; gap: 8px;
@@ -238,13 +252,10 @@
 
 /* ---------------- contextual toolbar ---------------- */
 .ed-toolbar {
-  grid-column: 3;
-  justify-self: center;
   display: flex; align-items: center; gap: 4px;
   padding: 8px 12px; border-radius: 20px;
   background: var(--surface);
   box-shadow: inset 0 0 0 1px var(--line-soft), 0 4px 14px rgba(60,36,18,.08), 0 18px 40px rgba(60,36,18,.1);
-  margin-top: 14px;
 }
 .ed-tb {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -260,17 +271,13 @@
 .ed-tb-dot { width: 19px; height: 19px; border-radius: 999px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2); display: block; }
 .ed-tb-mob { display: none; }
 
-.ed-next {
-  grid-column: 3; justify-self: end;
-  margin-top: -70px; margin-right: 6px;
-  position: relative; z-index: 46;
-}
+.ed-next { position: relative; z-index: 46; }
 .ed-next[data-ready]::before {
   content: 'Looks good? →';
-  position: absolute; right: calc(100% + 14px); top: 50%; transform: translateY(-50%);
-  font-family: var(--f-script); font-size: 18px; color: var(--muted);
+  position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%);
+  font-family: var(--f-script); font-size: 16px; color: var(--muted);
   white-space: nowrap;
-  animation: m-fade-left .45s var(--e-out) both;
+  animation: m-fade-up .45s var(--e-out) both;
 }
 
 /* ---------------- sheets ---------------- */
@@ -327,7 +334,10 @@
   .ed-panel-sub { max-width: none; margin-top: 6px; font-size: 13.5px; }
   .ed-panel-body, .ed-history { display: none; }
 
-  .ed-stage { gap: 10px; }
+  .ed-stage { gap: 10px; position: static; }
+  /* both children are position: fixed on a phone, so the dock steps out of
+     the way and lets them place themselves as they did before */
+  .ed-dock { display: contents; }
   .ed-card { max-width: min(340px, 84vw, calc(46dvh * var(--card-ar, .714))); }
   .ed-hint { font-size: 11.5px; padding: 0 10px; }
 
@@ -380,7 +390,10 @@
 .ed-rail-ico { transition: transform .22s var(--e-spring); }
 .ed-rail-btn[data-on] .ed-rail-ico { transform: translateY(-1px) scale(1.06); }
 
-.ep-font, .ep-deco, .ep-phrase, .ep-frame { will-change: transform; }
+/* these used to carry will-change: transform, which handed every one of the
+   forty-odd sticker and font buttons its own compositor layer for the sake of
+   a press animation. The transform is cheap; the layers were not. */
+.ep-font:active, .ep-deco:active, .ep-phrase:active, .ep-frame:active { will-change: transform; }
 .ep-deco:active { transform: scale(.92); }
 .ep-font:active { transform: scale(.96); }
 
@@ -393,3 +406,23 @@
 
 .ed-hist-btn > svg { transition: transform .2s var(--e-spring), background .18s; }
 .ed-hist-btn:not(:disabled):active > svg { transform: scale(.9) rotate(-12deg); }
+
+/* ---------------- swapping the card ----------------
+   Thumbnails render the real card with the real photo in it, so the choice
+   is made on what it will actually look like rather than on a name. */
+.ep-templates { display: flex; flex-direction: column; gap: 12px; }
+.ep-tpl-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+.ep-tpl { display: block; width: 100%; text-align: left; background: none; cursor: pointer; }
+.ep-tpl-crop {
+  display: block; position: relative; width: 100%;
+  border-radius: 12px; overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--line), var(--sh-sm);
+  transition: box-shadow .2s var(--e-out), transform .2s var(--e-out);
+}
+.ep-tpl:hover .ep-tpl-crop { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--line-strong), var(--sh-md); }
+.ep-tpl[data-on] .ep-tpl-crop { box-shadow: 0 0 0 2px var(--crimson), var(--sh-md); }
+.ep-tpl-name {
+  display: block; margin-top: 6px;
+  font-family: var(--f-sans); font-size: 12px; color: var(--ink-soft);
+}
+.ep-tpl[data-on] .ep-tpl-name { color: var(--crimson); font-weight: 600; }

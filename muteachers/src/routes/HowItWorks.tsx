@@ -47,7 +47,7 @@ export default function HowItWorks() {
         </ol>
 
         <div className="st-cta">
-          <ButtonLink to="/pick" variant="dark" size="lg" icon={<SparkIcon />}>Create a Card</ButtonLink>
+          <ButtonLink to="/photo" variant="dark" size="lg" icon={<SparkIcon />}>Create a Card</ButtonLink>
           <ButtonLink to="/about" variant="outline" size="lg" trailing={<ChevronPill />}>About this project</ButtonLink>
         </div>
 

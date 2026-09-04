@@ -4,9 +4,9 @@ import { TopNav } from '../components/shell/TopNav'
 import { StepBar } from '../components/shell/StepBar'
 import { CardCanvas } from '../components/card/CardCanvas'
 import { Button, ArrowRight } from '../components/ui/Button'
-import { Burst, HeartDoodle, StarDoodle } from '../components/art/Doodles'
+import { Burst, StarDoodle } from '../components/art/Doodles'
 import { AaIcon, AlignIcon, DotsIcon, MoveIcon, SizeIcon, ToolIcons, TrashIcon } from '../components/editor/EditorBits'
-import { ColorPanel, DecoPanel, FontGrid, HandwritePanel, PhotoPanel, SWATCHES, TextControls } from '../components/editor/Panels'
+import { ColorPanel, DecoPanel, FontGrid, HandwritePanel, PhotoPanel, SWATCHES, TemplatePanel, TextControls } from '../components/editor/Panels'
 import { getTemplate } from '../lib/templates'
 import { scrollIntoView } from '../lib/useReveal'
 import { useCard } from '../lib/store'
@@ -14,10 +14,11 @@ import { useAuth } from '../context/AuthContext'
 import type { CardElement, DecoKey, FontKey } from '../lib/types'
 import './editor.css'
 
-type Tool = 'text' | 'handwrite' | 'decorate' | 'stickers' | 'colors' | 'photo'
-type Sheet = null | 'font' | 'size' | 'color' | 'align' | 'more'
+type Tool = 'card' | 'text' | 'handwrite' | 'decorate' | 'stickers' | 'colors' | 'photo'
+type Sheet = null | 'card' | 'font' | 'size' | 'color' | 'align' | 'more'
 
 const TOOLS: { key: Tool; label: string }[] = [
+  { key: 'card', label: 'Card' },
   { key: 'text', label: 'Text' },
   { key: 'handwrite', label: 'Handwrite' },
   { key: 'decorate', label: 'Decorate' },
@@ -57,12 +58,11 @@ export default function Editor() {
   useEffect(() => {
     if (!loading && !user) {
       openAuthModal({
-        mode: 'signup',
-        title: 'Sign In to Edit Your Card',
-        subtitle: 'Please sign in or create an account to customize and save your card ✨',
+        title: 'First — what’s your name?',
+        subtitle: 'It goes on your card so your teacher knows who it’s from.',
         redirectTo: '/create',
       })
-      nav('/pick', { replace: true })
+      nav('/', { replace: true })
     }
   }, [user, loading, nav, openAuthModal])
 
@@ -141,10 +141,10 @@ export default function Editor() {
           <header className="ed-panel-head">
             <h1 className="ed-panel-title">Make it <em>yours</em><Burst className="ed-panel-burst" size={20} /></h1>
             <StarDoodle className="ed-panel-star" size={22} color="var(--ink-soft)" />
-            <p className="ed-panel-sub">Click on the card to edit your message <HeartDoodle size={15} className="ed-panel-heart" /></p>
           </header>
 
           <div className="ed-panel-body">
+            {tool === 'card' && <TemplatePanel />}
             {tool === 'text' && (
               <>
                 <FontGrid value={selectedText?.font} onPick={f => selectedText && update(selectedText.id, { font: f } as Partial<CardElement>)} />
@@ -201,30 +201,33 @@ export default function Editor() {
             <svg viewBox="0 0 20 20" fill="none" aria-hidden><path d="M7 9.4V4.6a1.5 1.5 0 0 1 3 0v4M10 8.4V3.6a1.5 1.5 0 0 1 3 0v5M13 8.6V5.8a1.5 1.5 0 0 1 3 0v6.6c0 3.4-2.4 5.6-5.6 5.6-2.6 0-4-1-5.2-2.8L3 12.2a1.5 1.5 0 0 1 2.4-1.8L7 12.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>
             {hint}
           </p>
+          <div className="ed-dock">
+          {/* -------- contextual toolbar -------- */}
+          <div className="ed-toolbar" data-active={selected ? '' : undefined}>
+            <ToolbarBtn label="Edit Text" active accent
+              icon={<span className="ed-tb-aa">Aa</span>}
+              onClick={() => { if (selectedText) setEditing(selectedText.id); else setSheet('more') }} />
+            <ToolbarBtn label="Card" icon={ToolIcons.card} onClick={() => setSheet(s => s === 'card' ? null : 'card')} />
+            <ToolbarBtn label="Font" icon={<AaIcon small />} onClick={() => setSheet(s => s === 'font' ? null : 'font')} />
+            <ToolbarBtn label="Size" icon={<SizeIcon />} onClick={() => setSheet(s => s === 'size' ? null : 'size')} />
+            <ToolbarBtn label="Color" icon={<span className="ed-tb-dot" style={{ background: (selected && 'color' in selected && selected.color) || '#1a1a1a' }} />}
+              onClick={() => setSheet(s => s === 'color' ? null : 'color')} />
+            <ToolbarBtn label="Align" icon={<AlignIcon v={(selectedText?.align ?? 'center') as 'left'} />} onClick={() => setSheet(s => s === 'align' ? null : 'align')} />
+            <ToolbarBtn label="Move" className="ed-tb-desk" icon={<MoveIcon />}
+              onClick={() => selected && update(selected.id, { box: { ...selected.box, x: 50 - selected.box.w / 2 } } as Partial<CardElement>)} />
+            <ToolbarBtn label="Delete" className="ed-tb-desk" icon={<TrashIcon />} onClick={() => selectedId && remove(selectedId)} />
+            <ToolbarBtn label="More" className="ed-tb-mob" icon={<DotsIcon />} onClick={() => setSheet(s => s === 'more' ? null : 'more')} />
+          </div>
+
+          <div className="ed-next" ref={nextRef} data-ready={touched && !editingId ? '' : undefined}>
+            <Button variant="dark" size="lg" trailing={<ArrowRight />} onClick={goNext}
+              className={touched && !editingId ? 'm-attention' : undefined}>
+              Next
+            </Button>
+          </div>
+          </div>
         </section>
 
-        {/* -------- contextual toolbar -------- */}
-        <div className="ed-toolbar" data-active={selected ? '' : undefined}>
-          <ToolbarBtn label="Edit Text" active accent
-            icon={<span className="ed-tb-aa">Aa</span>}
-            onClick={() => { if (selectedText) setEditing(selectedText.id); else setSheet('more') }} />
-          <ToolbarBtn label="Font" icon={<AaIcon small />} onClick={() => setSheet(s => s === 'font' ? null : 'font')} />
-          <ToolbarBtn label="Size" icon={<SizeIcon />} onClick={() => setSheet(s => s === 'size' ? null : 'size')} />
-          <ToolbarBtn label="Color" icon={<span className="ed-tb-dot" style={{ background: (selected && 'color' in selected && selected.color) || '#1a1a1a' }} />}
-            onClick={() => setSheet(s => s === 'color' ? null : 'color')} />
-          <ToolbarBtn label="Align" icon={<AlignIcon v={(selectedText?.align ?? 'center') as 'left'} />} onClick={() => setSheet(s => s === 'align' ? null : 'align')} />
-          <ToolbarBtn label="Move" className="ed-tb-desk" icon={<MoveIcon />}
-            onClick={() => selected && update(selected.id, { box: { ...selected.box, x: 50 - selected.box.w / 2 } } as Partial<CardElement>)} />
-          <ToolbarBtn label="Delete" className="ed-tb-desk" icon={<TrashIcon />} onClick={() => selectedId && remove(selectedId)} />
-          <ToolbarBtn label="More" className="ed-tb-mob" icon={<DotsIcon />} onClick={() => setSheet(s => s === 'more' ? null : 'more')} />
-        </div>
-
-        <div className="ed-next" ref={nextRef} data-ready={touched && !editingId ? '' : undefined}>
-          <Button variant="dark" size="lg" trailing={<ArrowRight />} onClick={goNext}
-            className={touched && !editingId ? 'm-attention' : undefined}>
-            Next
-          </Button>
-        </div>
       </main>
 
       {/* -------- mobile sheets -------- */}
@@ -233,6 +236,12 @@ export default function Editor() {
           <button className="ed-scrim" onClick={() => setSheet(null)} aria-label="Close panel" />
           <div className="ed-sheet" role="dialog" aria-modal="true">
             <span className="ed-sheet-grip" />
+            {sheet === 'card' && (
+              <>
+                <h3>Pick a card</h3>
+                <TemplatePanel />
+              </>
+            )}
             {sheet === 'font' && (
               <>
                 <h3>Font</h3>
@@ -282,6 +291,7 @@ export default function Editor() {
                   ))}
                 </div>
                 <div className="ed-sheet-body">
+                  {tool === 'card' && <TemplatePanel />}
                   {tool === 'text' && <FontGrid value={selectedText?.font} onPick={f => selectedText && update(selectedText.id, { font: f } as Partial<CardElement>)} />}
                   {tool === 'handwrite' && <HandwritePanel onAdd={(t, f) => { addNote(t, f); setSheet(null) }} />}
                   {tool === 'decorate' && <DecoPanel only={['hearts', 'stars', 'flowers', 'doodles', 'tape', 'retro']} onAdd={addDecoHere} />}

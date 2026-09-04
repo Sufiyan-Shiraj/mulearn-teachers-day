@@ -4,7 +4,9 @@ import { FONTS, FONT_ORDER } from '../../lib/fonts'
 import { DECO_GROUPS, DECO_LABEL } from '../../lib/decoMeta'
 import { Decoration } from '../art/Decorations'
 import { AlignIcon } from './EditorBits'
-import { useCard } from '../../lib/store'
+import { newDoc, useCard } from '../../lib/store'
+import { TEMPLATES } from '../../lib/templates'
+import { CardCanvas } from '../card/CardCanvas'
 import { clampPan, normalizePhoto, panLimit } from '../../lib/image'
 
 export const SWATCHES = ['#1a1a1a', '#7b0e11', '#c08a52', '#ecd9c0', '#ffffff', '#2f4858', '#7f9166', '#8c63a9', '#d2372f', '#e0a63c']
@@ -156,6 +158,42 @@ export function ColorPanel({ el }: { el: CardElement | null }) {
             onChange={e => el && update(el.id, { color: e.target.value } as Partial<CardElement>, { history: false })}
             onBlur={commit} aria-label="Custom colour" />
         </label>
+      </div>
+    </div>
+  )
+}
+
+/* ---------------- the card itself ---------------- */
+
+/**
+ * Swapping the template rearranges the whole card, so it lives in the editor
+ * rather than in a step before it — you can see your own photo and words in
+ * each one instead of choosing a layout blind.
+ */
+export function TemplatePanel() {
+  const templateId = useCard(s => s.doc.templateId)
+  const photo = useCard(s => s.doc.photo)
+  const setTemplate = useCard(s => s.setTemplate)
+
+  return (
+    <div className="ep-templates">
+      <p className="ep-hint">Your photo and words carry across.</p>
+      <div className="ep-tpl-grid">
+        {TEMPLATES.map(t => (
+          <button
+            key={t.id}
+            className="ep-tpl"
+            data-on={templateId === t.id ? '' : undefined}
+            onClick={() => setTemplate(t.id)}
+            aria-pressed={templateId === t.id}
+            aria-label={`Use the ${t.name} card`}
+          >
+            <span className="ep-tpl-crop">
+              <CardCanvas doc={{ ...newDoc(t.id), photo }} template={t} face="front" mode="thumb" />
+            </span>
+            <span className="ep-tpl-name">{t.name}</span>
+          </button>
+        ))}
       </div>
     </div>
   )

@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react'
 
 export const ToolIcons = {
+  card: (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect x="3.2" y="2.6" width="12" height="16" rx="2.2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8.8 5.4h12a2.2 2.2 0 0 1 2.2 2.2v11.6a2.2 2.2 0 0 1-2.2 2.2H8.8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" opacity=".45" />
+      <path d="M6 9.4h6.4M6 12.6h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
   text: (
     <svg viewBox="0 0 26 22" fill="none" aria-hidden>
       <text x="0" y="18" fontFamily="Playfair Display, serif" fontSize="20" fontWeight="600" fill="currentColor">T</text>

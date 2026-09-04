@@ -2,6 +2,7 @@ import { isSupabaseConfigured, supabase, type UserProfile } from './supabase'
 import type { CardDoc } from './types'
 import { library, saveToLibrary, type SavedCard } from './store'
 import { decodeCard } from './share'
+import { pushProfile } from './profile'
 
 export interface CardRecord {
   doc: CardDoc
@@ -67,11 +68,21 @@ export async function saveCardToDb(doc: CardDoc, user?: UserProfile | null): Pro
       updated_at: new Date().toISOString(),
     }
 
-    if (user?.id && !user.id.startsWith('demo-')) {
-      payload.owner_id = user.id
+    if (user?.id) payload.owner_id = user.id
+
+    const save = () => supabase.from('cards').upsert(payload, { onConflict: 'share_slug' })
+
+    let { error } = await save()
+
+    /* 23503 is the foreign key to users: this person has a name on their
+       device but no row to hang a card off — they claimed it while offline,
+       or before the database was ready for them. Write the profile and try
+       the card once more rather than telling them the save failed. */
+    if (error?.code === '23503' && user?.id) {
+      await pushProfile(user)
+      ;({ error } = await save())
     }
 
-    const { error } = await supabase.from('cards').upsert(payload, { onConflict: 'share_slug' })
     if (error) {
       console.warn('Supabase card save failed:', error.message)
       return { slug: doc.id, stored: false }
@@ -187,9 +198,7 @@ export async function likeCardInDb(slug: string): Promise<number> {
 export async function fetchUserCardsFromDb(user?: UserProfile | null): Promise<SavedCard[]> {
   const localList = library()
 
-  if (!isSupabaseConfigured || !user?.id || user.id.startsWith('demo-')) {
-    return localList
-  }
+  if (!isSupabaseConfigured || !user?.id) return localList
 
   try {
     const { data, error } = await supabase
@@ -403,20 +412,8 @@ export async function fetchUserProfileFromDb(username: string): Promise<{
     }
   }
 
-  // Fallback for demo user
-  if (username === 'mulearn_student') {
-    return {
-      user: {
-        id: 'demo-user-123',
-        email: 'student.mulearn@gmail.com',
-        displayName: 'mulearn Student',
-        username: 'mulearn_student',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      },
-      cards: [],
-      totalHearts: 340,
-    }
-  }
-
+  /* an unknown handle is an unknown handle — there used to be a stand-in
+     profile here with a stock photo and 340 invented hearts, which anyone
+     could reach by visiting /u/mulearn_student */
   return null
 }

@@ -4,7 +4,6 @@ import { TopNav } from '../components/shell/TopNav'
 import { StepBar } from '../components/shell/StepBar'
 import { CardFlip } from '../components/card/CardFlip'
 import { Button, ArrowRight } from '../components/ui/Button'
-import { NoteScrap } from '../components/ui/Torn'
 import { Burst, HeartDoodle } from '../components/art/Doodles'
 import { Decoration } from '../components/art/Decorations'
 import { AaIcon, ToolIcons } from '../components/editor/EditorBits'
@@ -33,7 +32,7 @@ export default function Preview() {
       <main className="pv-main">
         <aside className="pv-side">
           <h1 className="pv-title">Almost there!<Burst className="pv-title-burst" size={18} /></h1>
-          <p className="pv-sub">Preview your card and<br />make any final touches.</p>
+          <p className="pv-sub">Take a last look before you send it.</p>
 
           <div className="pv-faces">
             <button className="pv-face" data-on={!flipped ? '' : undefined} onClick={() => setFlipped(false)}>
@@ -78,9 +77,6 @@ export default function Preview() {
             <ArrowRight size={19} />
           </button>
 
-          <NoteScrap className="pv-scrap reveal" rotate={-3} clip>
-            You&rsquo;re creating<br />something special<br />for someone who<br />means a lot. <HeartDoodle size={15} className="pv-scrap-heart" />
-          </NoteScrap>
           <span className="pv-daisy"><Decoration deco="daisy" /></span>
         </aside>
 

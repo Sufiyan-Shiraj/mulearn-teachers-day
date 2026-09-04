@@ -1,4 +1,13 @@
+/* the dialog animates itself in — framer-motion was pulling a 40KB animation
+   engine into the first load for one fade and one spring */
+@keyframes auth-overlay-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes auth-modal-in {
+  from { opacity: 0; transform: translateY(16px) scale(.93) }
+  to   { opacity: 1; transform: none }
+}
+
 .auth-overlay {
+  animation: auth-overlay-in .2s ease both;
   position: fixed;
   inset: 0;
   z-index: 9999;
@@ -17,6 +26,7 @@
 }
 
 .auth-modal {
+  animation: auth-modal-in .34s cubic-bezier(.2,.9,.3,1.1) both;
   position: relative;
   width: 100%;
   max-width: 440px;
@@ -48,6 +58,7 @@
 }
 
 .auth-close {
+  transition: transform .18s cubic-bezier(.2,.9,.3,1.1), background .18s ease, color .18s ease;
   position: absolute;
   top: 1rem;
   right: 1rem;
@@ -137,39 +148,15 @@
   transform: scale(0.97);
 }
 
-.auth-btn--google {
-  background: #ffffff;
-  color: #2b2520;
-  border: 1.5px solid #dfd7cc;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-}
+/* ---- carrying on to Google by itself ----
+   A line fills across the button for as long as the hand-off is pending, so
+   the wait is visible and obviously about to end rather than a hang. */
+@keyframes auth-auto-fill { to { transform: scaleX(1); } }
 
-.auth-btn--google:hover {
-  background: #faf7f2;
-  border-color: #c9bfb2;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
-}
-
-.auth-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--muted-2, #9a8f83);
-  font-size: 0.8rem;
-  font-style: italic;
-  margin: 0.3rem 0;
+@media (prefers-reduced-motion: reduce) {
 }
 
 .auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px dashed var(--border, #dfd7cc);
-}
-
-.auth-divider span {
-  padding: 0 0.8rem;
-}
 
 .auth-btn--demo {
   background: var(--surface, #f9f4eb);
@@ -211,16 +198,6 @@
   align-items: center;
 }
 
-.auth-at {
-  position: absolute;
-  left: 1rem;
-  font-family: monospace;
-  font-weight: 700;
-  color: var(--red, #861f21);
-  font-size: 1.1rem;
-  pointer-events: none;
-}
-
 .auth-input {
   width: 100%;
   padding: 0.85rem 1rem 0.85rem 2.4rem;
@@ -238,6 +215,26 @@
   box-shadow: 0 0 0 3px rgba(134, 31, 33, 0.15);
 }
 
+/* the name field has no @ prefix in front of it, so it starts at the edge */
+.auth-input--name { padding-left: 1rem; }
+
+/* what the name turns into in a URL, shown as it is typed */
+.auth-handle-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted-2, #8b8175);
+  text-align: left;
+}
+.auth-handle-note code {
+  font-family: monospace;
+  color: var(--red, #861f21);
+  background: rgba(134, 31, 33, 0.07);
+  padding: 0.1rem 0.34rem;
+  border-radius: 5px;
+}
+
+.auth-btn--primary:disabled { opacity: .5; cursor: default; }
+
 .auth-err {
   font-size: 0.85rem;
   color: #c92a2a;
@@ -252,87 +249,11 @@
   line-height: 1.4;
 }
 
-.auth-tabs {
-  position: relative;
-  display: flex;
-  background: var(--surface, #f5efe4);
-  border: 1.5px solid var(--border, #dfd7cc);
-  border-radius: 999px;
-  padding: 4px;
-  margin: 0 0 1.2rem;
-  gap: 4px;
-  width: 100%;
-  max-width: 280px;
+
+.auth-close:hover { transform: rotate(90deg) scale(1.08); }
+.auth-close:active { transform: rotate(90deg) scale(.92); }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-overlay, .auth-modal { animation: none; }
+  .auth-close:hover, .auth-close:active { transform: none; }
 }
-
-.auth-tab {
-  position: relative;
-  flex: 1;
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-}
-
-.auth-tab-text {
-  position: relative;
-  z-index: 2;
-  font-size: 0.94rem;
-  font-weight: 700;
-  white-space: nowrap;
-  font-weight: 700;
-  color: var(--muted, #6d645a);
-  transition: color 0.18s ease;
-}
-
-.auth-tab[data-active] .auth-tab-text {
-  color: var(--fg, #1f1b18);
-}
-
-.auth-tab-pill {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: var(--card, #ffffff);
-  box-shadow: 0 2px 8px rgba(44, 25, 20, 0.12), 0 1px 2px rgba(44, 25, 20, 0.06);
-  z-index: 1;
-}
-
-.auth-tab-content {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.auth-switch-note {
-  font-size: 0.88rem;
-  color: var(--muted, #6d645a);
-  margin-top: 0.6rem;
-}
-
-.auth-switch-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  margin-left: 0.35rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--red, #861f21);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.15s ease;
-}
-
-.auth-switch-btn:hover {
-  color: var(--fg, #1f1b18);
-}
-
-

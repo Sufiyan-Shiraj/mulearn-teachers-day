@@ -95,8 +95,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
   .stagger > * { opacity: 1; animation: none; }
   .m-float, .m-drift, .m-twinkle, .m-pulse-soft { animation: none; }
+  .route { animation: none; }
 }
 

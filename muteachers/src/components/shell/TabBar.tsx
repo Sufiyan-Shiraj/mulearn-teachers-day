@@ -18,7 +18,7 @@ export function TabBar() {
   const items: Item[] = [
     { to: '/', label: 'Home', icon: <HomeIcon /> },
     {
-      to: '/pick',
+      to: '/photo',
       label: 'Create',
       icon: <PlusIcon />,
       accent: true,
@@ -26,12 +26,11 @@ export function TabBar() {
         if (!user) {
           e.preventDefault()
           openAuthModal({
-            mode: 'signup',
-            title: 'Sign In to Create a Card',
+                        title: 'First — what’s your name?',
             subtitle: 'Sign in or sign up to personalize, save, and share your card ✨',
-            redirectTo: '/pick',
+            redirectTo: '/photo',
             onSuccess: () => {
-              nav('/pick')
+              nav('/photo')
             },
           })
         }
@@ -41,14 +40,13 @@ export function TabBar() {
     { to: '/leaderboards', label: 'Boards', icon: <TrophyIcon /> },
     {
       to: user?.username ? `/u/${user.username}` : '#auth',
-      label: user ? 'Profile' : 'Sign In',
+      label: user ? 'Profile' : 'Your name',
       icon: <UserIcon />,
       onClick: (e) => {
         if (!user) {
           e.preventDefault()
           openAuthModal({
-            mode: 'signin',
-            title: 'Sign In to Your Account',
+            title: 'What’s your name?',
             subtitle: 'Sign in to access your cards and creator profile ✨',
           })
         }

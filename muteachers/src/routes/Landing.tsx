@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { TopNav } from '../components/shell/TopNav'
 import { ButtonLink, ChevronPill, SparkIcon } from '../components/ui/Button'
 import { Chip, ChipRow } from '../components/ui/Chip'
@@ -12,8 +12,7 @@ import { useCard, newDoc } from '../lib/store'
 import { useAuth } from '../context/AuthContext'
 import { SiteFooter } from '../components/shell/SiteFooter'
 import { useReveal } from '../lib/useReveal'
-import { motion } from 'framer-motion'
-import { usePointerParallax, useScrollParallax } from '../lib/useParallax'
+import { useHeroParallax } from '../lib/useHeroParallax'
 import './landing.css'
 
 export default function Landing() {
@@ -25,8 +24,6 @@ export default function Landing() {
   const page = useReveal<HTMLDivElement>()
   const userPhoto = useCard(s => s.doc.photo)
   const demoPhoto = userPhoto ?? '/demo-photo.jpg'
-  const collageScrollY = useScrollParallax(34)
-  const tickScrollY = useScrollParallax(-22)
 
   const shown = TEMPLATES.filter(t => tag === 'all' || t.tags.includes(tag as never))
 
@@ -62,7 +59,7 @@ export default function Landing() {
             </p>
             <div className="ld-cta">
               <ButtonLink
-                to="/pick"
+                to="/photo"
                 variant="dark"
                 size="lg"
                 icon={<SparkIcon />}
@@ -70,13 +67,12 @@ export default function Landing() {
                   if (!user) {
                     e.preventDefault()
                     openAuthModal({
-                      mode: 'signup',
-                      title: 'Sign In to Create a Card',
-                      subtitle: 'Sign in or sign up to personalize, save, and share your card ✨',
-                      redirectTo: '/pick',
+                      title: 'First — what’s your name?',
+                      subtitle: 'It goes on your card so your teacher knows who it’s from.',
+                      redirectTo: '/photo',
                       onSuccess: () => {
                         startCard(TEMPLATES[0].id)
-                        nav('/pick')
+                        nav('/photo')
                       },
                     })
                     return
@@ -92,12 +88,12 @@ export default function Landing() {
             </div>
           </div>
 
-          <HeroCollage scrollY={collageScrollY} />
+          <HeroCollage />
         </div>
 
-        <motion.div style={{ y: tickScrollY }} className="ld-tick-wrap" aria-hidden>
+        <div className="ld-tick-wrap" aria-hidden>
           <TickCluster className="ld-tick-1 m-drift" size={26} color="var(--muted-2)" />
-        </motion.div>
+        </div>
         <TornEdge className="ld-tear" fill="var(--paper-warm)" height={52} />
       </section>
 
@@ -109,12 +105,6 @@ export default function Landing() {
               Pick a card that feels you
               <Burst className="ld-picks-burst" size={20} />
             </h2>
-            <Link to="/pick" className="ld-viewall">
-              View all templates
-              <span className="ld-viewall-chev">
-                <svg viewBox="0 0 12 12" aria-hidden><path d="M4.4 2.4 8 6l-3.6 3.6" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </span>
-            </Link>
           </div>
         </div>
 
@@ -131,9 +121,8 @@ export default function Landing() {
                   onClick={() => {
                     if (!user) {
                       openAuthModal({
-                        mode: 'signup',
-                        title: 'Sign In to Start Designing',
-                        subtitle: 'Sign in or sign up to customize this card and save it to your profile ✨',
+                          title: 'First — what’s your name?',
+                        subtitle: 'It goes on your card so your teacher knows who it’s from.',
                         redirectTo: '/photo',
                         onSuccess: () => {
                           startCard(t.id)
@@ -167,12 +156,6 @@ export default function Landing() {
               <Chip key={t.key} active={tag === t.key} onClick={() => setTag(t.key)}>{t.label}</Chip>
             ))}
           </ChipRow>
-          <Link to="/pick" className="ld-viewall-mobile">
-            View all templates
-            <span className="ld-viewall-chev">
-              <svg viewBox="0 0 12 12" aria-hidden><path d="M4.4 2.4 8 6l-3.6 3.6" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </span>
-          </Link>
         </div>
       </section>
 
@@ -183,93 +166,49 @@ export default function Landing() {
 
 /* ------------------------------------------------------------------ */
 
-function HeroCollage({ scrollY }: { scrollY?: any }) {
-  const { containerRef, tiltX, tiltY, getPlaneTransform, isSupported } = usePointerParallax({
-    maxOffset: 24,
-    maxRotation: 5.5,
-    damping: 24,
-    stiffness: 135,
-  })
-
-  // Planes by depth
-  const backPlane = getPlaneTransform(0.22)
-  const midPlane = getPlaneTransform(0.55)
-  const forePlane = getPlaneTransform(0.92)
-  const airPlane1 = getPlaneTransform(1.35)
-  const airPlane2 = getPlaneTransform(1.6)
-  const airPlane3 = getPlaneTransform(1.85)
+function HeroCollage() {
+  /* depth per plane; CSS turns these into the actual offsets */
+  const ref = useHeroParallax<HTMLDivElement>()
 
   return (
-    <motion.div
-      ref={containerRef}
-      className="ld-collage"
-      style={isSupported ? { rotateX: tiltX, rotateY: tiltY, y: scrollY } : { y: scrollY }}
-      aria-hidden
-    >
+    <div ref={ref} className="ld-collage" aria-hidden>
       {/* Background paper strip & grid */}
-      <motion.div
-        className="ld-cl-strip"
-        style={isSupported ? { x: backPlane.x, y: backPlane.y, rotate: 1.5 } : undefined}
-      />
-      <motion.div
-        className="ld-cl-grid"
-        style={isSupported ? { x: backPlane.x, y: backPlane.y, rotate: -2 } : undefined}
-      >
+      <div className="ld-cl-strip ld-plane" style={{ ['--d' as string]: '.22', ['--r' as string]: '1.5deg' }} />
+      <div className="ld-cl-grid ld-plane" style={{ ['--d' as string]: '.22', ['--r' as string]: '-2deg' }}>
         <Decoration deco="grid-patch" />
-      </motion.div>
+      </div>
 
       {/* Midground Polaroid frame & washi tape */}
-      <motion.div
-        className="ld-cl-frame"
-        style={isSupported ? { x: midPlane.x, y: midPlane.y, rotate: -1.2 } : undefined}
-      >
+      <div className="ld-cl-frame ld-plane" style={{ ['--d' as string]: '.55', ['--r' as string]: '-1.2deg' }}>
         <div className="ld-cl-photo">
           <img src="/demo-photo.jpg" alt="" draggable={false} />
         </div>
         <div className="ld-cl-tape"><Decoration deco="tape-dots" /></div>
-      </motion.div>
+      </div>
 
       {/* Foreground handwritten torn note */}
-      <motion.div
-        className="ld-cl-note"
-        style={isSupported ? { x: forePlane.x, y: forePlane.y, rotate: -1.6 } : undefined}
-      >
+      <div className="ld-cl-note ld-plane" style={{ ['--d' as string]: '.92', ['--r' as string]: '-1.6deg' }}>
         Thank you for<br />
         <span>inspiring us every day!</span>
         <HeartDoodle className="ld-cl-note-heart" size={16} />
-      </motion.div>
+      </div>
 
       {/* Airborne floating stickers & doodles at varying floating depths */}
-      <motion.div
-        className="ld-cl-star-gold m-drift"
-        style={isSupported ? { x: airPlane1.x, y: airPlane1.y, rotate: 16 } : undefined}
-      >
+      <div className="ld-cl-star-gold ld-plane m-drift" style={{ ['--d' as string]: '1.35', ['--r' as string]: '16deg' }}>
         <Decoration deco="star-gold" />
-      </motion.div>
-      <motion.div
-        className="ld-cl-star-silver m-drift"
-        style={isSupported ? { x: airPlane2.x, y: airPlane2.y, rotate: -14 } : undefined}
-      >
+      </div>
+      <div className="ld-cl-star-silver ld-plane m-drift" style={{ ['--d' as string]: '1.6', ['--r' as string]: '-14deg' }}>
         <Decoration deco="star-silver" />
-      </motion.div>
-      <motion.div
-        className="ld-cl-heart m-float"
-        style={isSupported ? { x: airPlane3.x, y: airPlane3.y, rotate: 6 } : undefined}
-      >
+      </div>
+      <div className="ld-cl-heart ld-plane m-float" style={{ ['--d' as string]: '1.85', ['--r' as string]: '6deg' }}>
         <Decoration deco="heart-red" />
-      </motion.div>
-      <motion.div
-        className="ld-cl-daisy m-drift"
-        style={isSupported ? { x: airPlane1.x, y: airPlane1.y, rotate: -10 } : undefined}
-      >
+      </div>
+      <div className="ld-cl-daisy ld-plane m-drift" style={{ ['--d' as string]: '1.35', ['--r' as string]: '-10deg' }}>
         <Decoration deco="daisy" />
-      </motion.div>
-      <motion.div
-        className="ld-cl-b1"
-        style={isSupported ? { x: airPlane2.x, y: airPlane2.y } : undefined}
-      >
+      </div>
+      <div className="ld-cl-b1 ld-plane" style={{ ['--d' as string]: '1.6' }}>
         <Burst size={22} color="var(--red)" />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
